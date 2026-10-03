@@ -1,0 +1,10 @@
+{
+  "event.example.blood_moon": "Luna de sangre",
+  "event.example.blood_moon.description": "Una luna roja enorme sale y la noche caza. Evento de ejemplo del LiveEvents Example Pack.",
+  "event.example.blood_moon.title": "Sale la Luna de Sangre",
+  "event.example.blood_moon.subtitle": "Quédate cerca de la luz",
+  "event.example.blood_moon.phase.rise": "La Salida",
+  "event.example.blood_moon.phase.hunt": "La Caza",
+  "event.example.blood_moon.phase.set": "La Puesta",
+  "subtitles.example.blood_moon.howl": "Algo aúlla"
+}

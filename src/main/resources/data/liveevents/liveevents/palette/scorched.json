@@ -1,0 +1,53 @@
+{
+  "format_version": 1,
+  "rules": [
+    {
+      "from": "minecraft:grass_block",
+      "to": "minecraft:coarse_dirt"
+    },
+    {
+      "from": "minecraft:podzol",
+      "to": "minecraft:coarse_dirt"
+    },
+    {
+      "from": "minecraft:mycelium",
+      "to": "minecraft:coarse_dirt"
+    },
+    {
+      "from": "minecraft:dirt",
+      "to": "minecraft:coarse_dirt"
+    },
+    {
+      "from": "minecraft:moss_block",
+      "to": "minecraft:tuff"
+    },
+    {
+      "from": "minecraft:sand",
+      "to": "minecraft:red_sand"
+    },
+    {
+      "from": "#minecraft:leaves",
+      "to": "minecraft:air"
+    },
+    {
+      "from": "#minecraft:flowers",
+      "to": "minecraft:air"
+    },
+    {
+      "from": "minecraft:short_grass",
+      "to": "minecraft:dead_bush"
+    },
+    {
+      "from": "minecraft:tall_grass",
+      "to": "minecraft:air"
+    },
+    {
+      "from": "minecraft:fern",
+      "to": "minecraft:dead_bush"
+    },
+    {
+      "from": "#minecraft:logs",
+      "to": "minecraft:blackstone"
+    }
+  ]
+}

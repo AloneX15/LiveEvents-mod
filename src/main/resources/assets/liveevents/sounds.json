@@ -1,0 +1,303 @@
+{
+  "supernova.heartbeat": {
+    "subtitle": "subtitles.liveevents.supernova.heartbeat",
+    "sounds": [
+      {
+        "name": "minecraft:entity.warden.heartbeat",
+        "type": "event",
+        "pitch": 0.7,
+        "volume": 1
+      }
+    ]
+  },
+  "supernova.groan": {
+    "subtitle": "subtitles.liveevents.supernova.groan",
+    "sounds": [
+      {
+        "name": "minecraft:entity.warden.sonic_charge",
+        "type": "event",
+        "pitch": 0.5,
+        "volume": 0.9
+      },
+      {
+        "name": "minecraft:entity.elder_guardian.curse",
+        "type": "event",
+        "pitch": 0.4,
+        "volume": 0.5
+      }
+    ]
+  },
+  "supernova.collapse": {
+    "subtitle": "subtitles.liveevents.supernova.collapse",
+    "sounds": [
+      {
+        "name": "minecraft:block.portal.trigger",
+        "type": "event",
+        "pitch": 0.5,
+        "volume": 1
+      }
+    ]
+  },
+  "supernova.shatter": {
+    "subtitle": "subtitles.liveevents.supernova.shatter",
+    "sounds": [
+      {
+        "name": "minecraft:block.glass.break",
+        "type": "event",
+        "pitch": 0.5,
+        "volume": 1
+      },
+      {
+        "name": "minecraft:block.amethyst_block.break",
+        "type": "event",
+        "pitch": 0.6,
+        "volume": 1
+      }
+    ]
+  },
+  "supernova.xray": {
+    "subtitle": "subtitles.liveevents.supernova.xray",
+    "sounds": [
+      {
+        "name": "minecraft:block.beacon.activate",
+        "type": "event",
+        "pitch": 2,
+        "volume": 0.8
+      }
+    ]
+  },
+  "supernova.crackle": {
+    "subtitle": "subtitles.liveevents.supernova.crackle",
+    "sounds": [
+      {
+        "name": "minecraft:block.campfire.crackle",
+        "type": "event",
+        "pitch": 0.7,
+        "volume": 1
+      },
+      {
+        "name": "minecraft:entity.guardian.attack",
+        "type": "event",
+        "pitch": 1.6,
+        "volume": 0.4
+      }
+    ]
+  },
+  "supernova.roar": {
+    "subtitle": "subtitles.liveevents.supernova.roar",
+    "sounds": [
+      {
+        "name": "minecraft:entity.ender_dragon.growl",
+        "type": "event",
+        "pitch": 0.5,
+        "volume": 1
+      }
+    ]
+  },
+  "supernova.blast": {
+    "subtitle": "subtitles.liveevents.supernova.blast",
+    "sounds": [
+      {
+        "name": "minecraft:entity.generic.explode",
+        "type": "event",
+        "pitch": 0.5,
+        "volume": 1
+      },
+      {
+        "name": "minecraft:entity.warden.sonic_boom",
+        "type": "event",
+        "pitch": 0.6,
+        "volume": 1
+      }
+    ]
+  },
+  "supernova.tinnitus": {
+    "subtitle": "subtitles.liveevents.supernova.tinnitus",
+    "sounds": [
+      {
+        "name": "minecraft:block.beacon.ambient",
+        "type": "event",
+        "pitch": 2,
+        "volume": 0.6
+      }
+    ]
+  },
+  "supernova.plasma": {
+    "subtitle": "subtitles.liveevents.supernova.plasma",
+    "sounds": [
+      {
+        "name": "minecraft:entity.blaze.burn",
+        "type": "event",
+        "pitch": 0.5,
+        "volume": 1
+      },
+      {
+        "name": "minecraft:block.fire.ambient",
+        "type": "event",
+        "pitch": 0.6,
+        "volume": 1
+      }
+    ]
+  },
+  "supernova.whistler": {
+    "subtitle": "subtitles.liveevents.supernova.whistler",
+    "sounds": [
+      {
+        "name": "minecraft:block.amethyst_block.chime",
+        "type": "event",
+        "pitch": 0.5,
+        "volume": 1
+      },
+      {
+        "name": "minecraft:block.respawn_anchor.ambient",
+        "type": "event",
+        "pitch": 1.5,
+        "volume": 0.6
+      }
+    ]
+  },
+  "supernova.wind": {
+    "subtitle": "subtitles.liveevents.supernova.wind",
+    "sounds": [
+      {
+        "name": "minecraft:item.elytra.flying",
+        "type": "event",
+        "pitch": 0.6,
+        "volume": 0.6
+      }
+    ]
+  },
+  "supernova.pulsar": {
+    "subtitle": "subtitles.liveevents.supernova.pulsar",
+    "sounds": [
+      {
+        "name": "minecraft:block.note_block.hat",
+        "type": "event",
+        "pitch": 2,
+        "volume": 0.5
+      }
+    ]
+  },
+  "meteor.rumble": {
+    "subtitle": "subtitles.liveevents.meteor.rumble",
+    "sounds": [
+      {
+        "name": "minecraft:entity.lightning_bolt.thunder",
+        "type": "event",
+        "pitch": 0.5,
+        "volume": 0.4
+      }
+    ]
+  },
+  "meteor.whistle": {
+    "subtitle": "subtitles.liveevents.meteor.whistle",
+    "sounds": [
+      {
+        "name": "minecraft:entity.firework_rocket.launch",
+        "type": "event",
+        "pitch": 0.5,
+        "volume": 1
+      }
+    ]
+  },
+  "meteor.impact_near": {
+    "subtitle": "subtitles.liveevents.meteor.impact_near",
+    "sounds": [
+      {
+        "name": "minecraft:entity.generic.explode",
+        "type": "event",
+        "pitch": 0.7,
+        "volume": 1
+      }
+    ]
+  },
+  "meteor.impact_far": {
+    "subtitle": "subtitles.liveevents.meteor.impact_far",
+    "sounds": [
+      {
+        "name": "minecraft:entity.lightning_bolt.thunder",
+        "type": "event",
+        "pitch": 0.6,
+        "volume": 0.8
+      }
+    ]
+  },
+  "meteor.sizzle": {
+    "subtitle": "subtitles.liveevents.meteor.sizzle",
+    "sounds": [
+      {
+        "name": "minecraft:block.lava.extinguish",
+        "type": "event",
+        "pitch": 0.7,
+        "volume": 0.8
+      }
+    ]
+  },
+  "earthquake.hum": {
+    "subtitle": "subtitles.liveevents.earthquake.hum",
+    "sounds": [
+      {
+        "name": "minecraft:block.respawn_anchor.ambient",
+        "type": "event",
+        "pitch": 0.5,
+        "volume": 0.7
+      }
+    ]
+  },
+  "earthquake.thump": {
+    "subtitle": "subtitles.liveevents.earthquake.thump",
+    "sounds": [
+      {
+        "name": "minecraft:block.anvil.land",
+        "type": "event",
+        "pitch": 0.5,
+        "volume": 1
+      }
+    ]
+  },
+  "earthquake.rumble": {
+    "subtitle": "subtitles.liveevents.earthquake.rumble",
+    "sounds": [
+      {
+        "name": "minecraft:entity.ravager.roar",
+        "type": "event",
+        "pitch": 0.5,
+        "volume": 0.6
+      },
+      {
+        "name": "minecraft:block.deepslate.break",
+        "type": "event",
+        "pitch": 0.5,
+        "volume": 1
+      }
+    ]
+  },
+  "earthquake.crack": {
+    "subtitle": "subtitles.liveevents.earthquake.crack",
+    "sounds": [
+      {
+        "name": "minecraft:block.deepslate.break",
+        "type": "event",
+        "pitch": 0.6,
+        "volume": 1
+      },
+      {
+        "name": "minecraft:block.stone.break",
+        "type": "event",
+        "pitch": 0.5,
+        "volume": 1
+      }
+    ]
+  },
+  "ui.warning": {
+    "subtitle": "subtitles.liveevents.ui.warning",
+    "sounds": [
+      {
+        "name": "minecraft:block.note_block.bass",
+        "type": "event",
+        "pitch": 0.6,
+        "volume": 1
+      }
+    ]
+  }
+}

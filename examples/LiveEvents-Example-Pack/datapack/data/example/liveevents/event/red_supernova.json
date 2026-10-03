@@ -1,0 +1,29 @@
+{
+  "$schema": "https://raw.githubusercontent.com/AloneX15/LiveEvents-mod/main/schema/liveevents-event.schema.json",
+  "format_version": 1,
+  "id": "example:red_supernova",
+  "extends": "liveevents:supernova",
+  "display_name": "Red Supernova (episode 12)",
+  "palette": {
+    "cyan": "#FF2244",
+    "pulsar": "#FF6688",
+    "violet": "#AA0033"
+  },
+  "overrides": {
+    "breakout.light_cut.cuts": [
+      [
+        "8.0s",
+        "$cyan"
+      ],
+      [
+        "9.0s",
+        "$violet"
+      ],
+      [
+        "10.5s",
+        "$cyan"
+      ]
+    ],
+    "aftermath.duration": "7d"
+  }
+}

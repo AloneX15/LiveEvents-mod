@@ -1,0 +1,22 @@
+{
+  "format_version": 1,
+  "id": "liveevents_test:visual",
+  "scope": "localized",
+  "phases": [
+    {
+      "id": "a",
+      "from": "0s",
+      "to": "30s",
+      "modules": [
+        {
+          "type": "sky_tint",
+          "color": "#FF0000"
+        },
+        {
+          "type": "title",
+          "title": "x"
+        }
+      ]
+    }
+  ]
+}

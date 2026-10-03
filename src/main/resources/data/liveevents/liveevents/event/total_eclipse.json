@@ -1,0 +1,166 @@
+{
+  "$schema": "https://raw.githubusercontent.com/AloneX15/LiveEvents-mod/main/schema/liveevents-event.schema.json",
+  "format_version": 1,
+  "id": "liveevents:total_eclipse",
+  "display_name": "event.liveevents.total_eclipse",
+  "description": "event.liveevents.total_eclipse.description",
+  "scope": "celestial",
+  "anchor": {
+    "azimuth": 180,
+    "altitude": 50
+  },
+  "lethal": false,
+  "allowed_dimensions": [
+    "minecraft:overworld"
+  ],
+  "cooldown": "60s",
+  "palette": {
+    "black": "#050505",
+    "corona": "#FFF6D8",
+    "gold": "#FFD27A",
+    "dusk": "#1A1430",
+    "ruby": "#FF3355"
+  },
+  "phases": [
+    {
+      "id": "first_contact",
+      "from": "0s",
+      "to": "20s",
+      "title": "event.liveevents.total_eclipse.phase.first_contact",
+      "modules": [
+        {
+          "type": "celestial_body",
+          "shape": "sun",
+          "color": "$corona",
+          "core": "$corona",
+          "corona": "$gold",
+          "size_deg": 7.5
+        },
+        {
+          "type": "sky_tint",
+          "color": "$dusk",
+          "strength": {
+            "from": 0,
+            "to": 0.45
+          },
+          "fade": "2s"
+        },
+        {
+          "type": "title",
+          "at": "0.5s",
+          "title": "event.liveevents.total_eclipse.title",
+          "subtitle": "event.liveevents.total_eclipse.subtitle"
+        }
+      ]
+    },
+    {
+      "id": "totality",
+      "from": "20s",
+      "to": "60s",
+      "title": "event.liveevents.total_eclipse.phase.totality",
+      "modules": [
+        {
+          "type": "time_override",
+          "mode": "dark",
+          "fade": "3s"
+        },
+        {
+          "type": "celestial_body",
+          "shape": "sun",
+          "color": "$black",
+          "core": "$black",
+          "corona": "$corona",
+          "size_deg": 8
+        },
+        {
+          "type": "lens_flare",
+          "colors": [
+            "$corona"
+          ],
+          "intensity": 0.35
+        },
+        {
+          "type": "sky_tint",
+          "color": "$black",
+          "horizon": "$ruby",
+          "strength": 0.6,
+          "fade": "3s"
+        },
+        {
+          "type": "audio_duck",
+          "level": 0.2
+        },
+        {
+          "type": "sound_loop",
+          "sound": "liveevents:earthquake.hum",
+          "bpm": 6,
+          "volume": 0.25
+        }
+      ]
+    },
+    {
+      "id": "diamond_ring",
+      "from": "60s",
+      "to": "75s",
+      "title": "event.liveevents.total_eclipse.phase.diamond_ring",
+      "modules": [
+        {
+          "type": "celestial_body",
+          "shape": "sun",
+          "color": "$corona",
+          "core": "$corona",
+          "corona": "$gold",
+          "size_deg": 7.5
+        },
+        {
+          "type": "flash",
+          "at": "60s",
+          "color": "$corona",
+          "intensity": 0.35,
+          "fade": "1.5s",
+          "profiles": {
+            "safe": {
+              "intensity": 0.15
+            }
+          }
+        },
+        {
+          "type": "lens_flare",
+          "colors": [
+            "$corona",
+            "$gold"
+          ],
+          "intensity": {
+            "from": 0.9,
+            "to": 0.2
+          }
+        },
+        {
+          "type": "sky_tint",
+          "color": "$dusk",
+          "strength": {
+            "from": 0.45,
+            "to": 0.1
+          },
+          "fade": "2s"
+        }
+      ]
+    },
+    {
+      "id": "last_light",
+      "from": "75s",
+      "to": "90s",
+      "title": "event.liveevents.total_eclipse.phase.last_light",
+      "modules": [
+        {
+          "type": "celestial_body",
+          "shape": "sun",
+          "color": "$corona",
+          "core": "$corona",
+          "corona": "$gold",
+          "size_deg": 7.5
+        }
+      ]
+    }
+  ]
+}

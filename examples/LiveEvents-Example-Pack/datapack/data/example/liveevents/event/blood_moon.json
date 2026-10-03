@@ -1,0 +1,167 @@
+{
+  "$schema": "https://raw.githubusercontent.com/AloneX15/LiveEvents-mod/main/schema/liveevents-event.schema.json",
+  "format_version": 1,
+  "id": "example:blood_moon",
+  "display_name": "event.example.blood_moon",
+  "description": "event.example.blood_moon.description",
+  "scope": "celestial",
+  "anchor": {
+    "azimuth": 90,
+    "altitude": 30
+  },
+  "night_override": "require",
+  "lethal": false,
+  "affects": [
+    "players"
+  ],
+  "cooldown": "5m",
+  "default_profile": "gameplay",
+  "params": {
+    "radius": 0
+  },
+  "palette": {
+    "night": "#12030A",
+    "blood": "#9B0A1E",
+    "ember": "#FF4A2A",
+    "mist": "#3A0A14"
+  },
+  "phases": [
+    {
+      "id": "rise",
+      "from": "0s",
+      "to": "20s",
+      "title": "event.example.blood_moon.phase.rise",
+      "description": {
+        "sky": "La luna sale enorme por el este, teñida de un rojo oscuro.",
+        "chaos": "Los animales callan. Algo antiguo despierta."
+      },
+      "modules": [
+        {
+          "type": "sky_tint",
+          "color": "$night",
+          "strength": {
+            "from": 0.1,
+            "to": 0.6
+          },
+          "fade": "4s",
+          "to": "90s"
+        },
+        {
+          "type": "celestial_body",
+          "shape": "star",
+          "color": "$blood",
+          "core": "$ember",
+          "size_deg": {
+            "from": 6,
+            "to": 10
+          },
+          "curve": "ease_out"
+        },
+        {
+          "type": "audio_duck",
+          "level": 0.2
+        },
+        {
+          "type": "sound",
+          "at": "2s",
+          "sound": "example:blood_moon.howl",
+          "volume": 1,
+          "position": "anchor"
+        },
+        {
+          "type": "title",
+          "at": "1s",
+          "title": "event.example.blood_moon.title",
+          "subtitle": "event.example.blood_moon.subtitle"
+        }
+      ]
+    },
+    {
+      "id": "hunt",
+      "from": "20s",
+      "to": "75s",
+      "title": "event.example.blood_moon.phase.hunt",
+      "description": {
+        "sky": "La luna late como un corazón. La niebla se vuelve carmesí.",
+        "chaos": "La noche caza. Quédate cerca de la luz."
+      },
+      "modules": [
+        {
+          "type": "celestial_body",
+          "shape": "boiling",
+          "color": "$blood",
+          "core": "$ember",
+          "size_deg": 10,
+          "flicker_hz": [
+            0.5,
+            1.2
+          ]
+        },
+        {
+          "type": "screen_overlay",
+          "color": "$mist",
+          "vignette": 0.45,
+          "tint": 0.08,
+          "pulse_hz": 1,
+          "profiles": {
+            "safe": {
+              "pulse_hz": 0
+            }
+          }
+        },
+        {
+          "type": "sound_loop",
+          "sound": "liveevents:supernova.heartbeat",
+          "bpm": {
+            "from": 50,
+            "to": 90
+          },
+          "volume": 0.6
+        },
+        {
+          "type": "status_effect",
+          "effect": "minecraft:darkness",
+          "duration": "3s",
+          "interval": "15s",
+          "requires_sky": true
+        },
+        {
+          "type": "block_transform",
+          "palette": "example:blood_soil",
+          "chance": 0.03,
+          "radius": 48,
+          "per_second": 100
+        }
+      ]
+    },
+    {
+      "id": "set",
+      "from": "75s",
+      "to": "90s",
+      "title": "event.example.blood_moon.phase.set",
+      "description": {
+        "sky": "La luna se hunde y su color se apaga.",
+        "chaos": "Silencio. Por ahora."
+      },
+      "modules": [
+        {
+          "type": "celestial_body",
+          "shape": "star",
+          "color": "$blood",
+          "size_deg": {
+            "from": 10,
+            "to": 6
+          }
+        },
+        {
+          "type": "sound",
+          "at": "80s",
+          "sound": "example:blood_moon.howl",
+          "volume": 0.6,
+          "pitch": 0.8,
+          "position": "anchor"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,45 @@
+{
+  "schemaVersion": 1,
+  "id": "${id}",
+  "version": "${version}",
+  "name": "${name}",
+  "description": "Admin-triggered live cosmic and natural events (supernovas, meteor showers, earthquakes) with cinematic client-side visuals and real, revertible effects on the world.",
+  "authors": ["TakumiStudios"],
+  "contact": {
+    "homepage": "https://github.com/AloneX15/LiveEvents-mod/wiki",
+    "sources": "https://github.com/AloneX15/LiveEvents-mod",
+    "issues": "https://github.com/AloneX15/LiveEvents-mod/issues"
+  },
+  "license": "MIT",
+  "icon": "assets/liveevents/icon.png",
+  "environment": "*",
+  "entrypoints": {
+    "main": ["com.takumistudios.liveevents.LiveEvents"],
+    "client": ["com.takumistudios.liveevents.client.LiveEventsClient"],
+    "modmenu": ["com.takumistudios.liveevents.client.compat.ModMenuCompat"]
+  },
+  "mixins": [
+    {
+      "config": "liveevents.client.mixins.json",
+      "environment": "client"
+    }
+  ],
+  "depends": {
+    "fabricloader": ">=${loader}",
+    "minecraft": "${minecraft}",
+    "java": ">=25",
+    "fabric-api": "*"
+  },
+  "suggests": {
+    "luckperms": "*",
+    "placeholder-api": "*",
+    "modmenu": "*"
+  },
+  "custom": {
+    "modmenu": {
+      "links": {
+        "modmenu.wiki": "https://github.com/AloneX15/LiveEvents-mod/wiki"
+      }
+    }
+  }
+}

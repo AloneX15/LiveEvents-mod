@@ -1,0 +1,17 @@
+{
+  "format_version": 1,
+  "rules": [
+    {
+      "from": "minecraft:grass_block",
+      "to": "minecraft:crimson_nylium"
+    },
+    {
+      "from": "minecraft:short_grass",
+      "to": "minecraft:crimson_roots"
+    },
+    {
+      "from": "#minecraft:flowers",
+      "to": "minecraft:crimson_fungus"
+    }
+  ]
+}

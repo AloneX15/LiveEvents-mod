@@ -1,0 +1,60 @@
+{
+  "$schema": "https://raw.githubusercontent.com/AloneX15/LiveEvents-mod/main/schema/liveevents-event.schema.json",
+  "format_version": 1,
+  "id": "liveevents:earthquake",
+  "display_name": "event.liveevents.earthquake",
+  "description": "event.liveevents.earthquake.description",
+  "scope": "regional",
+  "allowed_dimensions": ["minecraft:overworld", "minecraft:the_nether", "minecraft:the_end"],
+  "cooldown": "30s",
+  "params": { "radius": 160 },
+  "palette": { "dust": "#B8A27A", "deep_dust": "#6B5A43", "sky_dim": "#4A4E57", "crack_glow": "#FF5A1F" },
+  "phases": [
+    {
+      "id": "silence", "from": "0s", "to": "6s",
+      "title": "event.liveevents.earthquake.phase.silence",
+      "description": { "sky": "", "chaos": "El mundo calla. Cae polvo de los techos y las hojas se sueltan solas." },
+      "modules": [
+        { "type": "audio_duck", "level": 0.15 },
+        { "type": "sound_loop", "sound": "liveevents:earthquake.hum", "bpm": 15, "volume": 0.3 },
+        { "type": "particle_emitter", "particle": "minecraft:white_ash", "rate": 25, "radius": 10, "height": 4 },
+        { "type": "sky_tint", "color": "$sky_dim", "strength": 0.3, "fade": "4s", "to": "45s" }
+      ]
+    },
+    {
+      "id": "p_wave", "from": "6s", "to": "12s",
+      "title": "event.liveevents.earthquake.phase.p_wave",
+      "description": { "sky": "", "chaos": "Un golpe seco desde abajo, como si algo enorme chocara contra el mundo." },
+      "modules": [
+        { "type": "camera_shake", "at": "6s", "duration": "0.8s", "amplitude": { "from": 0.8, "to": 0 }, "axis": "vertical", "frequency": 12, "curve": "ease_out", "falloff": "$radius" },
+        { "type": "sound", "at": "6s", "sound": "liveevents:earthquake.thump", "volume": 1.2, "position": "center" },
+        { "type": "sound_loop", "sound": "liveevents:earthquake.rumble", "bpm": 20, "volume": { "from": 0.3, "to": 0.8 } }
+      ]
+    },
+    {
+      "id": "s_wave", "from": "12s", "to": "32s",
+      "title": "event.liveevents.earthquake.phase.s_wave",
+      "description": { "sky": "", "chaos": "El suelo se ondula. Las grietas corren por el paisaje y los acantilados se desmoronan." },
+      "modules": [
+        { "type": "seismic_wave", "amplitude": { "from": 1.2, "to": 0.6 }, "p_speed": 120, "s_speed": 60, "nausea": true, "drop_blocks": true,
+          "profiles": { "safe": { "amplitude": 0.35, "nausea": false } } },
+        { "type": "crack", "length": 96, "width": 2, "depth": 6, "branches": 3 },
+        { "type": "particle_emitter", "particle": "minecraft:campfire_signal_smoke", "rate": 12, "around": "center", "radius": 48, "height": 0 },
+        { "type": "debris", "rate": 30, "block": "minecraft:dirt" },
+        { "type": "knockback", "strength": 0.25, "random": true, "interval": "2s", "radius": "$radius * 0.4" },
+        { "type": "sound_loop", "sound": "liveevents:earthquake.rumble", "bpm": 30, "volume": 1.0 },
+        { "type": "sound_loop", "sound": "liveevents:earthquake.crack", "bpm": 25, "volume": 0.8 }
+      ]
+    },
+    {
+      "id": "aftershocks", "from": "32s", "to": "45s",
+      "title": "event.liveevents.earthquake.phase.aftershocks",
+      "description": { "sky": "", "chaos": "Réplicas cada vez más débiles. El polvo se posa y el silencio vuelve a pesar." },
+      "modules": [
+        { "type": "camera_shake", "amplitude": { "from": 0.4, "to": 0 }, "frequency": 6, "falloff": "$radius" },
+        { "type": "particle_emitter", "particle": "minecraft:white_ash", "rate": { "from": 20, "to": 0 }, "radius": 10, "height": 4 },
+        { "type": "sound_loop", "sound": "liveevents:earthquake.rumble", "bpm": 12, "volume": { "from": 0.5, "to": 0 } }
+      ]
+    }
+  ]
+}

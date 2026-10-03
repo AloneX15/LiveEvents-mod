@@ -1,0 +1,3859 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://raw.githubusercontent.com/AloneX15/LiveEvents-mod/main/schema/liveevents-event.schema.json",
+  "title": "LiveEvents event definition",
+  "description": "Definición de evento de LiveEvents (generado; no editar a mano).",
+  "type": "object",
+  "required": [
+    "format_version"
+  ],
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "description": "URL de este schema"
+    },
+    "format_version": {
+      "type": "integer",
+      "description": "Versión del formato (obligatorio)",
+      "const": 1
+    },
+    "id": {
+      "type": "string",
+      "description": "espacio:nombre",
+      "pattern": "^[a-z0-9_.-]+:[a-z0-9_./-]+$"
+    },
+    "extends": {
+      "type": "string",
+      "description": "Evento del que hereda (variante)",
+      "pattern": "^[a-z0-9_.-]+:[a-z0-9_./-]+$"
+    },
+    "display_name": {
+      "type": "string",
+      "description": "Nombre o clave de traducción"
+    },
+    "description": {
+      "type": "string",
+      "description": "Descripción o clave de traducción"
+    },
+    "scope": {
+      "type": "string",
+      "description": "Ámbito",
+      "enum": [
+        "celestial",
+        "localized",
+        "regional"
+      ]
+    },
+    "anchor": {
+      "type": "object",
+      "description": "Ancla en la bóveda",
+      "properties": {
+        "azimuth": {
+          "type": "number",
+          "description": "Acimut en grados (0 = norte, 90 = este)"
+        },
+        "altitude": {
+          "type": "number",
+          "description": "Altura en grados (0–90)"
+        }
+      }
+    },
+    "allowed_dimensions": {
+      "type": "array",
+      "description": "Dimensiones donde se puede lanzar",
+      "items": {
+        "type": "string",
+        "description": "Dimensión"
+      }
+    },
+    "night_override": {
+      "type": "string",
+      "description": "Noche forzada",
+      "enum": [
+        "none",
+        "visual",
+        "require"
+      ]
+    },
+    "clear_weather": {
+      "type": "boolean",
+      "description": "Despeja el cielo y restaura el clima al terminar"
+    },
+    "lethal": {
+      "type": "boolean",
+      "description": "false = nunca baja a nadie de medio corazón"
+    },
+    "affects": {
+      "type": "array",
+      "description": "Entidades afectadas",
+      "items": {
+        "type": "string",
+        "description": "Tipo",
+        "enum": [
+          "players",
+          "hostile",
+          "passive",
+          "pets",
+          "named"
+        ]
+      }
+    },
+    "world_mode": {
+      "type": "string",
+      "description": "Persistencia de los cambios",
+      "enum": [
+        "permanent",
+        "revert_on_end",
+        "revert_manual"
+      ]
+    },
+    "cooldown": {
+      "description": "Tiempo mínimo entre dos lanzamientos",
+      "anyOf": [
+        {
+          "type": "number",
+          "description": "Segundos"
+        },
+        {
+          "type": "string",
+          "description": "Duración",
+          "pattern": "^([0-9]+(\\.[0-9]+)?[tsmhd]?|permanent)$"
+        }
+      ]
+    },
+    "default_profile": {
+      "type": "string",
+      "description": "Perfil por defecto",
+      "enum": [
+        "cinematic",
+        "gameplay",
+        "safe"
+      ]
+    },
+    "queue_policy": {
+      "type": "string",
+      "description": "Si hay un evento incompatible",
+      "enum": [
+        "reject",
+        "queue"
+      ]
+    },
+    "palette": {
+      "type": "object",
+      "description": "Colores con nombre",
+      "additionalProperties": {
+        "type": "string",
+        "description": "#RRGGBB",
+        "pattern": "^#[0-9A-Fa-f]{6}$"
+      }
+    },
+    "params": {
+      "type": "object",
+      "description": "Parámetros numéricos ($radius, $count…)",
+      "additionalProperties": {
+        "type": "number",
+        "description": "Valor"
+      }
+    },
+    "overrides": {
+      "type": "object",
+      "description": "Cambios por ruta fase.módulo.parámetro (variantes)"
+    },
+    "phases": {
+      "type": "array",
+      "description": "Fases",
+      "items": {
+        "type": "object",
+        "description": "Fase (segmento del guion)",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Id de la fase"
+          },
+          "from": {
+            "description": "Inicio",
+            "anyOf": [
+              {
+                "type": "number",
+                "description": "Segundos"
+              },
+              {
+                "type": "string",
+                "description": "Duración",
+                "pattern": "^([0-9]+(\\.[0-9]+)?[tsmhd]?|permanent)$"
+              }
+            ]
+          },
+          "to": {
+            "description": "Fin",
+            "anyOf": [
+              {
+                "type": "number",
+                "description": "Segundos"
+              },
+              {
+                "type": "string",
+                "description": "Duración",
+                "pattern": "^([0-9]+(\\.[0-9]+)?[tsmhd]?|permanent)$"
+              }
+            ]
+          },
+          "title": {
+            "type": "string",
+            "description": "Título del segmento"
+          },
+          "description": {
+            "type": "object",
+            "description": "Textos del guion",
+            "properties": {
+              "sky": {
+                "type": "string",
+                "description": "El Cielo"
+              },
+              "chaos": {
+                "type": "string",
+                "description": "El Caos"
+              }
+            }
+          },
+          "modules": {
+            "type": "array",
+            "description": "Módulos",
+            "items": {
+              "$ref": "#/definitions/module"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "from",
+          "to"
+        ]
+      }
+    },
+    "aftermath": {
+      "type": "object",
+      "description": "Secuelas persistentes del cielo",
+      "properties": {
+        "persistent": {
+          "type": "array",
+          "description": "Secuelas",
+          "items": {
+            "type": "string",
+            "description": "Tipo",
+            "enum": [
+              "nebula",
+              "pulsar"
+            ]
+          }
+        },
+        "duration": {
+          "description": "Duración (p. ej. 3d o permanent)",
+          "anyOf": [
+            {
+              "type": "number",
+              "description": "Segundos"
+            },
+            {
+              "type": "string",
+              "description": "Duración",
+              "pattern": "^([0-9]+(\\.[0-9]+)?[tsmhd]?|permanent)$"
+            }
+          ]
+        }
+      }
+    }
+  },
+  "definitions": {
+    "module": {
+      "type": "object",
+      "description": "Módulo",
+      "required": [
+        "type"
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "description": "Tipo de módulo",
+          "anyOf": [
+            {
+              "enum": [
+                "liveevents:sky_tint",
+                "sky_tint",
+                "liveevents:sky_blackout",
+                "sky_blackout",
+                "liveevents:celestial_body",
+                "celestial_body",
+                "liveevents:star_point",
+                "star_point",
+                "liveevents:sky_shatter",
+                "sky_shatter",
+                "liveevents:atmo_rings",
+                "atmo_rings",
+                "liveevents:plasma_shell",
+                "plasma_shell",
+                "liveevents:aurora",
+                "aurora",
+                "liveevents:nebula",
+                "nebula",
+                "liveevents:pulsar",
+                "pulsar",
+                "liveevents:lens_flare",
+                "lens_flare",
+                "liveevents:shadow_whip",
+                "shadow_whip",
+                "liveevents:time_override",
+                "time_override",
+                "liveevents:artificial_day",
+                "artificial_day",
+                "liveevents:flash",
+                "flash",
+                "liveevents:whiteout",
+                "whiteout",
+                "liveevents:light_cut",
+                "light_cut",
+                "liveevents:chromatic_glitch",
+                "chromatic_glitch",
+                "liveevents:bloom",
+                "bloom",
+                "liveevents:screen_overlay",
+                "screen_overlay",
+                "liveevents:light_pulse",
+                "light_pulse",
+                "liveevents:camera_shake",
+                "camera_shake",
+                "liveevents:sound",
+                "sound",
+                "liveevents:sound_loop",
+                "sound_loop",
+                "liveevents:audio_duck",
+                "audio_duck",
+                "liveevents:shockwave",
+                "shockwave",
+                "liveevents:particle_emitter",
+                "particle_emitter",
+                "liveevents:meteor_trail",
+                "meteor_trail",
+                "liveevents:ash_fall",
+                "ash_fall",
+                "liveevents:debris",
+                "debris",
+                "liveevents:chat_broadcast",
+                "chat_broadcast",
+                "liveevents:title",
+                "title",
+                "liveevents:boss_bar",
+                "boss_bar",
+                "liveevents:damage_area",
+                "damage_area",
+                "liveevents:status_effect",
+                "status_effect",
+                "liveevents:ignite",
+                "ignite",
+                "liveevents:knockback",
+                "knockback",
+                "liveevents:gravity_pull",
+                "gravity_pull",
+                "liveevents:gaze_check",
+                "gaze_check",
+                "liveevents:lightning_storm",
+                "lightning_storm",
+                "liveevents:weather",
+                "weather",
+                "liveevents:block_transform",
+                "block_transform",
+                "liveevents:melt",
+                "melt",
+                "liveevents:crater",
+                "crater",
+                "liveevents:fire_spread",
+                "fire_spread",
+                "liveevents:crack",
+                "crack",
+                "liveevents:meteor_impacts",
+                "meteor_impacts",
+                "liveevents:seismic_wave",
+                "seismic_wave"
+              ]
+            },
+            {
+              "type": "string",
+              "description": "Módulo de un addon (espacio:nombre)",
+              "pattern": "^[a-z0-9_.-]+:[a-z0-9_./-]+$"
+            }
+          ]
+        },
+        "from": {
+          "description": "Momento del evento en que empieza (por defecto: inicio de la fase)",
+          "anyOf": [
+            {
+              "type": "number",
+              "description": "Segundos"
+            },
+            {
+              "type": "string",
+              "description": "Duración",
+              "pattern": "^([0-9]+(\\.[0-9]+)?[tsmhd]?|permanent)$"
+            }
+          ]
+        },
+        "to": {
+          "description": "Momento del evento en que termina (por defecto: fin de la fase)",
+          "anyOf": [
+            {
+              "type": "number",
+              "description": "Segundos"
+            },
+            {
+              "type": "string",
+              "description": "Duración",
+              "pattern": "^([0-9]+(\\.[0-9]+)?[tsmhd]?|permanent)$"
+            }
+          ]
+        },
+        "at": {
+          "description": "Momento puntual (sustituye a from) (por defecto: -)",
+          "anyOf": [
+            {
+              "type": "number",
+              "description": "Segundos"
+            },
+            {
+              "type": "string",
+              "description": "Duración",
+              "pattern": "^([0-9]+(\\.[0-9]+)?[tsmhd]?|permanent)$"
+            }
+          ]
+        },
+        "duration": {
+          "description": "Duración a partir de at (por defecto: -)",
+          "anyOf": [
+            {
+              "type": "number",
+              "description": "Segundos"
+            },
+            {
+              "type": "string",
+              "description": "Duración",
+              "pattern": "^([0-9]+(\\.[0-9]+)?[tsmhd]?|permanent)$"
+            }
+          ]
+        },
+        "curve": {
+          "description": "Curva de los rangos: linear, ease_in, ease_out, ease_in_out, pulse, step (por defecto: linear)",
+          "type": "string"
+        },
+        "priority": {
+          "description": "Prioridad al mezclar con otros eventos (por defecto: 0)",
+          "anyOf": [
+            {
+              "type": "number",
+              "description": "Número",
+              "minimum": -100.0,
+              "maximum": 100.0
+            },
+            {
+              "type": "string",
+              "description": "Variable o expresión",
+              "pattern": "^.*\\$.*$"
+            }
+          ]
+        },
+        "profiles": {
+          "description": "Parámetros distintos por perfil, p. ej. {\"safe\": {\"strength\": 0.2}} (por defecto: -)",
+          "type": "object"
+        },
+        "requires_sky": {
+          "description": "Solo afecta a quien está bajo el cielo (por defecto: false)",
+          "type": "boolean"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "enum": [
+                  "liveevents:sky_tint",
+                  "sky_tint"
+                ]
+              }
+            }
+          },
+          "then": {
+            "description": "Tiñe el cielo y la niebla con un color.",
+            "properties": {
+              "color": {
+                "description": "Color del tinte (obligatorio)",
+                "type": "string",
+                "pattern": "^(#[0-9A-Fa-f]{6}|\\$[a-z0-9_]+)$"
+              },
+              "strength": {
+                "description": "Intensidad (0-1) (por defecto: 0.6)",
+                "anyOf": [
+                  {
+                    "type": "number",
+                    "description": "Número",
+                    "minimum": 0.0,
+                    "maximum": 1.0
+                  },
+                  {
+                    "type": "string",
+                    "description": "Variable o expresión",
+                    "pattern": "^.*\\$.*$"
+                  },
+                  {
+                    "type": "object",
+                    "description": "Rango que se interpola",
+                    "properties": {
+                      "from": {
+                        "type": "number",
+                        "description": "Número",
+                        "minimum": 0.0,
+                        "maximum": 1.0
+                      },
+                      "to": {
+                        "type": "number",
+                        "description": "Número",
+                        "minimum": 0.0,
+                        "maximum": 1.0
+                      }
+                    }
+                  },
+                  {
+                    "type": "array",
+                    "description": "[desde, hasta]",
+                    "items": {
+                      "type": "number",
+                      "description": "Número",
+                      "minimum": 0.0,
+                      "maximum": 1.0
+                    },
+                    "minItems": 2,
+                    "maxItems": 2
+                  }
+                ]
+              },
+              "fade": {
+                "description": "Fundido de entrada y salida (por defecto: 1s)",
+                "anyOf": [
+                  {
+                    "type": "number",
+                    "description": "Segundos"
+                  },
+                  {
+                    "type": "string",
+                    "description": "Duración",
+                    "pattern": "^([0-9]+(\\.[0-9]+)?[tsmhd]?|permanent)$"
+                  }
+                ]
+              },
+              "horizon": {
+                "description": "Color opcional del horizonte (degradado) (por defecto: -)",
+                "type": "string",
+                "pattern": "^(#[0-9A-Fa-f]{6}|\\$[a-z0-9_]+)$"
+              }
+            },
+            "required": [
+              "color"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "enum": [
+                  "liveevents:sky_blackout",
+                  "sky_blackout"
+                ]
+              }
+            }
+          },
+          "then": {
+            "description": "Apaga las estrellas y oscurece cielo y niebla de golpe.",
+            "properties": {
+              "strength": {
+                "description": "Oscuridad (0-1) (por defecto: 0.95)",
+                "anyOf": [
+                  {
+                    "type": "number",
+                    "description": "Número",
+                    "minimum": 0.0,
+                    "maximum": 1.0
+                  },
+                  {
+                    "type": "string",
+                    "description": "Variable o expresión",
+                    "pattern": "^.*\\$.*$"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "enum": [
+                  "liveevents:celestial_body",
+                  "celestial_body"
+                ]
+              }
+            }
+          },
+          "then": {
+            "description": "Cuerpo celeste anclado a la bóveda: estrella, sol demonio o púlsar. Se deforma, parpadea, lanza llamaradas y puede colapsar.",
+            "properties": {
+              "shape": {
+                "description": "star, boiling (mercurio hirviendo) o sun (por defecto: star)",
+                "type": "string"
+              },
+              "color": {
+                "description": "Color principal (por defecto: #FFFFFF)",
+                "type": "string",
+                "pattern": "^(#[0-9A-Fa-f]{6}|\\$[a-z0-9_]+)$"
+              },
+              "core": {
+                "description": "Color del núcleo (por defecto: -)",
+                "type": "string",
+                "pattern": "^(#[0-9A-Fa-f]{6}|\\$[a-z0-9_]+)$"
+              },
+              "corona": {
+                "description": "Color de la corona (por defecto: -)",
+                "type": "string",
+                "pattern": "^(#[0-9A-Fa-f]{6}|\\$[a-z0-9_]+)$"
+              },
+              "size_deg": {
+                "description": "Tamaño aparente en grados (por defecto: 2)",
+                "anyOf": [
+                  {
+                    "type": "number",
+                    "description": "Número",
+                    "minimum": 0.1,
+                    "maximum": 120.0
+                  },
+                  {
+                    "type": "string",
+                    "description": "Variable o expresión",
+                    "pattern": "^.*\\$.*$"
+                  },
+                  {
+                    "type": "object",
+                    "description": "Rango que se interpola",
+                    "properties": {
+                      "from": {
+                        "type": "number",
+                        "description": "Número",
+                        "minimum": 0.1,
+                        "maximum": 120.0
+                      },
+                      "to": {
+                        "type": "number",
+                        "description": "Número",
+                        "minimum": 0.1,
+                        "maximum": 120.0
+                      }
+                    }
+                  },
+                  {
+                    "type": "array",
+                    "description": "[desde, hasta]",
+                    "items": {
+                      "type": "number",
+                      "description": "Número",
+                      "minimum": 0.1,
+                      "maximum": 120.0
+                    },
+                    "minItems": 2,
+                    "maxItems": 2
+                  }
+                ]
+              },
+              "flicker_hz": {
+                "description": "Parpadeo en Hz (limitado por accesibilidad si es grande) (por defecto: 0)",
+                "anyOf": [
+                  {
+                    "type": "number",
+                    "description": "Número",
+                    "minimum": 0.0,
+                    "maximum": 60.0
+                  },
+                  {
+                    "type": "string",
+                    "description": "Variable o expresión",
+                    "pattern": "^.*\\$.*$"
+                  },
+                  {
+                    "type": "object",
+                    "description": "Rango que se interpola",
+                    "properties": {
+                      "from": {
+                        "type": "number",
+                        "description": "Número",
+                        "minimum": 0.0,
+                        "maximum": 60.0
+                      },
+                      "to": {
+                        "type": "number",
+                        "description": "Número",
+                        "minimum": 0.0,
+                        "maximum": 60.0
+                      }
+                    }
+                  },
+                  {
+                    "type": "array",
+                    "description": "[desde, hasta]",
+                    "items": {
+                      "type": "number",
+                      "description": "Número",
+                      "minimum": 0.0,
+                      "maximum": 60.0
+                    },
+                    "minItems": 2,
+                    "maxItems": 2
+                  }
+                ]
+              },
+              "flares": {
+                "description": "Llamaradas asimétricas (por defecto: false)",
+                "type": "boolean"
+              },
+              "collapse": {
+                "description": "{at, duration, curve}: colapso hasta desaparecer (por defecto: -)",
+                "type": "object"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "enum": [
+                  "liveevents:star_point",
+                  "star_point"
+                ]
+              }
+            }
+          },
+          "then": {
+            "description": "Punto estelar brillante con halo (versión simple de celestial_body).",
+            "properties": {
+              "color": {
+                "description": "Color (por defecto: #FFFFFF)",
+                "type": "string",
+                "pattern": "^(#[0-9A-Fa-f]{6}|\\$[a-z0-9_]+)$"
+              },
+              "size_deg": {
+                "description": "Tamaño aparente (por defecto: 1)",
+                "anyOf": [
+                  {
+                    "type": "number",
+                    "description": "Número",
+                    "minimum": 0.1,
+                    "maximum": 30.0
+                  },
+                  {
+                    "type": "string",
+                    "description": "Variable o expresión",
+                    "pattern": "^.*\\$.*$"
+                  },
+                  {
+                    "type": "object",
+                    "description": "Rango que se interpola",
+                    "properties": {
+                      "from": {
+                        "type": "number",
+                        "description": "Número",
+                        "minimum": 0.1,
+                        "maximum": 30.0
+                      },
+                      "to": {
+                        "type": "number",
+                        "description": "Número",
+                        "minimum": 0.1,
+                        "maximum": 30.0
+                      }
+                    }
+                  },
+                  {
+                    "type": "array",
+                    "description": "[desde, hasta]",
+                    "items": {
+                      "type": "number",
+                      "description": "Número",
+                      "minimum": 0.1,
+                      "maximum": 30.0
+                    },
+                    "minItems": 2,
+                    "maxItems": 2
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "enum": [
+                  "liveevents:sky_shatter",
+                  "sky_shatter"
+                ]
+              }
+            }
+          },
+          "then": {
+            "description": "Rompe la bóveda en fragmentos con grietas luminosas que se extienden desde el ancla.",
+            "properties": {
+              "shards": {
+                "description": "Número de fragmentos (por defecto: 200)",
+                "anyOf": [
+                  {
+                    "type": "number",
+                    "description": "Número",
+                    "minimum": 8.0,
+                    "maximum": 600.0
+                  },
+                  {
+                    "type": "string",
+                    "description": "Variable o expresión",
+                    "pattern": "^.*\\$.*$"
+                  }
+                ]
+              },
+              "crack_color": {
+                "description": "Color de las grietas (por defecto: #00FFFF)",
+                "type": "string",
+                "pattern": "^(#[0-9A-Fa-f]{6}|\\$[a-z0-9_]+)$"
+              },
+              "spread": {
+                "description": "Tiempo que tardan las grietas en cubrir el cielo (por defecto: 1.5s)",
+                "anyOf": [
+                  {
+                    "type": "number",
+                    "description": "Segundos"
+                  },
+                  {
+                    "type": "string",
+                    "description": "Duración",
+                    "pattern": "^([0-9]+(\\.[0-9]+)?[tsmhd]?|permanent)$"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "enum": [
+                  "liveevents:atmo_rings",
+                  "atmo_rings"
+                ]
+              }
+            }
+          },
+          "then": {
+            "description": "Anillos de vapor que salen del ancla y recorren la bóveda.",
+            "properties": {
+              "color": {
+                "description": "Color (por defecto: #FFFFFF)",
+                "type": "string",
+                "pattern": "^(#[0-9A-Fa-f]{6}|\\$[a-z0-9_]+)$"
+              },
+              "interval": {
+                "description": "Tiempo entre anillos (por defecto: 2.5s)",
+                "anyOf": [
+                  {
+                    "type": "number",
+                    "description": "Segundos"
+                  },
+                  {
+                    "type": "string",
+                    "description": "Duración",
+                    "pattern": "^([0-9]+(\\.[0-9]+)?[tsmhd]?|permanent)$"
+                  }
+                ]
+              },
+              "speed_deg": {
+                "description": "Grados por segundo (por defecto: 45)",
+                "anyOf": [
+                  {
+                    "type": "number",
+                    "description": "Número",
+                    "minimum": 1.0,
+                    "maximum": 360.0
+                  },
+                  {
+                    "type": "string",
+                    "description": "Variable o expresión",
+                    "pattern": "^.*\\$.*$"
+                  }
+                ]
+              },
+              "distortion": {
+                "description": "Distorsión al pasar (0-1) (por defecto: 0.5)",
+                "anyOf": [
+                  {
+                    "type": "number",
+                    "description": "Número",
+                    "minimum": 0.0,
+                    "maximum": 1.0
+                  },
+                  {
+                    "type": "string",
+                    "description": "Variable o expresión",
+                    "pattern": "^.*\\$.*$"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "enum": [
+                  "liveevents:plasma_shell",
+                  "plasma_shell"
+                ]
+              }
+            }
+          },
+          "then": {
+            "description": "Esfera de plasma con filamentos que crece desde el ancla.",
+            "properties": {
+              "colors": {
+                "description": "Colores por los que pasa (por defecto: [\"#FFFFFF\", \"#FF4500\"])",
+                "type": "array"
+              },
+              "coverage": {
+                "description": "Fracción de la bóveda cubierta (por defecto: {\"from\":0.05,\"to\":0.7})",
+                "anyOf": [
+                  {
+                    "type": "number",
+                    "description": "Número",
+                    "minimum": 0.0,
+                    "maximum": 1.0
+                  },
+                  {
+                    "type": "string",
+                    "description": "Variable o expresión",
+                    "pattern": "^.*\\$.*$"
+                  },
+                  {
+                    "type": "object",
+                    "description": "Rango que se interpola",
+                    "properties": {
+                      "from": {
+                        "type": "number",
+                        "description": "Número",
+                        "minimum": 0.0,
+                        "maximum": 1.0
+                      },
+                      "to": {
+                        "type": "number",
+                        "description": "Número",
+                        "minimum": 0.0,
+                        "maximum": 1.0
+                      }
+                    }
+                  },
+                  {
+                    "type": "array",
+                    "description": "[desde, hasta]",
+                    "items": {
+                      "type": "number",
+                      "description": "Número",
+                      "minimum": 0.0,
+                      "maximum": 1.0
+                    },
+                    "minItems": 2,
+                    "maxItems": 2
+                  }
+                ]
+              },
+              "turbulence": {
+                "description": "Turbulencia del ruido (por defecto: 1)",
+                "anyOf": [
+                  {
+                    "type": "number",
+                    "description": "Número",
+                    "minimum": 0.0,
+                    "maximum": 4.0
+                  },
+                  {
+                    "type": "string",
+                    "description": "Variable o expresión",
+                    "pattern": "^.*\\$.*$"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "enum": [
+                  "liveevents:aurora",
+                  "aurora"
+                ]
+              }
+            }
+          },
+          "then": {
+            "description": "Cortinas de aurora desde los horizontes norte y sur.",
+            "properties": {
+              "colors": {
+                "description": "Colores (por defecto: [\"#39FF14\", \"#DC143C\"])",
+                "type": "array"
+              },
+              "intensity": {
+                "description": "Intensidad (0-1) (por defecto: 0.7)",
+                "anyOf": [
+                  {
+                    "type": "number",
+                    "description": "Número",
+                    "minimum": 0.0,
+                    "maximum": 1.0
+                  },
+                  {
+                    "type": "string",
+                    "description": "Variable o expresión",
+                    "pattern": "^.*\\$.*$"
+                  },
+                  {
+                    "type": "object",
+                    "description": "Rango que se interpola",
+                    "properties": {
+                      "from": {
+                        "type": "number",
+                        "description": "Número",
+                        "minimum": 0.0,
+                        "maximum": 1.0
+                      },
+                      "to": {
+                        "type": "number",
+                        "description": "Número",
+                        "minimum": 0.0,
+                        "maximum": 1.0
+                      }
+                    }
+                  },
+                  {
+                    "type": "array",
+                    "description": "[desde, hasta]",
+                    "items": {
+                      "type": "number",
+                      "description": "Número",
+                      "minimum": 0.0,
+                      "maximum": 1.0
+                    },
+                    "minItems": 2,
+                    "maxItems": 2
+                  }
+                ]
+              },
+              "speed": {
+                "description": "Velocidad de las cortinas (por defecto: 1)",
+                "anyOf": [
+                  {
+                    "type": "number",
+                    "description": "Número",
+                    "minimum": 0.0,
+                    "maximum": 5.0
+                  },
+                  {
+                    "type": "string",
+                    "description": "Variable o expresión",
+                    "pattern": "^.*\\$.*$"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "enum": [
+                  "liveevents:nebula",
+                  "nebula"
+                ]
+              }
+            }
+          },
+          "then": {
+            "description": "Nebulosa por capas. Puede quedarse como secuela persistente.",
+            "properties": {
+              "colors": {
+                "description": "Colores de las capas (por defecto: [\"#FF0000\", \"#00CED1\", \"#C8B400\"])",
+                "type": "array"
+              },
+              "span_deg": {
+                "description": "Anchura en grados de acimut (por defecto: 180)",
+                "anyOf": [
+                  {
+                    "type": "number",
+                    "description": "Número",
+                    "minimum": 10.0,
+                    "maximum": 360.0
+                  },
+                  {
+                    "type": "string",
+                    "description": "Variable o expresión",
+                    "pattern": "^.*\\$.*$"
+                  }
+                ]
+              },
+              "opacity": {
+                "description": "Opacidad (por defecto: 0.6)",
+                "anyOf": [
+                  {
+                    "type": "number",
+                    "description": "Número",
+                    "minimum": 0.0,
+                    "maximum": 1.0
+                  },
+                  {
+                    "type": "string",
+                    "description": "Variable o expresión",
+                    "pattern": "^.*\\$.*$"
+                  },
+                  {
+                    "type": "object",
+                    "description": "Rango que se interpola",
+                    "properties": {
+                      "from": {
+                        "type": "number",
+                        "description": "Número",
+                        "minimum": 0.0,
+                        "maximum": 1.0
+                      },
+                      "to": {
+                        "type": "number",
+                        "description": "Número",
+                        "minimum": 0.0,
+                        "maximum": 1.0
+                      }
+                    }
+                  },
+                  {
+                    "type": "array",
+                    "description": "[desde, hasta]",
+                    "items": {
+                      "type": "number",
+                      "description": "Número",
+                      "minimum": 0.0,
+                      "maximum": 1.0
+                    },
+                    "minItems": 2,
+                    "maxItems": 2
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "enum": [
+                  "liveevents:pulsar",
+                  "pulsar"
+                ]
+              }
+            }
+          },
+          "then": {
+            "description": "Punto que parpadea y haces de faro que giran (con límites de accesibilidad).",
+            "properties": {
+              "color": {
+                "description": "Color (por defecto: #7DF9FF)",
+                "type": "string",
+                "pattern": "^(#[0-9A-Fa-f]{6}|\\$[a-z0-9_]+)$"
+              },
+              "hz": {
+                "description": "Parpadeo del punto (solo área pequeña) (por defecto: 30)",
+                "anyOf": [
+                  {
+                    "type": "number",
+                    "description": "Número",
+                    "minimum": 0.0,
+                    "maximum": 60.0
+                  },
+                  {
+                    "type": "string",
+                    "description": "Variable o expresión",
+                    "pattern": "^.*\\$.*$"
+                  }
+                ]
+              },
+              "beam_rpm": {
+                "description": "Vueltas por minuto de los haces (por defecto: 40)",
+                "anyOf": [
+                  {
+                    "type": "number",
+                    "description": "Número",
+                    "minimum": 0.0,
+                    "maximum": 180.0
+                  },
+                  {
+                    "type": "string",
+                    "description": "Variable o expresión",
+                    "pattern": "^.*\\$.*$"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "enum": [
+                  "liveevents:lens_flare",
+                  "lens_flare"
+                ]
+              }
+            }
+          },
+          "then": {
+            "description": "Flares anamórficos horizontales desde el ancla.",
+            "properties": {
+              "colors": {
+                "description": "Colores (por defecto: [\"#7DF9FF\", \"#FF00FF\"])",
+                "type": "array"
+              },
+              "intensity": {
+                "description": "Intensidad (por defecto: 0.8)",
+                "anyOf": [
+                  {
+                    "type": "number",
+                    "description": "Número",
+                    "minimum": 0.0,
+                    "maximum": 1.0
+                  },
+                  {
+                    "type": "string",
+                    "description": "Variable o expresión",
+                    "pattern": "^.*\\$.*$"
+                  },
+                  {
+                    "type": "object",
+                    "description": "Rango que se interpola",
+                    "properties": {
+                      "from": {
+                        "type": "number",
+                        "description": "Número",
+                        "minimum": 0.0,
+                        "maximum": 1.0
+                      },
+                      "to": {
+                        "type": "number",
+                        "description": "Número",
+                        "minimum": 0.0,
+                        "maximum": 1.0
+                      }
+                    }
+                  },
+                  {
+                    "type": "array",
+                    "description": "[desde, hasta]",
+                    "items": {
+                      "type": "number",
+                      "description": "Número",
+                      "minimum": 0.0,
+                      "maximum": 1.0
+                    },
+                    "minItems": 2,
+                    "maxItems": 2
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "enum": [
+                  "liveevents:shadow_whip",
+                  "shadow_whip"
+                ]
+              }
+            }
+          },
+          "then": {
+            "description": "Mueve el ángulo del sol para que giren las sombras. Solo se nota con shaders; sin ellos es un parpadeo de luz.",
+            "properties": {
+              "speed": {
+                "description": "Velocidad (por defecto: 1)",
+                "anyOf": [
+                  {
+                    "type": "number",
+                    "description": "Número",
+                    "minimum": 0.0,
+                    "maximum": 10.0
+                  },
+                  {
+                    "type": "string",
+                    "description": "Variable o expresión",
+                    "pattern": "^.*\\$.*$"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "enum": [
+                  "liveevents:time_override",
+                  "time_override"
+                ]
+              }
+            }
+          },
+          "then": {
+            "description": "Fuerza la noche (o la oscuridad) solo en la vista del cliente. La hora del servidor no cambia.",
+            "properties": {
+              "mode": {
+                "description": "night o dark (por defecto: night)",
+                "type": "string"
+              },
+              "fade": {
+                "description": "Fundido (por defecto: 3s)",
+                "anyOf": [
+                  {
+                    "type": "number",
+                    "description": "Segundos"
+                  },
+                  {
+                    "type": "string",
+                    "description": "Duración",
+                    "pattern": "^([0-9]+(\\.[0-9]+)?[tsmhd]?|permanent)$"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "enum": [
+                  "liveevents:artificial_day",
+                  "artificial_day"
+                ]
+              }
+            }
+          },
+          "then": {
+            "description": "Cliente: ilumina el mundo como de día. Servidor: los no-muertos expuestos arden.",
+            "properties": {
+              "color": {
+                "description": "Color de la luz (por defecto: #FFF6E0)",
+                "type": "string",
+                "pattern": "^(#[0-9A-Fa-f]{6}|\\$[a-z0-9_]+)$"
+              },
+              "burn_undead": {
+                "description": "Los no-muertos bajo el cielo arden (por defecto: true)",
+                "type": "boolean"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "enum": [
+                  "liveevents:flash",
+                  "flash"
+                ]
+              }
+            }
+          },
+          "then": {
+            "description": "Destello a pantalla completa, limitado por la regla de destellos.",
+            "properties": {
+              "color": {
+                "description": "Color (por defecto: #FFFFFF)",
+                "type": "string",
+                "pattern": "^(#[0-9A-Fa-f]{6}|\\$[a-z0-9_]+)$"
+              },
+              "intensity": {
+                "description": "Pico (0-1) (por defecto: 1)",
+                "anyOf": [
+                  {
+                    "type": "number",
+                    "description": "Número",
+                    "minimum": 0.0,
+                    "maximum": 1.0
+                  },
+                  {
+                    "type": "string",
+                    "description": "Variable o expresión",
+                    "pattern": "^.*\\$.*$"
+                  }
+                ]
+              },
+              "fade": {
+                "description": "Caída (por defecto: 0.6s)",
+                "anyOf": [
+                  {
+                    "type": "number",
+                    "description": "Segundos"
+                  },
+                  {
+                    "type": "string",
+                    "description": "Duración",
+                    "pattern": "^([0-9]+(\\.[0-9]+)?[tsmhd]?|permanent)$"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "enum": [
+                  "liveevents:whiteout",
+                  "whiteout"
+                ]
+              }
+            }
+          },
+          "then": {
+            "description": "Sobreexposición a blanco con curva de pico y sostenido.",
+            "properties": {
+              "peak": {
+                "description": "Pico (0-1) (por defecto: 0.85)",
+                "anyOf": [
+                  {
+                    "type": "number",
+                    "description": "Número",
+                    "minimum": 0.0,
+                    "maximum": 1.0
+                  },
+                  {
+                    "type": "string",
+                    "description": "Variable o expresión",
+                    "pattern": "^.*\\$.*$"
+                  }
+                ]
+              },
+              "peak_time": {
+                "description": "Duración del pico (por defecto: 1s)",
+                "anyOf": [
+                  {
+                    "type": "number",
+                    "description": "Segundos"
+                  },
+                  {
+                    "type": "string",
+                    "description": "Duración",
+                    "pattern": "^([0-9]+(\\.[0-9]+)?[tsmhd]?|permanent)$"
+                  }
+                ]
+              },
+              "sustain": {
+                "description": "Nivel sostenido (por defecto: 0.35)",
+                "anyOf": [
+                  {
+                    "type": "number",
+                    "description": "Número",
+                    "minimum": 0.0,
+                    "maximum": 1.0
+                  },
+                  {
+                    "type": "string",
+                    "description": "Variable o expresión",
+                    "pattern": "^.*\\$.*$"
+                  }
+                ]
+              },
+              "color": {
+                "description": "Color (por defecto: #FFFFFF)",
+                "type": "string",
+                "pattern": "^(#[0-9A-Fa-f]{6}|\\$[a-z0-9_]+)$"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "enum": [
+                  "liveevents:light_cut",
+                  "light_cut"
+                ]
+              }
+            }
+          },
+          "then": {
+            "description": "Cambia el color del cielo y de la luz a golpes, sin interpolar (o con fundido en modo seguro).",
+            "properties": {
+              "cuts": {
+                "description": "Lista de [tiempo, color] (obligatorio)",
+                "type": "array",
+                "items": {
+                  "type": "array",
+                  "minItems": 2,
+                  "maxItems": 2
+                }
+              },
+              "mode": {
+                "description": "cut o fade (por defecto: cut)",
+                "type": "string"
+              },
+              "fade": {
+                "description": "Fundido en modo fade (por defecto: 1s)",
+                "anyOf": [
+                  {
+                    "type": "number",
+                    "description": "Segundos"
+                  },
+                  {
+                    "type": "string",
+                    "description": "Duración",
+                    "pattern": "^([0-9]+(\\.[0-9]+)?[tsmhd]?|permanent)$"
+                  }
+                ]
+              },
+              "strength": {
+                "description": "Intensidad del tinte (por defecto: 0.45)",
+                "anyOf": [
+                  {
+                    "type": "number",
+                    "description": "Número",
+                    "minimum": 0.0,
+                    "maximum": 1.0
+                  },
+                  {
+                    "type": "string",
+                    "description": "Variable o expresión",
+                    "pattern": "^.*\\$.*$"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "cuts"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "enum": [
+                  "liveevents:chromatic_glitch",
+                  "chromatic_glitch"
+                ]
+              }
+            }
+          },
+          "then": {
+            "description": "Aberración cromática, separación RGB y franjas desplazadas.",
+            "properties": {
+              "strength": {
+                "description": "Intensidad (0-1) (por defecto: 0.8)",
+                "anyOf": [
+                  {
+                    "type": "number",
+                    "description": "Número",
+                    "minimum": 0.0,
+                    "maximum": 1.0
+                  },
+                  {
+                    "type": "string",
+                    "description": "Variable o expresión",
+                    "pattern": "^.*\\$.*$"
+                  }
+                ]
+              },
+              "slices": {
+                "description": "Franjas horizontales desplazadas (por defecto: true)",
+                "type": "boolean"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "enum": [
+                  "liveevents:bloom",
+                  "bloom"
+                ]
+              }
+            }
+          },
+          "then": {
+            "description": "Bloom falso: resplandor alrededor de las fuentes brillantes del evento.",
+            "properties": {
+              "intensity": {
+                "description": "Intensidad (1 = 100 %) (por defecto: 1)",
+                "anyOf": [
+                  {
+                    "type": "number",
+                    "description": "Número",
+                    "minimum": 0.0,
+                    "maximum": 3.0
+                  },
+                  {
+                    "type": "string",
+                    "description": "Variable o expresión",
+                    "pattern": "^.*\\$.*$"
+                  },
+                  {
+                    "type": "object",
+                    "description": "Rango que se interpola",
+                    "properties": {
+                      "from": {
+                        "type": "number",
+                        "description": "Número",
+                        "minimum": 0.0,
+                        "maximum": 3.0
+                      },
+                      "to": {
+                        "type": "number",
+                        "description": "Número",
+                        "minimum": 0.0,
+                        "maximum": 3.0
+                      }
+                    }
+                  },
+                  {
+                    "type": "array",
+                    "description": "[desde, hasta]",
+                    "items": {
+                      "type": "number",
+                      "description": "Número",
+                      "minimum": 0.0,
+                      "maximum": 3.0
+                    },
+                    "minItems": 2,
+                    "maxItems": 2
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "enum": [
+                  "liveevents:screen_overlay",
+                  "screen_overlay"
+                ]
+              }
+            }
+          },
+          "then": {
+            "description": "Viñeta o tinte en pantalla (radiación, calor).",
+            "properties": {
+              "color": {
+                "description": "Color (por defecto: #000000)",
+                "type": "string",
+                "pattern": "^(#[0-9A-Fa-f]{6}|\\$[a-z0-9_]+)$"
+              },
+              "vignette": {
+                "description": "Cierre de la viñeta (0-1) (por defecto: 0.4)",
+                "anyOf": [
+                  {
+                    "type": "number",
+                    "description": "Número",
+                    "minimum": 0.0,
+                    "maximum": 1.0
+                  },
+                  {
+                    "type": "string",
+                    "description": "Variable o expresión",
+                    "pattern": "^.*\\$.*$"
+                  },
+                  {
+                    "type": "object",
+                    "description": "Rango que se interpola",
+                    "properties": {
+                      "from": {
+                        "type": "number",
+                        "description": "Número",
+                        "minimum": 0.0,
+                        "maximum": 1.0
+                      },
+                      "to": {
+                        "type": "number",
+                        "description": "Número",
+                        "minimum": 0.0,
+                        "maximum": 1.0
+                      }
+                    }
+                  },
+                  {
+                    "type": "array",
+                    "description": "[desde, hasta]",
+                    "items": {
+                      "type": "number",
+                      "description": "Número",
+                      "minimum": 0.0,
+                      "maximum": 1.0
+                    },
+                    "minItems": 2,
+                    "maxItems": 2
+                  }
+                ]
+              },
+              "tint": {
+                "description": "Tinte uniforme (0-1) (por defecto: 0)",
+                "anyOf": [
+                  {
+                    "type": "number",
+                    "description": "Número",
+                    "minimum": 0.0,
+                    "maximum": 1.0
+                  },
+                  {
+                    "type": "string",
+                    "description": "Variable o expresión",
+                    "pattern": "^.*\\$.*$"
+                  },
+                  {
+                    "type": "object",
+                    "description": "Rango que se interpola",
+                    "properties": {
+                      "from": {
+                        "type": "number",
+                        "description": "Número",
+                        "minimum": 0.0,
+                        "maximum": 1.0
+                      },
+                      "to": {
+                        "type": "number",
+                        "description": "Número",
+                        "minimum": 0.0,
+                        "maximum": 1.0
+                      }
+                    }
+                  },
+                  {
+                    "type": "array",
+                    "description": "[desde, hasta]",
+                    "items": {
+                      "type": "number",
+                      "description": "Número",
+                      "minimum": 0.0,
+                      "maximum": 1.0
+                    },
+                    "minItems": 2,
+                    "maxItems": 2
+                  }
+                ]
+              },
+              "pulse_hz": {
+                "description": "Pulso (limitado a 3 Hz) (por defecto: 0)",
+                "anyOf": [
+                  {
+                    "type": "number",
+                    "description": "Número",
+                    "minimum": 0.0,
+                    "maximum": 3.0
+                  },
+                  {
+                    "type": "string",
+                    "description": "Variable o expresión",
+                    "pattern": "^.*\\$.*$"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "enum": [
+                  "liveevents:light_pulse",
+                  "light_pulse"
+                ]
+              }
+            }
+          },
+          "then": {
+            "description": "Iluminación dinámica simulada (pulso de luz).",
+            "properties": {
+              "color": {
+                "description": "Color (por defecto: #FFAA55)",
+                "type": "string",
+                "pattern": "^(#[0-9A-Fa-f]{6}|\\$[a-z0-9_]+)$"
+              },
+              "intensity": {
+                "description": "Intensidad (por defecto: 0.5)",
+                "anyOf": [
+                  {
+                    "type": "number",
+                    "description": "Número",
+                    "minimum": 0.0,
+                    "maximum": 1.0
+                  },
+                  {
+                    "type": "string",
+                    "description": "Variable o expresión",
+                    "pattern": "^.*\\$.*$"
+                  },
+                  {
+                    "type": "object",
+                    "description": "Rango que se interpola",
+                    "properties": {
+                      "from": {
+                        "type": "number",
+                        "description": "Número",
+                        "minimum": 0.0,
+                        "maximum": 1.0
+                      },
+                      "to": {
+                        "type": "number",
+                        "description": "Número",
+                        "minimum": 0.0,
+                        "maximum": 1.0
+                      }
+                    }
+                  },
+                  {
+                    "type": "array",
+                    "description": "[desde, hasta]",
+                    "items": {
+                      "type": "number",
+                      "description": "Número",
+                      "minimum": 0.0,
+                      "maximum": 1.0
+                    },
+                    "minItems": 2,
+                    "maxItems": 2
+                  }
+                ]
+              },
+              "hz": {
+                "description": "Frecuencia (limitada a 3 Hz) (por defecto: 1)",
+                "anyOf": [
+                  {
+                    "type": "number",
+                    "description": "Número",
+                    "minimum": 0.0,
+                    "maximum": 3.0
+                  },
+                  {
+                    "type": "string",
+                    "description": "Variable o expresión",
+                    "pattern": "^.*\\$.*$"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "enum": [
+                  "liveevents:camera_shake",
+                  "camera_shake"
+                ]
+              }
+            }
+          },
+          "then": {
+            "description": "Temblor de cámara con ruido suave; la amplitud baja con la distancia.",
+            "properties": {
+              "amplitude": {
+                "description": "Amplitud en grados (por defecto: 0.2)",
+                "anyOf": [
+                  {
+                    "type": "number",
+                    "description": "Número",
+                    "minimum": 0.0,
+                    "maximum": 5.0
+                  },
+                  {
+                    "type": "string",
+                    "description": "Variable o expresión",
+                    "pattern": "^.*\\$.*$"
+                  },
+                  {
+                    "type": "object",
+                    "description": "Rango que se interpola",
+                    "properties": {
+                      "from": {
+                        "type": "number",
+                        "description": "Número",
+                        "minimum": 0.0,
+                        "maximum": 5.0
+                      },
+                      "to": {
+                        "type": "number",
+                        "description": "Número",
+                        "minimum": 0.0,
+                        "maximum": 5.0
+                      }
+                    }
+                  },
+                  {
+                    "type": "array",
+                    "description": "[desde, hasta]",
+                    "items": {
+                      "type": "number",
+                      "description": "Número",
+                      "minimum": 0.0,
+                      "maximum": 5.0
+                    },
+                    "minItems": 2,
+                    "maxItems": 2
+                  }
+                ]
+              },
+              "frequency": {
+                "description": "Frecuencia del ruido (por defecto: 8)",
+                "anyOf": [
+                  {
+                    "type": "number",
+                    "description": "Número",
+                    "minimum": 0.1,
+                    "maximum": 40.0
+                  },
+                  {
+                    "type": "string",
+                    "description": "Variable o expresión",
+                    "pattern": "^.*\\$.*$"
+                  }
+                ]
+              },
+              "axis": {
+                "description": "both, vertical o horizontal (por defecto: both)",
+                "type": "string"
+              },
+              "falloff": {
+                "description": "Radio en bloques a partir del cual se atenúa (0 = sin atenuación) (por defecto: 0)",
+                "anyOf": [
+                  {
+                    "type": "number",
+                    "description": "Número",
+                    "minimum": 0.0,
+                    "maximum": 4096.0
+                  },
+                  {
+                    "type": "string",
+                    "description": "Variable o expresión",
+                    "pattern": "^.*\\$.*$"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "enum": [
+                  "liveevents:sound",
+                  "sound"
+                ]
+              }
+            }
+          },
+          "then": {
+            "description": "Sonido puntual con retraso por distancia y atenuación.",
+            "properties": {
+              "sound": {
+                "description": "Id del sonido (obligatorio)",
+                "type": "string",
+                "pattern": "^([a-z0-9_.-]+:[a-z0-9_./-]+|\\$[a-z0-9_]+)$"
+              },
+              "volume": {
+                "description": "Volumen (por defecto: 1)",
+                "anyOf": [
+                  {
+                    "type": "number",
+                    "description": "Número",
+                    "minimum": 0.0,
+                    "maximum": 4.0
+                  },
+                  {
+                    "type": "string",
+                    "description": "Variable o expresión",
+                    "pattern": "^.*\\$.*$"
+                  }
+                ]
+              },
+              "pitch": {
+                "description": "Tono (por defecto: 1)",
+                "anyOf": [
+                  {
+                    "type": "number",
+                    "description": "Número",
+                    "minimum": 0.5,
+                    "maximum": 2.0
+                  },
+                  {
+                    "type": "string",
+                    "description": "Variable o expresión",
+                    "pattern": "^.*\\$.*$"
+                  }
+                ]
+              },
+              "position": {
+                "description": "listener, center o anchor (por defecto: listener)",
+                "type": "string"
+              },
+              "delay_by_distance": {
+                "description": "Llega más tarde cuanto más lejos (por defecto: true)",
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "sound"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "enum": [
+                  "liveevents:sound_loop",
+                  "sound_loop"
+                ]
+              }
+            }
+          },
+          "then": {
+            "description": "Sonido repetido con curvas de volumen, tono o ritmo.",
+            "properties": {
+              "sound": {
+                "description": "Id del sonido (obligatorio)",
+                "type": "string",
+                "pattern": "^([a-z0-9_.-]+:[a-z0-9_./-]+|\\$[a-z0-9_]+)$"
+              },
+              "volume": {
+                "description": "Volumen (por defecto: 1)",
+                "anyOf": [
+                  {
+                    "type": "number",
+                    "description": "Número",
+                    "minimum": 0.0,
+                    "maximum": 4.0
+                  },
+                  {
+                    "type": "string",
+                    "description": "Variable o expresión",
+                    "pattern": "^.*\\$.*$"
+                  },
+                  {
+                    "type": "object",
+                    "description": "Rango que se interpola",
+                    "properties": {
+                      "from": {
+                        "type": "number",
+                        "description": "Número",
+                        "minimum": 0.0,
+                        "maximum": 4.0
+                      },
+                      "to": {
+                        "type": "number",
+                        "description": "Número",
+                        "minimum": 0.0,
+                        "maximum": 4.0
+                      }
+                    }
+                  },
+                  {
+                    "type": "array",
+                    "description": "[desde, hasta]",
+                    "items": {
+                      "type": "number",
+                      "description": "Número",
+                      "minimum": 0.0,
+                      "maximum": 4.0
+                    },
+                    "minItems": 2,
+                    "maxItems": 2
+                  }
+                ]
+              },
+              "pitch": {
+                "description": "Tono (por defecto: 1)",
+                "anyOf": [
+                  {
+                    "type": "number",
+                    "description": "Número",
+                    "minimum": 0.5,
+                    "maximum": 2.0
+                  },
+                  {
+                    "type": "string",
+                    "description": "Variable o expresión",
+                    "pattern": "^.*\\$.*$"
+                  },
+                  {
+                    "type": "object",
+                    "description": "Rango que se interpola",
+                    "properties": {
+                      "from": {
+                        "type": "number",
+                        "description": "Número",
+                        "minimum": 0.5,
+                        "maximum": 2.0
+                      },
+                      "to": {
+                        "type": "number",
+                        "description": "Número",
+                        "minimum": 0.5,
+                        "maximum": 2.0
+                      }
+                    }
+                  },
+                  {
+                    "type": "array",
+                    "description": "[desde, hasta]",
+                    "items": {
+                      "type": "number",
+                      "description": "Número",
+                      "minimum": 0.5,
+                      "maximum": 2.0
+                    },
+                    "minItems": 2,
+                    "maxItems": 2
+                  }
+                ]
+              },
+              "bpm": {
+                "description": "Golpes por minuto (por defecto: 60)",
+                "anyOf": [
+                  {
+                    "type": "number",
+                    "description": "Número",
+                    "minimum": 1.0,
+                    "maximum": 600.0
+                  },
+                  {
+                    "type": "string",
+                    "description": "Variable o expresión",
+                    "pattern": "^.*\\$.*$"
+                  },
+                  {
+                    "type": "object",
+                    "description": "Rango que se interpola",
+                    "properties": {
+                      "from": {
+                        "type": "number",
+                        "description": "Número",
+                        "minimum": 1.0,
+                        "maximum": 600.0
+                      },
+                      "to": {
+                        "type": "number",
+                        "description": "Número",
+                        "minimum": 1.0,
+                        "maximum": 600.0
+                      }
+                    }
+                  },
+                  {
+                    "type": "array",
+                    "description": "[desde, hasta]",
+                    "items": {
+                      "type": "number",
+                      "description": "Número",
+                      "minimum": 1.0,
+                      "maximum": 600.0
+                    },
+                    "minItems": 2,
+                    "maxItems": 2
+                  }
+                ]
+              }
+            },
+            "required": [
+              "sound"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "enum": [
+                  "liveevents:audio_duck",
+                  "audio_duck"
+                ]
+              }
+            }
+          },
+          "then": {
+            "description": "Baja la música del juego para crear silencios.",
+            "properties": {
+              "level": {
+                "description": "Nivel al que baja (0-1) (por defecto: 0.1)",
+                "anyOf": [
+                  {
+                    "type": "number",
+                    "description": "Número",
+                    "minimum": 0.0,
+                    "maximum": 1.0
+                  },
+                  {
+                    "type": "string",
+                    "description": "Variable o expresión",
+                    "pattern": "^.*\\$.*$"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "enum": [
+                  "liveevents:shockwave",
+                  "shockwave"
+                ]
+              }
+            }
+          },
+          "then": {
+            "description": "Anillo que se expande desde el centro, con polvo al tocar el suelo.",
+            "properties": {
+              "color": {
+                "description": "Color (por defecto: #FFE0B0)",
+                "type": "string",
+                "pattern": "^(#[0-9A-Fa-f]{6}|\\$[a-z0-9_]+)$"
+              },
+              "radius": {
+                "description": "Radio en bloques (por defecto: {\"from\":0,\"to\":64})",
+                "anyOf": [
+                  {
+                    "type": "number",
+                    "description": "Número",
+                    "minimum": 0.0,
+                    "maximum": 1024.0
+                  },
+                  {
+                    "type": "string",
+                    "description": "Variable o expresión",
+                    "pattern": "^.*\\$.*$"
+                  },
+                  {
+                    "type": "object",
+                    "description": "Rango que se interpola",
+                    "properties": {
+                      "from": {
+                        "type": "number",
+                        "description": "Número",
+                        "minimum": 0.0,
+                        "maximum": 1024.0
+                      },
+                      "to": {
+                        "type": "number",
+                        "description": "Número",
+                        "minimum": 0.0,
+                        "maximum": 1024.0
+                      }
+                    }
+                  },
+                  {
+                    "type": "array",
+                    "description": "[desde, hasta]",
+                    "items": {
+                      "type": "number",
+                      "description": "Número",
+                      "minimum": 0.0,
+                      "maximum": 1024.0
+                    },
+                    "minItems": 2,
+                    "maxItems": 2
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "enum": [
+                  "liveevents:particle_emitter",
+                  "particle_emitter"
+                ]
+              }
+            }
+          },
+          "then": {
+            "description": "Emisor genérico de partículas vanilla.",
+            "properties": {
+              "particle": {
+                "description": "Id de la partícula (por defecto: minecraft:ash)",
+                "type": "string",
+                "pattern": "^([a-z0-9_.-]+:[a-z0-9_./-]+|\\$[a-z0-9_]+)$"
+              },
+              "rate": {
+                "description": "Partículas por segundo (antes del LOD) (por defecto: 40)",
+                "anyOf": [
+                  {
+                    "type": "number",
+                    "description": "Número",
+                    "minimum": 0.0,
+                    "maximum": 2000.0
+                  },
+                  {
+                    "type": "string",
+                    "description": "Variable o expresión",
+                    "pattern": "^.*\\$.*$"
+                  },
+                  {
+                    "type": "object",
+                    "description": "Rango que se interpola",
+                    "properties": {
+                      "from": {
+                        "type": "number",
+                        "description": "Número",
+                        "minimum": 0.0,
+                        "maximum": 2000.0
+                      },
+                      "to": {
+                        "type": "number",
+                        "description": "Número",
+                        "minimum": 0.0,
+                        "maximum": 2000.0
+                      }
+                    }
+                  },
+                  {
+                    "type": "array",
+                    "description": "[desde, hasta]",
+                    "items": {
+                      "type": "number",
+                      "description": "Número",
+                      "minimum": 0.0,
+                      "maximum": 2000.0
+                    },
+                    "minItems": 2,
+                    "maxItems": 2
+                  }
+                ]
+              },
+              "radius": {
+                "description": "Radio de emisión alrededor del jugador o del centro (por defecto: 24)",
+                "anyOf": [
+                  {
+                    "type": "number",
+                    "description": "Número",
+                    "minimum": 0.0,
+                    "maximum": 256.0
+                  },
+                  {
+                    "type": "string",
+                    "description": "Variable o expresión",
+                    "pattern": "^.*\\$.*$"
+                  }
+                ]
+              },
+              "around": {
+                "description": "player o center (por defecto: player)",
+                "type": "string"
+              },
+              "height": {
+                "description": "Altura sobre el suelo (por defecto: 12)",
+                "anyOf": [
+                  {
+                    "type": "number",
+                    "description": "Número",
+                    "minimum": -64.0,
+                    "maximum": 256.0
+                  },
+                  {
+                    "type": "string",
+                    "description": "Variable o expresión",
+                    "pattern": "^.*\\$.*$"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "enum": [
+                  "liveevents:meteor_trail",
+                  "meteor_trail"
+                ]
+              }
+            }
+          },
+          "then": {
+            "description": "Estrellas fugaces y bólidos solo visuales.",
+            "properties": {
+              "rate": {
+                "description": "Estelas por segundo (por defecto: 1)",
+                "anyOf": [
+                  {
+                    "type": "number",
+                    "description": "Número",
+                    "minimum": 0.0,
+                    "maximum": 30.0
+                  },
+                  {
+                    "type": "string",
+                    "description": "Variable o expresión",
+                    "pattern": "^.*\\$.*$"
+                  },
+                  {
+                    "type": "object",
+                    "description": "Rango que se interpola",
+                    "properties": {
+                      "from": {
+                        "type": "number",
+                        "description": "Número",
+                        "minimum": 0.0,
+                        "maximum": 30.0
+                      },
+                      "to": {
+                        "type": "number",
+                        "description": "Número",
+                        "minimum": 0.0,
+                        "maximum": 30.0
+                      }
+                    }
+                  },
+                  {
+                    "type": "array",
+                    "description": "[desde, hasta]",
+                    "items": {
+                      "type": "number",
+                      "description": "Número",
+                      "minimum": 0.0,
+                      "maximum": 30.0
+                    },
+                    "minItems": 2,
+                    "maxItems": 2
+                  }
+                ]
+              },
+              "color": {
+                "description": "Color de la estela (por defecto: #FF7A1A)",
+                "type": "string",
+                "pattern": "^(#[0-9A-Fa-f]{6}|\\$[a-z0-9_]+)$"
+              },
+              "core": {
+                "description": "Color del núcleo (por defecto: #FFF4D6)",
+                "type": "string",
+                "pattern": "^(#[0-9A-Fa-f]{6}|\\$[a-z0-9_]+)$"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "enum": [
+                  "liveevents:ash_fall",
+                  "ash_fall"
+                ]
+              }
+            }
+          },
+          "then": {
+            "description": "Ceniza que cae alrededor del jugador.",
+            "properties": {
+              "rate": {
+                "description": "Partículas por segundo (por defecto: 60)",
+                "anyOf": [
+                  {
+                    "type": "number",
+                    "description": "Número",
+                    "minimum": 0.0,
+                    "maximum": 2000.0
+                  },
+                  {
+                    "type": "string",
+                    "description": "Variable o expresión",
+                    "pattern": "^.*\\$.*$"
+                  },
+                  {
+                    "type": "object",
+                    "description": "Rango que se interpola",
+                    "properties": {
+                      "from": {
+                        "type": "number",
+                        "description": "Número",
+                        "minimum": 0.0,
+                        "maximum": 2000.0
+                      },
+                      "to": {
+                        "type": "number",
+                        "description": "Número",
+                        "minimum": 0.0,
+                        "maximum": 2000.0
+                      }
+                    }
+                  },
+                  {
+                    "type": "array",
+                    "description": "[desde, hasta]",
+                    "items": {
+                      "type": "number",
+                      "description": "Número",
+                      "minimum": 0.0,
+                      "maximum": 2000.0
+                    },
+                    "minItems": 2,
+                    "maxItems": 2
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "enum": [
+                  "liveevents:debris",
+                  "debris"
+                ]
+              }
+            }
+          },
+          "then": {
+            "description": "Escombros que saltan desde el centro.",
+            "properties": {
+              "rate": {
+                "description": "Partículas por segundo (por defecto: 30)",
+                "anyOf": [
+                  {
+                    "type": "number",
+                    "description": "Número",
+                    "minimum": 0.0,
+                    "maximum": 2000.0
+                  },
+                  {
+                    "type": "string",
+                    "description": "Variable o expresión",
+                    "pattern": "^.*\\$.*$"
+                  },
+                  {
+                    "type": "object",
+                    "description": "Rango que se interpola",
+                    "properties": {
+                      "from": {
+                        "type": "number",
+                        "description": "Número",
+                        "minimum": 0.0,
+                        "maximum": 2000.0
+                      },
+                      "to": {
+                        "type": "number",
+                        "description": "Número",
+                        "minimum": 0.0,
+                        "maximum": 2000.0
+                      }
+                    }
+                  },
+                  {
+                    "type": "array",
+                    "description": "[desde, hasta]",
+                    "items": {
+                      "type": "number",
+                      "description": "Número",
+                      "minimum": 0.0,
+                      "maximum": 2000.0
+                    },
+                    "minItems": 2,
+                    "maxItems": 2
+                  }
+                ]
+              },
+              "block": {
+                "description": "Bloque de las partículas (por defecto: minecraft:stone)",
+                "type": "string",
+                "pattern": "^([a-z0-9_.-]+:[a-z0-9_./-]+|\\$[a-z0-9_]+)$"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "enum": [
+                  "liveevents:chat_broadcast",
+                  "chat_broadcast"
+                ]
+              }
+            }
+          },
+          "then": {
+            "description": "Mensaje en el chat a los jugadores afectados.",
+            "properties": {
+              "message": {
+                "description": "Texto o clave de traducción (obligatorio)",
+                "type": "string"
+              }
+            },
+            "required": [
+              "message"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "enum": [
+                  "liveevents:title",
+                  "title"
+                ]
+              }
+            }
+          },
+          "then": {
+            "description": "Título y subtítulo en pantalla (oculto en cinematic salvo force).",
+            "properties": {
+              "title": {
+                "description": "Texto o clave de traducción (obligatorio)",
+                "type": "string"
+              },
+              "subtitle": {
+                "description": "Subtítulo (por defecto: -)",
+                "type": "string"
+              },
+              "force": {
+                "description": "Mostrar también en cinematic (por defecto: false)",
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "title"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "enum": [
+                  "liveevents:boss_bar",
+                  "boss_bar"
+                ]
+              }
+            }
+          },
+          "then": {
+            "description": "Barra de jefe con cuenta atrás del evento o de la fase.",
+            "properties": {
+              "text": {
+                "description": "Texto (por defecto, el nombre del evento) (por defecto: -)",
+                "type": "string"
+              },
+              "color": {
+                "description": "pink, blue, red, green, yellow, purple, white (por defecto: red)",
+                "type": "string"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "enum": [
+                  "liveevents:damage_area",
+                  "damage_area"
+                ]
+              }
+            }
+          },
+          "then": {
+            "description": "Daño en un radio con un tipo de daño propio.",
+            "properties": {
+              "damage_type": {
+                "description": "Tipo de daño (por defecto: liveevents:stellar_burn)",
+                "type": "string",
+                "pattern": "^([a-z0-9_.-]+:[a-z0-9_./-]+|\\$[a-z0-9_]+)$"
+              },
+              "amount": {
+                "description": "Daño (medios corazones) (por defecto: 2)",
+                "anyOf": [
+                  {
+                    "type": "number",
+                    "description": "Número",
+                    "minimum": 0.0,
+                    "maximum": 1000.0
+                  },
+                  {
+                    "type": "string",
+                    "description": "Variable o expresión",
+                    "pattern": "^.*\\$.*$"
+                  },
+                  {
+                    "type": "object",
+                    "description": "Rango que se interpola",
+                    "properties": {
+                      "from": {
+                        "type": "number",
+                        "description": "Número",
+                        "minimum": 0.0,
+                        "maximum": 1000.0
+                      },
+                      "to": {
+                        "type": "number",
+                        "description": "Número",
+                        "minimum": 0.0,
+                        "maximum": 1000.0
+                      }
+                    }
+                  },
+                  {
+                    "type": "array",
+                    "description": "[desde, hasta]",
+                    "items": {
+                      "type": "number",
+                      "description": "Número",
+                      "minimum": 0.0,
+                      "maximum": 1000.0
+                    },
+                    "minItems": 2,
+                    "maxItems": 2
+                  }
+                ]
+              },
+              "radius": {
+                "description": "Radio (celestial: toda la dimensión) (por defecto: $radius)",
+                "anyOf": [
+                  {
+                    "type": "number",
+                    "description": "Número",
+                    "minimum": 0.0,
+                    "maximum": 4096.0
+                  },
+                  {
+                    "type": "string",
+                    "description": "Variable o expresión",
+                    "pattern": "^.*\\$.*$"
+                  }
+                ]
+              },
+              "interval": {
+                "description": "Cada cuánto se aplica (por defecto: 1s)",
+                "anyOf": [
+                  {
+                    "type": "number",
+                    "description": "Segundos"
+                  },
+                  {
+                    "type": "string",
+                    "description": "Duración",
+                    "pattern": "^([0-9]+(\\.[0-9]+)?[tsmhd]?|permanent)$"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "enum": [
+                  "liveevents:status_effect",
+                  "status_effect"
+                ]
+              }
+            }
+          },
+          "then": {
+            "description": "Aplica un efecto de estado vanilla o del mod.",
+            "properties": {
+              "effect": {
+                "description": "Id del efecto (obligatorio)",
+                "type": "string",
+                "pattern": "^([a-z0-9_.-]+:[a-z0-9_./-]+|\\$[a-z0-9_]+)$"
+              },
+              "amplifier": {
+                "description": "Nivel - 1 (por defecto: 0)",
+                "anyOf": [
+                  {
+                    "type": "number",
+                    "description": "Número",
+                    "minimum": 0.0,
+                    "maximum": 9.0
+                  },
+                  {
+                    "type": "string",
+                    "description": "Variable o expresión",
+                    "pattern": "^.*\\$.*$"
+                  }
+                ]
+              },
+              "duration": {
+                "description": "Duración del efecto (por defecto: 10s)",
+                "anyOf": [
+                  {
+                    "type": "number",
+                    "description": "Segundos"
+                  },
+                  {
+                    "type": "string",
+                    "description": "Duración",
+                    "pattern": "^([0-9]+(\\.[0-9]+)?[tsmhd]?|permanent)$"
+                  }
+                ]
+              },
+              "radius": {
+                "description": "Radio (por defecto: $radius)",
+                "anyOf": [
+                  {
+                    "type": "number",
+                    "description": "Número",
+                    "minimum": 0.0,
+                    "maximum": 4096.0
+                  },
+                  {
+                    "type": "string",
+                    "description": "Variable o expresión",
+                    "pattern": "^.*\\$.*$"
+                  }
+                ]
+              },
+              "interval": {
+                "description": "Si se indica, se renueva cada intervalo (por defecto: -)",
+                "anyOf": [
+                  {
+                    "type": "number",
+                    "description": "Segundos"
+                  },
+                  {
+                    "type": "string",
+                    "description": "Duración",
+                    "pattern": "^([0-9]+(\\.[0-9]+)?[tsmhd]?|permanent)$"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "effect"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "enum": [
+                  "liveevents:ignite",
+                  "ignite"
+                ]
+              }
+            }
+          },
+          "then": {
+            "description": "Prende fuego a las entidades afectadas.",
+            "properties": {
+              "seconds": {
+                "description": "Segundos ardiendo (por defecto: 4)",
+                "anyOf": [
+                  {
+                    "type": "number",
+                    "description": "Número",
+                    "minimum": 0.0,
+                    "maximum": 60.0
+                  },
+                  {
+                    "type": "string",
+                    "description": "Variable o expresión",
+                    "pattern": "^.*\\$.*$"
+                  }
+                ]
+              },
+              "radius": {
+                "description": "Radio (por defecto: $radius)",
+                "anyOf": [
+                  {
+                    "type": "number",
+                    "description": "Número",
+                    "minimum": 0.0,
+                    "maximum": 4096.0
+                  },
+                  {
+                    "type": "string",
+                    "description": "Variable o expresión",
+                    "pattern": "^.*\\$.*$"
+                  }
+                ]
+              },
+              "interval": {
+                "description": "Cada cuánto (por defecto: 2s)",
+                "anyOf": [
+                  {
+                    "type": "number",
+                    "description": "Segundos"
+                  },
+                  {
+                    "type": "string",
+                    "description": "Duración",
+                    "pattern": "^([0-9]+(\\.[0-9]+)?[tsmhd]?|permanent)$"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "enum": [
+                  "liveevents:knockback",
+                  "knockback"
+                ]
+              }
+            }
+          },
+          "then": {
+            "description": "Empujón radial desde el centro.",
+            "properties": {
+              "strength": {
+                "description": "Fuerza (por defecto: 1)",
+                "anyOf": [
+                  {
+                    "type": "number",
+                    "description": "Número",
+                    "minimum": 0.0,
+                    "maximum": 10.0
+                  },
+                  {
+                    "type": "string",
+                    "description": "Variable o expresión",
+                    "pattern": "^.*\\$.*$"
+                  },
+                  {
+                    "type": "object",
+                    "description": "Rango que se interpola",
+                    "properties": {
+                      "from": {
+                        "type": "number",
+                        "description": "Número",
+                        "minimum": 0.0,
+                        "maximum": 10.0
+                      },
+                      "to": {
+                        "type": "number",
+                        "description": "Número",
+                        "minimum": 0.0,
+                        "maximum": 10.0
+                      }
+                    }
+                  },
+                  {
+                    "type": "array",
+                    "description": "[desde, hasta]",
+                    "items": {
+                      "type": "number",
+                      "description": "Número",
+                      "minimum": 0.0,
+                      "maximum": 10.0
+                    },
+                    "minItems": 2,
+                    "maxItems": 2
+                  }
+                ]
+              },
+              "radius": {
+                "description": "Radio (por defecto: $radius)",
+                "anyOf": [
+                  {
+                    "type": "number",
+                    "description": "Número",
+                    "minimum": 0.0,
+                    "maximum": 1024.0
+                  },
+                  {
+                    "type": "string",
+                    "description": "Variable o expresión",
+                    "pattern": "^.*\\$.*$"
+                  }
+                ]
+              },
+              "random": {
+                "description": "Dirección aleatoria (pérdida de equilibrio) (por defecto: false)",
+                "type": "boolean"
+              },
+              "interval": {
+                "description": "Si se indica, se repite (por defecto: -)",
+                "anyOf": [
+                  {
+                    "type": "number",
+                    "description": "Segundos"
+                  },
+                  {
+                    "type": "string",
+                    "description": "Duración",
+                    "pattern": "^([0-9]+(\\.[0-9]+)?[tsmhd]?|permanent)$"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "enum": [
+                  "liveevents:gravity_pull",
+                  "gravity_pull"
+                ]
+              }
+            }
+          },
+          "then": {
+            "description": "Atrae a las entidades hacia el centro (agujero negro).",
+            "properties": {
+              "strength": {
+                "description": "Aceleración por tick (por defecto: 0.1)",
+                "anyOf": [
+                  {
+                    "type": "number",
+                    "description": "Número",
+                    "minimum": 0.0,
+                    "maximum": 2.0
+                  },
+                  {
+                    "type": "string",
+                    "description": "Variable o expresión",
+                    "pattern": "^.*\\$.*$"
+                  },
+                  {
+                    "type": "object",
+                    "description": "Rango que se interpola",
+                    "properties": {
+                      "from": {
+                        "type": "number",
+                        "description": "Número",
+                        "minimum": 0.0,
+                        "maximum": 2.0
+                      },
+                      "to": {
+                        "type": "number",
+                        "description": "Número",
+                        "minimum": 0.0,
+                        "maximum": 2.0
+                      }
+                    }
+                  },
+                  {
+                    "type": "array",
+                    "description": "[desde, hasta]",
+                    "items": {
+                      "type": "number",
+                      "description": "Número",
+                      "minimum": 0.0,
+                      "maximum": 2.0
+                    },
+                    "minItems": 2,
+                    "maxItems": 2
+                  }
+                ]
+              },
+              "radius": {
+                "description": "Radio (por defecto: $radius)",
+                "anyOf": [
+                  {
+                    "type": "number",
+                    "description": "Número",
+                    "minimum": 0.0,
+                    "maximum": 1024.0
+                  },
+                  {
+                    "type": "string",
+                    "description": "Variable o expresión",
+                    "pattern": "^.*\\$.*$"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "enum": [
+                  "liveevents:gaze_check",
+                  "gaze_check"
+                ]
+              }
+            }
+          },
+          "then": {
+            "description": "Detecta quién mira al ancla y le aplica módulos extra.",
+            "properties": {
+              "cone_deg": {
+                "description": "Semiángulo del cono (por defecto: 20)",
+                "anyOf": [
+                  {
+                    "type": "number",
+                    "description": "Número",
+                    "minimum": 1.0,
+                    "maximum": 90.0
+                  },
+                  {
+                    "type": "string",
+                    "description": "Variable o expresión",
+                    "pattern": "^.*\\$.*$"
+                  }
+                ]
+              },
+              "then": {
+                "description": "Módulos que se aplican a quien mira (obligatorio)",
+                "type": "array",
+                "items": {
+                  "$ref": "#/definitions/module"
+                }
+              }
+            },
+            "required": [
+              "then"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "enum": [
+                  "liveevents:lightning_storm",
+                  "lightning_storm"
+                ]
+              }
+            }
+          },
+          "then": {
+            "description": "Rayos cerca de los jugadores expuestos, con tope global.",
+            "properties": {
+              "max": {
+                "description": "Rayos como máximo (además del tope del servidor) (por defecto: 12)",
+                "anyOf": [
+                  {
+                    "type": "number",
+                    "description": "Número",
+                    "minimum": 0.0,
+                    "maximum": 200.0
+                  },
+                  {
+                    "type": "string",
+                    "description": "Variable o expresión",
+                    "pattern": "^.*\\$.*$"
+                  }
+                ]
+              },
+              "interval": {
+                "description": "Tiempo medio entre rayos (por defecto: 1.5s)",
+                "anyOf": [
+                  {
+                    "type": "number",
+                    "description": "Segundos"
+                  },
+                  {
+                    "type": "string",
+                    "description": "Duración",
+                    "pattern": "^([0-9]+(\\.[0-9]+)?[tsmhd]?|permanent)$"
+                  }
+                ]
+              },
+              "distance": {
+                "description": "Distancia máxima al jugador (por defecto: 24)",
+                "anyOf": [
+                  {
+                    "type": "number",
+                    "description": "Número",
+                    "minimum": 4.0,
+                    "maximum": 128.0
+                  },
+                  {
+                    "type": "string",
+                    "description": "Variable o expresión",
+                    "pattern": "^.*\\$.*$"
+                  }
+                ]
+              },
+              "fire": {
+                "description": "Los rayos prenden fuego (por defecto: false)",
+                "type": "boolean"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "enum": [
+                  "liveevents:weather",
+                  "weather"
+                ]
+              }
+            }
+          },
+          "then": {
+            "description": "Cambia el clima temporalmente y lo restaura al terminar.",
+            "properties": {
+              "set": {
+                "description": "clear, rain o thunder (por defecto: clear)",
+                "type": "string"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "enum": [
+                  "liveevents:block_transform",
+                  "block_transform"
+                ]
+              }
+            }
+          },
+          "then": {
+            "description": "Sustituye bloques de la superficie según una paleta. Queda en el diario.",
+            "properties": {
+              "palette": {
+                "description": "Paleta de transformación (por defecto: liveevents:scorched)",
+                "type": "string",
+                "pattern": "^([a-z0-9_.-]+:[a-z0-9_./-]+|\\$[a-z0-9_]+)$"
+              },
+              "chance": {
+                "description": "Probabilidad por columna (por defecto: 0.15)",
+                "anyOf": [
+                  {
+                    "type": "number",
+                    "description": "Número",
+                    "minimum": 0.0,
+                    "maximum": 1.0
+                  },
+                  {
+                    "type": "string",
+                    "description": "Variable o expresión",
+                    "pattern": "^.*\\$.*$"
+                  },
+                  {
+                    "type": "object",
+                    "description": "Rango que se interpola",
+                    "properties": {
+                      "from": {
+                        "type": "number",
+                        "description": "Número",
+                        "minimum": 0.0,
+                        "maximum": 1.0
+                      },
+                      "to": {
+                        "type": "number",
+                        "description": "Número",
+                        "minimum": 0.0,
+                        "maximum": 1.0
+                      }
+                    }
+                  },
+                  {
+                    "type": "array",
+                    "description": "[desde, hasta]",
+                    "items": {
+                      "type": "number",
+                      "description": "Número",
+                      "minimum": 0.0,
+                      "maximum": 1.0
+                    },
+                    "minItems": 2,
+                    "maxItems": 2
+                  }
+                ]
+              },
+              "radius": {
+                "description": "Radio (por defecto: $radius)",
+                "anyOf": [
+                  {
+                    "type": "number",
+                    "description": "Número",
+                    "minimum": 0.0,
+                    "maximum": 512.0
+                  },
+                  {
+                    "type": "string",
+                    "description": "Variable o expresión",
+                    "pattern": "^.*\\$.*$"
+                  }
+                ]
+              },
+              "per_second": {
+                "description": "Columnas por segundo (por defecto: 400)",
+                "anyOf": [
+                  {
+                    "type": "number",
+                    "description": "Número",
+                    "minimum": 1.0,
+                    "maximum": 20000.0
+                  },
+                  {
+                    "type": "string",
+                    "description": "Variable o expresión",
+                    "pattern": "^.*\\$.*$"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "enum": [
+                  "liveevents:melt",
+                  "melt"
+                ]
+              }
+            }
+          },
+          "then": {
+            "description": "Derrite nieve y hielo de la superficie. Queda en el diario.",
+            "properties": {
+              "radius": {
+                "description": "Radio (por defecto: $radius)",
+                "anyOf": [
+                  {
+                    "type": "number",
+                    "description": "Número",
+                    "minimum": 0.0,
+                    "maximum": 512.0
+                  },
+                  {
+                    "type": "string",
+                    "description": "Variable o expresión",
+                    "pattern": "^.*\\$.*$"
+                  }
+                ]
+              },
+              "per_second": {
+                "description": "Columnas por segundo (por defecto: 400)",
+                "anyOf": [
+                  {
+                    "type": "number",
+                    "description": "Número",
+                    "minimum": 1.0,
+                    "maximum": 20000.0
+                  },
+                  {
+                    "type": "string",
+                    "description": "Variable o expresión",
+                    "pattern": "^.*\\$.*$"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "enum": [
+                  "liveevents:crater",
+                  "crater"
+                ]
+              }
+            }
+          },
+          "then": {
+            "description": "Abre un cráter con ruido determinista. Queda en el diario.",
+            "properties": {
+              "radius": {
+                "description": "Radio del cráter (por defecto: 6)",
+                "anyOf": [
+                  {
+                    "type": "number",
+                    "description": "Número",
+                    "minimum": 1.0,
+                    "maximum": 48.0
+                  },
+                  {
+                    "type": "string",
+                    "description": "Variable o expresión",
+                    "pattern": "^.*\\$.*$"
+                  }
+                ]
+              },
+              "depth": {
+                "description": "Profundidad relativa al radio (por defecto: 0.6)",
+                "anyOf": [
+                  {
+                    "type": "number",
+                    "description": "Número",
+                    "minimum": 0.1,
+                    "maximum": 2.0
+                  },
+                  {
+                    "type": "string",
+                    "description": "Variable o expresión",
+                    "pattern": "^.*\\$.*$"
+                  }
+                ]
+              },
+              "rim": {
+                "description": "Bloque del borde (por defecto: minecraft:basalt)",
+                "type": "string",
+                "pattern": "^([a-z0-9_.-]+:[a-z0-9_./-]+|\\$[a-z0-9_]+)$"
+              },
+              "core": {
+                "description": "Bloque del fondo (por defecto: minecraft:magma_block)",
+                "type": "string",
+                "pattern": "^([a-z0-9_.-]+:[a-z0-9_./-]+|\\$[a-z0-9_]+)$"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "enum": [
+                  "liveevents:fire_spread",
+                  "fire_spread"
+                ]
+              }
+            }
+          },
+          "then": {
+            "description": "Coloca fuego de forma controlada. Queda en el diario.",
+            "properties": {
+              "count": {
+                "description": "Fuegos como máximo (por defecto: 20)",
+                "anyOf": [
+                  {
+                    "type": "number",
+                    "description": "Número",
+                    "minimum": 0.0,
+                    "maximum": 2000.0
+                  },
+                  {
+                    "type": "string",
+                    "description": "Variable o expresión",
+                    "pattern": "^.*\\$.*$"
+                  }
+                ]
+              },
+              "radius": {
+                "description": "Radio (por defecto: 16)",
+                "anyOf": [
+                  {
+                    "type": "number",
+                    "description": "Número",
+                    "minimum": 0.0,
+                    "maximum": 512.0
+                  },
+                  {
+                    "type": "string",
+                    "description": "Variable o expresión",
+                    "pattern": "^.*\\$.*$"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "enum": [
+                  "liveevents:crack",
+                  "crack"
+                ]
+              }
+            }
+          },
+          "then": {
+            "description": "Grietas a lo largo de una línea de falla determinista. Queda en el diario.",
+            "properties": {
+              "length": {
+                "description": "Longitud en bloques (por defecto: 96)",
+                "anyOf": [
+                  {
+                    "type": "number",
+                    "description": "Número",
+                    "minimum": 4.0,
+                    "maximum": 1024.0
+                  },
+                  {
+                    "type": "string",
+                    "description": "Variable o expresión",
+                    "pattern": "^.*\\$.*$"
+                  }
+                ]
+              },
+              "width": {
+                "description": "Anchura (por defecto: 2)",
+                "anyOf": [
+                  {
+                    "type": "number",
+                    "description": "Número",
+                    "minimum": 1.0,
+                    "maximum": 8.0
+                  },
+                  {
+                    "type": "string",
+                    "description": "Variable o expresión",
+                    "pattern": "^.*\\$.*$"
+                  }
+                ]
+              },
+              "depth": {
+                "description": "Profundidad (por defecto: 6)",
+                "anyOf": [
+                  {
+                    "type": "number",
+                    "description": "Número",
+                    "minimum": 1.0,
+                    "maximum": 32.0
+                  },
+                  {
+                    "type": "string",
+                    "description": "Variable o expresión",
+                    "pattern": "^.*\\$.*$"
+                  }
+                ]
+              },
+              "branches": {
+                "description": "Ramas (por defecto: 3)",
+                "anyOf": [
+                  {
+                    "type": "number",
+                    "description": "Número",
+                    "minimum": 0.0,
+                    "maximum": 16.0
+                  },
+                  {
+                    "type": "string",
+                    "description": "Variable o expresión",
+                    "pattern": "^.*\\$.*$"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "enum": [
+                  "liveevents:meteor_impacts",
+                  "meteor_impacts"
+                ]
+              }
+            }
+          },
+          "then": {
+            "description": "Lluvia de meteoritos: N impactos deterministas con aviso en el suelo, estela, cráter, daño, empujón y fuego.",
+            "properties": {
+              "count": {
+                "description": "Número de impactos (por defecto: 40)",
+                "anyOf": [
+                  {
+                    "type": "number",
+                    "description": "Número",
+                    "minimum": 1.0,
+                    "maximum": 400.0
+                  },
+                  {
+                    "type": "string",
+                    "description": "Variable o expresión",
+                    "pattern": "^.*\\$.*$"
+                  }
+                ]
+              },
+              "radius": {
+                "description": "Radio alrededor del centro (por defecto: $radius)",
+                "anyOf": [
+                  {
+                    "type": "number",
+                    "description": "Número",
+                    "minimum": 8.0,
+                    "maximum": 1024.0
+                  },
+                  {
+                    "type": "string",
+                    "description": "Variable o expresión",
+                    "pattern": "^.*\\$.*$"
+                  }
+                ]
+              },
+              "crater_radius": {
+                "description": "Radio de cada cráter (por defecto: {\"from\":2,\"to\":5})",
+                "anyOf": [
+                  {
+                    "type": "number",
+                    "description": "Número",
+                    "minimum": 1.0,
+                    "maximum": 24.0
+                  },
+                  {
+                    "type": "string",
+                    "description": "Variable o expresión",
+                    "pattern": "^.*\\$.*$"
+                  },
+                  {
+                    "type": "object",
+                    "description": "Rango que se interpola",
+                    "properties": {
+                      "from": {
+                        "type": "number",
+                        "description": "Número",
+                        "minimum": 1.0,
+                        "maximum": 24.0
+                      },
+                      "to": {
+                        "type": "number",
+                        "description": "Número",
+                        "minimum": 1.0,
+                        "maximum": 24.0
+                      }
+                    }
+                  },
+                  {
+                    "type": "array",
+                    "description": "[desde, hasta]",
+                    "items": {
+                      "type": "number",
+                      "description": "Número",
+                      "minimum": 1.0,
+                      "maximum": 24.0
+                    },
+                    "minItems": 2,
+                    "maxItems": 2
+                  }
+                ]
+              },
+              "damage": {
+                "description": "Daño en el centro del impacto (por defecto: 8)",
+                "anyOf": [
+                  {
+                    "type": "number",
+                    "description": "Número",
+                    "minimum": 0.0,
+                    "maximum": 200.0
+                  },
+                  {
+                    "type": "string",
+                    "description": "Variable o expresión",
+                    "pattern": "^.*\\$.*$"
+                  }
+                ]
+              },
+              "blast_radius": {
+                "description": "Radio de daño y empujón (por defecto: 6)",
+                "anyOf": [
+                  {
+                    "type": "number",
+                    "description": "Número",
+                    "minimum": 0.0,
+                    "maximum": 48.0
+                  },
+                  {
+                    "type": "string",
+                    "description": "Variable o expresión",
+                    "pattern": "^.*\\$.*$"
+                  }
+                ]
+              },
+              "warning": {
+                "description": "Aviso en el suelo antes del impacto (por defecto: 1.5s)",
+                "anyOf": [
+                  {
+                    "type": "number",
+                    "description": "Segundos"
+                  },
+                  {
+                    "type": "string",
+                    "description": "Duración",
+                    "pattern": "^([0-9]+(\\.[0-9]+)?[tsmhd]?|permanent)$"
+                  }
+                ]
+              },
+              "fire": {
+                "description": "Pone fuego alrededor (por defecto: true)",
+                "type": "boolean"
+              },
+              "first_big": {
+                "description": "El primer meteorito es un bólido grande que se parte (por defecto: false)",
+                "type": "boolean"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "enum": [
+                  "liveevents:seismic_wave",
+                  "seismic_wave"
+                ]
+              }
+            }
+          },
+          "then": {
+            "description": "Terremoto: ondas P y S con retraso según la distancia al epicentro, náusea, empujones y desprendimientos.",
+            "properties": {
+              "amplitude": {
+                "description": "Amplitud del temblor en grados (por defecto: 1)",
+                "anyOf": [
+                  {
+                    "type": "number",
+                    "description": "Número",
+                    "minimum": 0.0,
+                    "maximum": 5.0
+                  },
+                  {
+                    "type": "string",
+                    "description": "Variable o expresión",
+                    "pattern": "^.*\\$.*$"
+                  },
+                  {
+                    "type": "object",
+                    "description": "Rango que se interpola",
+                    "properties": {
+                      "from": {
+                        "type": "number",
+                        "description": "Número",
+                        "minimum": 0.0,
+                        "maximum": 5.0
+                      },
+                      "to": {
+                        "type": "number",
+                        "description": "Número",
+                        "minimum": 0.0,
+                        "maximum": 5.0
+                      }
+                    }
+                  },
+                  {
+                    "type": "array",
+                    "description": "[desde, hasta]",
+                    "items": {
+                      "type": "number",
+                      "description": "Número",
+                      "minimum": 0.0,
+                      "maximum": 5.0
+                    },
+                    "minItems": 2,
+                    "maxItems": 2
+                  }
+                ]
+              },
+              "radius": {
+                "description": "Radio de efecto (por defecto: $radius)",
+                "anyOf": [
+                  {
+                    "type": "number",
+                    "description": "Número",
+                    "minimum": 8.0,
+                    "maximum": 2048.0
+                  },
+                  {
+                    "type": "string",
+                    "description": "Variable o expresión",
+                    "pattern": "^.*\\$.*$"
+                  }
+                ]
+              },
+              "p_speed": {
+                "description": "Velocidad de la onda P (bloques/s) (por defecto: 120)",
+                "anyOf": [
+                  {
+                    "type": "number",
+                    "description": "Número",
+                    "minimum": 1.0,
+                    "maximum": 2000.0
+                  },
+                  {
+                    "type": "string",
+                    "description": "Variable o expresión",
+                    "pattern": "^.*\\$.*$"
+                  }
+                ]
+              },
+              "s_speed": {
+                "description": "Velocidad de la onda S (bloques/s) (por defecto: 60)",
+                "anyOf": [
+                  {
+                    "type": "number",
+                    "description": "Número",
+                    "minimum": 1.0,
+                    "maximum": 2000.0
+                  },
+                  {
+                    "type": "string",
+                    "description": "Variable o expresión",
+                    "pattern": "^.*\\$.*$"
+                  }
+                ]
+              },
+              "nausea": {
+                "description": "Náusea cerca del epicentro (por defecto: true)",
+                "type": "boolean"
+              },
+              "drop_blocks": {
+                "description": "Hace caer grava, arena y espeleotemas sin soporte (por defecto: true)",
+                "type": "boolean"
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

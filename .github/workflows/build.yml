@@ -1,0 +1,207 @@
+name: Build and test
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# Un push nuevo a la misma rama cancela el run anterior (ahorra minutos y evita dev-releases desordenadas)
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  standards:
+    name: TakumiStudios standards
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Authorship and metadata
+        run: |
+          fail=0
+          json=src/main/resources/fabric.mod.json
+          grep -q "\"authors\": *\[[^]]*\"TakumiStudios\"" "$json" || { echo "::error file=$json::authors debe incluir \"TakumiStudios\""; fail=1; }
+          for key in license icon contact; do
+            grep -q "\"$key\"" "$json" || { echo "::error file=$json::falta \"$key\""; fail=1; }
+          done
+          grep -q "TakumiStudios" README.md || { echo "::error file=README.md::falta \"Creado por TakumiStudios\""; fail=1; }
+          [ -f LICENSE ] || { echo "::error::falta LICENSE"; fail=1; }
+          [ -f CHANGELOG.md ] || { echo "::error::falta CHANGELOG.md"; fail=1; }
+          [ -f SECURITY.md ] || { echo "::error::falta SECURITY.md"; fail=1; }
+          exit $fail
+
+      - name: Code hygiene
+        run: |
+          fail=0
+          # Nada de salida por consola ni trazas sueltas: todo pasa por el logger del mod
+          if grep -rnE 'System\.(out|err)\.print|\.printStackTrace\(\)' src/main src/client 2>/dev/null; then
+            echo "::error::usa el logger del mod en lugar de System.out/err o printStackTrace"; fail=1
+          fi
+          # Si hay mixins, deben estar documentados
+          if [ -n "$(find src -name '*.mixins.json' 2>/dev/null)" ] && [ ! -f MIXINS.md ]; then
+            echo "::error::el mod usa mixins y falta MIXINS.md"; fail=1
+          fi
+          exit $fail
+
+      - name: Translations (en_us y es_es con las mismas claves)
+        run: |
+          node -e '
+            const fs = require("fs"), path = require("path");
+            let fail = false;
+            const ls = d => fs.existsSync(d) ? fs.readdirSync(d) : [];
+            const dirs = ls("src").flatMap(s => ls(`src/${s}/resources/assets`).map(ns => `src/${s}/resources/assets/${ns}/lang`));
+            for (const dir of dirs.filter(d => fs.existsSync(d))) {
+              const load = f => JSON.parse(fs.readFileSync(path.join(dir, f), "utf8"));
+              if (!fs.existsSync(path.join(dir, "en_us.json"))) continue;
+              const base = Object.keys(load("en_us.json"));
+              if (!fs.existsSync(path.join(dir, "es_es.json"))) { console.log(`::error::falta ${dir}/es_es.json`); fail = true; }
+              for (const f of fs.readdirSync(dir).filter(f => f.endsWith(".json") && f !== "en_us.json")) {
+                const keys = new Set(Object.keys(load(f)));
+                const missing = base.filter(k => !keys.has(k));
+                if (missing.length) { console.log(`::error file=${dir}/${f}::faltan ${missing.length} claves: ${missing.slice(0, 10).join(", ")}`); fail = true; }
+              }
+            }
+            process.exit(fail ? 1 : 0);
+          '
+
+      - uses: gradle/actions/wrapper-validation@v6
+
+  test:
+    name: MC ${{ matrix.minecraft }}${{ matrix.compat && ' (compat pack)' || '' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        minecraft: ["26.1.2", "26.2", "26.3"]
+        # Sin compat pack: compat: [false]
+        compat: [false, true]
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: 25
+
+      - uses: gradle/actions/setup-gradle@v6
+
+      - name: Build and unit tests
+        if: ${{ !matrix.compat }}
+        run: ./gradlew :${{ matrix.minecraft }}:build --stacktrace
+
+      - name: Server gametests
+        run: ./gradlew :${{ matrix.minecraft }}:runGameTest ${{ matrix.compat && '-PcompatPack' || '' }} --stacktrace
+
+      - name: Upload jar
+        if: ${{ !matrix.compat }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: liveevents-mc${{ matrix.minecraft }}
+          path: |
+            versions/${{ matrix.minecraft }}/build/libs/*.jar
+            !versions/${{ matrix.minecraft }}/build/libs/*-sources.jar
+            !versions/${{ matrix.minecraft }}/build/libs/*-api.jar
+          if-no-files-found: error
+
+      - name: Upload test reports
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: reports-mc${{ matrix.minecraft }}${{ matrix.compat && '-compat' || '' }}
+          path: |
+            versions/${{ matrix.minecraft }}/build/reports/
+            versions/${{ matrix.minecraft }}/build/run/gameTest/logs/
+          if-no-files-found: ignore
+
+  client:
+    name: Client test MC ${{ matrix.minecraft }}
+    runs-on: ubuntu-latest
+    # Si el juego se cuelga (p. ej. sin contexto gráfico), el job no puede bloquear la CI
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        minecraft: ["26.1.2", "26.2", "26.3"]
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: 25
+
+      - uses: gradle/actions/setup-gradle@v6
+
+      - name: Install virtual display
+        run: sudo apt-get update && sudo apt-get install -y xvfb libgl1-mesa-dri libglx-mesa0 mesa-utils mesa-vulkan-drivers vulkan-tools
+
+      - name: Graphics diagnostics
+        continue-on-error: true
+        run: |
+          xvfb-run -a -s "-screen 0 1920x1080x24 +extension GLX +render" glxinfo -B || true
+          xvfb-run -a -s "-screen 0 1920x1080x24 +extension GLX +render" vulkaninfo --summary || true
+
+      - name: Client gametest
+        env:
+          # Renderizado por software (Mesa): 26.3 necesita un visual GLX de 24 bits y acaba usando Vulkan con lavapipe
+          LIBGL_ALWAYS_SOFTWARE: "1"
+        run: xvfb-run -a -s "-screen 0 1920x1080x24 +extension GLX +render" ./gradlew :${{ matrix.minecraft }}:runClientGameTest --stacktrace
+
+      - name: Upload screenshots
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: screenshots-mc${{ matrix.minecraft }}
+          path: versions/${{ matrix.minecraft }}/build/run/clientGameTest/screenshots/
+          if-no-files-found: ignore
+
+      - name: Upload client logs
+        if: ${{ failure() || cancelled() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: client-logs-mc${{ matrix.minecraft }}
+          path: versions/${{ matrix.minecraft }}/build/run/clientGameTest/logs/
+          if-no-files-found: ignore
+
+  dev-release:
+    name: Publish dev build
+    # Solo en pushes a main y solo si todas las pruebas pasaron
+    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+    # Sin test de cliente: needs: [standards, test]
+    needs: [standards, test, client]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    # Nunca dos dev-releases a la vez (borrar + crear no es atómico)
+    concurrency:
+      group: dev-release
+      cancel-in-progress: false
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          pattern: liveevents-mc*
+          path: jars
+          merge-multiple: true
+
+      - name: Replace the "dev" pre-release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          gh release delete dev --cleanup-tag --yes || true
+          gh release create dev jars/*.jar \
+            --prerelease \
+            --target "$GITHUB_SHA" \
+            --title "Dev build ($(echo "$GITHUB_SHA" | cut -c1-7))" \
+            --notes "Build automática de la rama main, generada tras pasar todas las pruebas en MC 26.1.2, 26.2 y 26.3.
+
+          Puede tener cambios sin publicar oficialmente. Elige el jar de tu versión de Minecraft; necesitas Fabric API.
+
+          Commit: $GITHUB_SHA
+
+          Creado por TakumiStudios."

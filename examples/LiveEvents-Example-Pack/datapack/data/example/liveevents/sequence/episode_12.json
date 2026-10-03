@@ -1,0 +1,29 @@
+{
+  "format_version": 1,
+  "id": "example:episode_12",
+  "steps": [
+    {
+      "at": "0s",
+      "command": "title @a title {\"text\":\"El cielo no es lo que parece\"}"
+    },
+    {
+      "at": "10s",
+      "event": "example:red_supernova",
+      "profile": "cinematic"
+    },
+    {
+      "at": "75s",
+      "event": "liveevents:meteor_shower",
+      "on": "@r",
+      "args": {
+        "count": 25,
+        "radius": 64
+      }
+    },
+    {
+      "at": "180s",
+      "event": "liveevents:earthquake",
+      "position": "0 64 0"
+    }
+  ]
+}

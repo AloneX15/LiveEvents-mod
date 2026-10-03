@@ -1,0 +1,155 @@
+{
+  "$schema": "https://raw.githubusercontent.com/AloneX15/LiveEvents-mod/main/schema/liveevents-event.schema.json",
+  "format_version": 1,
+  "id": "liveevents:great_meteor",
+  "display_name": "event.liveevents.great_meteor",
+  "description": "event.liveevents.great_meteor.description",
+  "scope": "localized",
+  "lethal": true,
+  "allowed_dimensions": [
+    "minecraft:overworld",
+    "minecraft:the_end"
+  ],
+  "cooldown": "60s",
+  "params": {
+    "radius": 24
+  },
+  "palette": {
+    "core": "#FFF4D6",
+    "magnesium": "#7CFF6B",
+    "trail": "#FF7A1A",
+    "dust": "#8A7A66"
+  },
+  "phases": [
+    {
+      "id": "approach",
+      "from": "0s",
+      "to": "15s",
+      "title": "event.liveevents.great_meteor.phase.approach",
+      "modules": [
+        {
+          "type": "meteor_trail",
+          "rate": {
+            "from": 0.2,
+            "to": 2
+          },
+          "color": "$magnesium",
+          "core": "$core"
+        },
+        {
+          "type": "sound_loop",
+          "sound": "liveevents:meteor.rumble",
+          "bpm": {
+            "from": 10,
+            "to": 40
+          },
+          "volume": {
+            "from": 0.2,
+            "to": 0.9
+          }
+        },
+        {
+          "type": "boss_bar",
+          "color": "red"
+        },
+        {
+          "type": "title",
+          "at": "0.5s",
+          "title": "event.liveevents.great_meteor.title",
+          "subtitle": "event.liveevents.great_meteor.subtitle"
+        }
+      ]
+    },
+    {
+      "id": "impact",
+      "from": "15s",
+      "to": "20s",
+      "title": "event.liveevents.great_meteor.phase.impact",
+      "modules": [
+        {
+          "type": "meteor_impacts",
+          "count": 1,
+          "radius": 8,
+          "first_big": true,
+          "crater_radius": {
+            "from": 8,
+            "to": 9
+          },
+          "damage": 20,
+          "blast_radius": 14,
+          "warning": "3s",
+          "fire": true,
+          "from": "12s",
+          "to": "16s"
+        },
+        {
+          "type": "shockwave",
+          "from": "16s",
+          "to": "20s",
+          "color": "#FFE0B0",
+          "radius": {
+            "from": 0,
+            "to": 96
+          }
+        },
+        {
+          "type": "debris",
+          "from": "16s",
+          "to": "20s",
+          "rate": 80,
+          "block": "minecraft:dirt"
+        },
+        {
+          "type": "knockback",
+          "at": "16s",
+          "strength": 1.5,
+          "radius": 32
+        }
+      ]
+    },
+    {
+      "id": "dust",
+      "from": "20s",
+      "to": "40s",
+      "title": "event.liveevents.great_meteor.phase.dust",
+      "modules": [
+        {
+          "type": "sky_tint",
+          "color": "$dust",
+          "strength": {
+            "from": 0.5,
+            "to": 0
+          },
+          "fade": "1s"
+        },
+        {
+          "type": "ash_fall",
+          "rate": {
+            "from": 80,
+            "to": 0
+          }
+        },
+        {
+          "type": "particle_emitter",
+          "particle": "minecraft:campfire_signal_smoke",
+          "rate": {
+            "from": 20,
+            "to": 2
+          },
+          "around": "center",
+          "radius": 8,
+          "height": 0
+        },
+        {
+          "type": "sound_loop",
+          "sound": "liveevents:meteor.sizzle",
+          "bpm": 20,
+          "volume": {
+            "from": 0.7,
+            "to": 0
+          }
+        }
+      ]
+    }
+  ]
+}

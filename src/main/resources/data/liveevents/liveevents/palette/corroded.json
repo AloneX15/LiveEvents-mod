@@ -1,0 +1,33 @@
+{
+  "format_version": 1,
+  "rules": [
+    {
+      "from": "minecraft:grass_block",
+      "to": "minecraft:coarse_dirt"
+    },
+    {
+      "from": "#minecraft:leaves",
+      "to": "minecraft:air"
+    },
+    {
+      "from": "#minecraft:crops",
+      "to": "minecraft:air"
+    },
+    {
+      "from": "#minecraft:flowers",
+      "to": "minecraft:air"
+    },
+    {
+      "from": "minecraft:short_grass",
+      "to": "minecraft:dead_bush"
+    },
+    {
+      "from": "minecraft:moss_block",
+      "to": "minecraft:tuff"
+    },
+    {
+      "from": "minecraft:cobblestone",
+      "to": "minecraft:mossy_cobblestone"
+    }
+  ]
+}

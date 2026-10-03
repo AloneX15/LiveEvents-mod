@@ -1,0 +1,9 @@
+version: 2
+updates:
+  # Mantiene al día las GitHub Actions (evita los avisos de Node.js obsoleto)
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: ci

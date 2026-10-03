@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "id": "liveevents-test",
+  "version": "1.0.0",
+  "name": "LiveEvents GameTests",
+  "environment": "*",
+  "entrypoints": {
+    "fabric-gametest": ["com.takumistudios.liveevents.test.LiveEventsGameTests"],
+    "fabric-client-gametest": ["com.takumistudios.liveevents.test.LiveEventsClientGameTest"]
+  },
+  "depends": {
+    "liveevents": "*",
+    "fabric-gametest-api-v1": "*"
+  }
+}

@@ -1,0 +1,116 @@
+{
+  "$schema": "https://raw.githubusercontent.com/AloneX15/LiveEvents-mod/main/schema/liveevents-event.schema.json",
+  "format_version": 1,
+  "id": "liveevents:aurora_borealis",
+  "display_name": "event.liveevents.aurora_borealis",
+  "description": "event.liveevents.aurora_borealis.description",
+  "scope": "celestial",
+  "night_override": "visual",
+  "lethal": false,
+  "allowed_dimensions": [
+    "minecraft:overworld"
+  ],
+  "palette": {
+    "green": "#39FF14",
+    "teal": "#00E5B0",
+    "violet": "#8A2BE2",
+    "night": "#06101A"
+  },
+  "phases": [
+    {
+      "id": "awakening",
+      "from": "0s",
+      "to": "20s",
+      "title": "event.liveevents.aurora_borealis.phase.awakening",
+      "modules": [
+        {
+          "type": "time_override",
+          "mode": "night",
+          "from": "0s",
+          "to": "120s",
+          "fade": "4s"
+        },
+        {
+          "type": "sky_tint",
+          "color": "$night",
+          "strength": 0.35,
+          "fade": "4s",
+          "to": "120s"
+        },
+        {
+          "type": "aurora",
+          "colors": [
+            "$green",
+            "$teal"
+          ],
+          "intensity": {
+            "from": 0,
+            "to": 0.6
+          },
+          "speed": 0.6
+        },
+        {
+          "type": "sound_loop",
+          "sound": "liveevents:supernova.whistler",
+          "bpm": 8,
+          "volume": 0.3,
+          "pitch": 0.7
+        }
+      ]
+    },
+    {
+      "id": "dance",
+      "from": "20s",
+      "to": "100s",
+      "title": "event.liveevents.aurora_borealis.phase.dance",
+      "modules": [
+        {
+          "type": "aurora",
+          "colors": [
+            "$green",
+            "$teal",
+            "$violet"
+          ],
+          "intensity": 0.95,
+          "speed": 1.2
+        },
+        {
+          "type": "light_pulse",
+          "color": "$green",
+          "intensity": 0.25,
+          "hz": 0.2
+        },
+        {
+          "type": "sound_loop",
+          "sound": "liveevents:supernova.whistler",
+          "bpm": 10,
+          "volume": 0.4,
+          "pitch": {
+            "from": 0.8,
+            "to": 1.1
+          }
+        }
+      ]
+    },
+    {
+      "id": "fade",
+      "from": "100s",
+      "to": "120s",
+      "title": "event.liveevents.aurora_borealis.phase.fade",
+      "modules": [
+        {
+          "type": "aurora",
+          "colors": [
+            "$green",
+            "$teal"
+          ],
+          "intensity": {
+            "from": 0.9,
+            "to": 0
+          },
+          "speed": 0.6
+        }
+      ]
+    }
+  ]
+}

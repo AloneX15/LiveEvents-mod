@@ -1,0 +1,13 @@
+{
+  "blood_moon.howl": {
+    "subtitle": "subtitles.example.blood_moon.howl",
+    "sounds": [
+      {
+        "name": "minecraft:entity.wolf.howl",
+        "type": "event",
+        "pitch": 0.6,
+        "volume": 1
+      }
+    ]
+  }
+}

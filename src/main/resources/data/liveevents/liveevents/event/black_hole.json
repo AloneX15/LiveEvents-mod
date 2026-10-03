@@ -1,0 +1,182 @@
+{
+  "$schema": "https://raw.githubusercontent.com/AloneX15/LiveEvents-mod/main/schema/liveevents-event.schema.json",
+  "format_version": 1,
+  "id": "liveevents:black_hole",
+  "display_name": "event.liveevents.black_hole",
+  "description": "event.liveevents.black_hole.description",
+  "scope": "localized",
+  "lethal": true,
+  "allowed_dimensions": [
+    "minecraft:overworld",
+    "minecraft:the_end"
+  ],
+  "cooldown": "60s",
+  "params": {
+    "radius": 32
+  },
+  "anchor": {
+    "azimuth": 0,
+    "altitude": 70
+  },
+  "palette": {
+    "void": "#000000",
+    "disk": "#FF8C1A",
+    "violet": "#6A0DAD",
+    "rim": "#FFE4B5"
+  },
+  "phases": [
+    {
+      "id": "singularity",
+      "from": "0s",
+      "to": "15s",
+      "title": "event.liveevents.black_hole.phase.singularity",
+      "modules": [
+        {
+          "type": "sky_blackout",
+          "strength": 0.4
+        },
+        {
+          "type": "plasma_shell",
+          "colors": [
+            "$rim",
+            "$disk",
+            "$violet"
+          ],
+          "coverage": {
+            "from": 0.02,
+            "to": 0.15
+          },
+          "turbulence": 3
+        },
+        {
+          "type": "celestial_body",
+          "shape": "star",
+          "color": "$void",
+          "core": "$void",
+          "size_deg": {
+            "from": 1,
+            "to": 5
+          }
+        },
+        {
+          "type": "sound_loop",
+          "sound": "liveevents:earthquake.hum",
+          "bpm": {
+            "from": 10,
+            "to": 30
+          },
+          "volume": 0.6
+        },
+        {
+          "type": "title",
+          "at": "0.5s",
+          "title": "event.liveevents.black_hole.title",
+          "subtitle": "event.liveevents.black_hole.subtitle"
+        }
+      ]
+    },
+    {
+      "id": "pull",
+      "from": "15s",
+      "to": "50s",
+      "title": "event.liveevents.black_hole.phase.pull",
+      "modules": [
+        {
+          "type": "plasma_shell",
+          "colors": [
+            "$disk",
+            "$violet"
+          ],
+          "coverage": 0.2,
+          "turbulence": 4
+        },
+        {
+          "type": "celestial_body",
+          "shape": "star",
+          "color": "$void",
+          "core": "$void",
+          "size_deg": 6
+        },
+        {
+          "type": "gravity_pull",
+          "strength": {
+            "from": 0.04,
+            "to": 0.22
+          },
+          "radius": 32
+        },
+        {
+          "type": "camera_shake",
+          "amplitude": {
+            "from": 0.1,
+            "to": 0.6
+          },
+          "frequency": 5,
+          "falloff": 64
+        },
+        {
+          "type": "chromatic_glitch",
+          "at": "30s",
+          "duration": "1s",
+          "strength": 0.5,
+          "profiles": {
+            "safe": {
+              "strength": 0.1,
+              "slices": false
+            }
+          }
+        },
+        {
+          "type": "sound_loop",
+          "sound": "liveevents:supernova.roar",
+          "bpm": 20,
+          "volume": 0.8,
+          "pitch": 0.6
+        }
+      ]
+    },
+    {
+      "id": "collapse",
+      "from": "50s",
+      "to": "60s",
+      "title": "event.liveevents.black_hole.phase.collapse",
+      "modules": [
+        {
+          "type": "crater",
+          "at": "50s",
+          "radius": 8,
+          "depth": 1,
+          "rim": "minecraft:obsidian",
+          "core": "minecraft:crying_obsidian"
+        },
+        {
+          "type": "flash",
+          "at": "50s",
+          "color": "$rim",
+          "intensity": 0.6,
+          "fade": "1s",
+          "profiles": {
+            "safe": {
+              "intensity": 0.25
+            }
+          }
+        },
+        {
+          "type": "shockwave",
+          "color": "$violet",
+          "radius": {
+            "from": 0,
+            "to": 64
+          }
+        },
+        {
+          "type": "sound",
+          "at": "50s",
+          "sound": "liveevents:supernova.collapse",
+          "volume": 1.4,
+          "position": "center"
+        }
+      ]
+    }
+  ]
+}

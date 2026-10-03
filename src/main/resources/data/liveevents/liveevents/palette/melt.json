@@ -1,0 +1,29 @@
+{
+  "format_version": 1,
+  "rules": [
+    {
+      "from": "minecraft:snow",
+      "to": "minecraft:air"
+    },
+    {
+      "from": "minecraft:snow_block",
+      "to": "minecraft:water"
+    },
+    {
+      "from": "minecraft:powder_snow",
+      "to": "minecraft:water"
+    },
+    {
+      "from": "minecraft:ice",
+      "to": "minecraft:water"
+    },
+    {
+      "from": "minecraft:packed_ice",
+      "to": "minecraft:water"
+    },
+    {
+      "from": "minecraft:frosted_ice",
+      "to": "minecraft:water"
+    }
+  ]
+}

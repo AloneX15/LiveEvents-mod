@@ -1,0 +1,131 @@
+{
+  "$schema": "https://raw.githubusercontent.com/AloneX15/LiveEvents-mod/main/schema/liveevents-event.schema.json",
+  "format_version": 1,
+  "id": "liveevents:solar_storm",
+  "display_name": "event.liveevents.solar_storm",
+  "description": "event.liveevents.solar_storm.description",
+  "scope": "celestial",
+  "anchor": {
+    "azimuth": 90,
+    "altitude": 35
+  },
+  "lethal": true,
+  "allowed_dimensions": [
+    "minecraft:overworld"
+  ],
+  "cooldown": "60s",
+  "palette": {
+    "sun": "#FFB347",
+    "plasma": "#FF6A00",
+    "green": "#39FF14",
+    "magenta": "#FF00AA",
+    "rad": "#9CFF3A"
+  },
+  "phases": [
+    {
+      "id": "flare",
+      "from": "0s",
+      "to": "15s",
+      "title": "event.liveevents.solar_storm.phase.flare",
+      "modules": [
+        {
+          "type": "celestial_body",
+          "shape": "boiling",
+          "color": "$sun",
+          "core": "#FFF1C1",
+          "size_deg": 3,
+          "flares": true,
+          "flicker_hz": [
+            1,
+            3
+          ]
+        },
+        {
+          "type": "lens_flare",
+          "colors": [
+            "$sun",
+            "$magenta"
+          ],
+          "intensity": 0.6
+        },
+        {
+          "type": "sound",
+          "at": "1s",
+          "sound": "liveevents:supernova.groan",
+          "volume": 0.7,
+          "position": "anchor"
+        },
+        {
+          "type": "title",
+          "at": "0.5s",
+          "title": "event.liveevents.solar_storm.title",
+          "subtitle": "event.liveevents.solar_storm.subtitle"
+        }
+      ]
+    },
+    {
+      "id": "storm",
+      "from": "15s",
+      "to": "60s",
+      "title": "event.liveevents.solar_storm.phase.storm",
+      "modules": [
+        {
+          "type": "aurora",
+          "colors": [
+            "$green",
+            "$magenta"
+          ],
+          "intensity": 1,
+          "speed": 2
+        },
+        {
+          "type": "screen_overlay",
+          "color": "$rad",
+          "vignette": 0.25,
+          "tint": 0.04,
+          "pulse_hz": 0.5
+        },
+        {
+          "type": "status_effect",
+          "effect": "liveevents:radiation_burn",
+          "amplifier": 0,
+          "duration": "6s",
+          "interval": "5s",
+          "requires_sky": true
+        },
+        {
+          "type": "lightning_storm",
+          "max": 6,
+          "interval": "4s",
+          "distance": 32
+        },
+        {
+          "type": "sound_loop",
+          "sound": "liveevents:supernova.crackle",
+          "bpm": 60,
+          "volume": 0.5
+        }
+      ]
+    },
+    {
+      "id": "calm",
+      "from": "60s",
+      "to": "75s",
+      "title": "event.liveevents.solar_storm.phase.calm",
+      "modules": [
+        {
+          "type": "aurora",
+          "colors": [
+            "$green",
+            "$magenta"
+          ],
+          "intensity": {
+            "from": 0.8,
+            "to": 0
+          },
+          "speed": 1
+        }
+      ]
+    }
+  ]
+}

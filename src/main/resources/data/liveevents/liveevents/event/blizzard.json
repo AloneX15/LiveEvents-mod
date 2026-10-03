@@ -1,0 +1,131 @@
+{
+  "$schema": "https://raw.githubusercontent.com/AloneX15/LiveEvents-mod/main/schema/liveevents-event.schema.json",
+  "format_version": 1,
+  "id": "liveevents:blizzard",
+  "display_name": "event.liveevents.blizzard",
+  "description": "event.liveevents.blizzard.description",
+  "scope": "regional",
+  "lethal": true,
+  "allowed_dimensions": [
+    "minecraft:overworld"
+  ],
+  "params": {
+    "radius": 96
+  },
+  "palette": {
+    "white": "#F4F8FF",
+    "grey": "#9AA6B2",
+    "ice": "#BFE6FF"
+  },
+  "phases": [
+    {
+      "id": "front",
+      "from": "0s",
+      "to": "20s",
+      "title": "event.liveevents.blizzard.phase.front",
+      "modules": [
+        {
+          "type": "weather",
+          "set": "rain",
+          "to": "90s"
+        },
+        {
+          "type": "sky_tint",
+          "color": "$grey",
+          "strength": {
+            "from": 0,
+            "to": 0.5
+          },
+          "fade": "3s",
+          "to": "90s"
+        },
+        {
+          "type": "particle_emitter",
+          "particle": "minecraft:snowflake",
+          "rate": {
+            "from": 20,
+            "to": 150
+          },
+          "radius": 18,
+          "height": 10
+        },
+        {
+          "type": "sound_loop",
+          "sound": "liveevents:supernova.wind",
+          "bpm": 12,
+          "volume": {
+            "from": 0.2,
+            "to": 0.8
+          }
+        }
+      ]
+    },
+    {
+      "id": "whiteout",
+      "from": "20s",
+      "to": "75s",
+      "title": "event.liveevents.blizzard.phase.whiteout",
+      "modules": [
+        {
+          "type": "particle_emitter",
+          "particle": "minecraft:snowflake",
+          "rate": 250,
+          "radius": 16,
+          "height": 10
+        },
+        {
+          "type": "screen_overlay",
+          "color": "$white",
+          "vignette": 0.55,
+          "tint": 0.12
+        },
+        {
+          "type": "status_effect",
+          "effect": "minecraft:slowness",
+          "amplifier": 0,
+          "duration": "6s",
+          "interval": "5s",
+          "requires_sky": true
+        },
+        {
+          "type": "block_transform",
+          "palette": "liveevents:frozen",
+          "chance": 0.08,
+          "per_second": 300
+        },
+        {
+          "type": "sound_loop",
+          "sound": "liveevents:supernova.wind",
+          "bpm": 14,
+          "volume": 1
+        }
+      ]
+    },
+    {
+      "id": "clearing",
+      "from": "75s",
+      "to": "90s",
+      "title": "event.liveevents.blizzard.phase.clearing",
+      "modules": [
+        {
+          "type": "particle_emitter",
+          "particle": "minecraft:snowflake",
+          "rate": {
+            "from": 120,
+            "to": 0
+          },
+          "radius": 18,
+          "height": 10
+        },
+        {
+          "type": "screen_overlay",
+          "color": "$white",
+          "vignette": {
+            "from": 0.4,
+            "to": 0
+          }
+        }
+      ]
+    }
+  ]
+}

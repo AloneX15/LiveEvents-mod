@@ -1,0 +1,20 @@
+{
+  "format_version": 1,
+  "rules": [
+    {
+      "from": "*",
+      "to": "minecraft:basalt",
+      "weight": 5
+    },
+    {
+      "from": "*",
+      "to": "minecraft:blackstone",
+      "weight": 3
+    },
+    {
+      "from": "*",
+      "to": "minecraft:magma_block",
+      "weight": 2
+    }
+  ]
+}

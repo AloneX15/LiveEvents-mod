@@ -1,0 +1,25 @@
+{
+  "format_version": 1,
+  "id": "liveevents_test:big",
+  "scope": "localized",
+  "world_mode": "revert_on_end",
+  "params": {
+    "radius": 48
+  },
+  "phases": [
+    {
+      "id": "burn",
+      "from": "0s",
+      "to": "20s",
+      "modules": [
+        {
+          "type": "block_transform",
+          "palette": "liveevents:scorched",
+          "chance": 1,
+          "radius": 48,
+          "per_second": 20000
+        }
+      ]
+    }
+  ]
+}

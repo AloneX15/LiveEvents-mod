@@ -1,0 +1,148 @@
+{
+  "$schema": "https://raw.githubusercontent.com/AloneX15/LiveEvents-mod/main/schema/liveevents-event.schema.json",
+  "format_version": 1,
+  "id": "liveevents:supernova",
+  "display_name": "event.liveevents.supernova",
+  "description": "event.liveevents.supernova.description",
+  "scope": "celestial",
+  "anchor": { "azimuth": 160, "altitude": 55 },
+  "allowed_dimensions": ["minecraft:overworld", "minecraft:the_end"],
+  "night_override": "visual",
+  "default_profile": "gameplay",
+  "lethal": true,
+  "cooldown": "60s",
+  "palette": {
+    "night": "#0A0E1A", "blood": "#8B0000", "cyan": "#00FFFF", "violet": "#8A2BE2",
+    "white": "#FFFFFF", "gold": "#FFD700", "magenta": "#FF00FF", "orange": "#FF4500",
+    "rot_purple": "#5B2A6E", "aurora_green": "#39FF14", "crimson": "#DC143C",
+    "hydrogen": "#FF0000", "oxygen": "#00CED1", "sulfur": "#C8B400", "pulsar": "#7DF9FF"
+  },
+  "phases": [
+    {
+      "id": "agony", "from": "0s", "to": "8s",
+      "title": "event.liveevents.supernova.phase.agony",
+      "description": {
+        "sky": "Un firmamento nocturno azul noche casi negro.",
+        "chaos": "Betelgeuse se convulsiona como mercurio hirviendo, colapsa en un segundo y deja una negrura muerta."
+      },
+      "modules": [
+        { "type": "time_override", "mode": "night", "from": "0s", "to": "60s", "fade": "3s" },
+        { "type": "sky_tint", "color": "$night", "strength": 0.7, "fade": "1.5s", "to": "7.3s" },
+        { "type": "celestial_body", "shape": "boiling", "color": "$blood", "core": "#C0201A", "size_deg": 3.5,
+          "flicker_hz": [2, 6], "flares": true, "to": "8s",
+          "collapse": { "at": "7.0s", "duration": "1.0s", "curve": "ease_in" },
+          "profiles": { "safe": { "flicker_hz": [1, 2] } } },
+        { "type": "camera_shake", "from": "3s", "to": "7s", "amplitude": { "from": 0.05, "to": 0.2 }, "frequency": 3,
+          "profiles": { "safe": { "amplitude": 0.03 } } },
+        { "type": "screen_overlay", "from": "3s", "to": "7.3s", "color": "#000000", "vignette": { "from": 0.1, "to": 0.5 } },
+        { "type": "sound_loop", "sound": "liveevents:supernova.heartbeat", "to": "7.3s", "bpm": { "from": 60, "to": 140 }, "volume": 0.9 },
+        { "type": "sound", "at": "1.5s", "sound": "liveevents:supernova.groan", "volume": 0.6, "position": "anchor" },
+        { "type": "sound", "at": "7.0s", "sound": "liveevents:supernova.collapse", "volume": 1.0, "position": "anchor" },
+        { "type": "sky_blackout", "from": "7.3s", "to": "8.0s", "strength": 0.97 },
+        { "type": "light_cut", "from": "7.3s", "to": "8.0s", "cuts": [["7.3s", "#000000"]], "strength": 0.6 },
+        { "type": "audio_duck", "from": "7.3s", "to": "8.0s", "level": 0.05 },
+        { "type": "title", "at": "0.5s", "title": "event.liveevents.supernova.title", "subtitle": "event.liveevents.supernova.subtitle" }
+      ]
+    },
+    {
+      "id": "breakout", "from": "8s", "to": "20s",
+      "title": "event.liveevents.supernova.phase.breakout",
+      "description": {
+        "sky": "¡Implosión y estallido brutal!",
+        "chaos": "La cúpula celeste se rompe en mil pedazos y el cielo cambia a golpes de luz cian y violeta."
+      },
+      "modules": [
+        { "type": "sky_shatter", "at": "8.0s", "duration": "12s", "shards": 200, "crack_color": "$cyan", "spread": "1.5s" },
+        { "type": "light_cut", "cuts": [["8.0s", "$cyan"], ["8.1s", "$violet"], ["9.2s", "$cyan"], ["10.0s", "$violet"], ["11.5s", "$cyan"]],
+          "strength": 0.45, "profiles": { "safe": { "mode": "fade", "fade": "1s", "strength": 0.25 } } },
+        { "type": "sky_tint", "color": "$violet", "horizon": "$cyan", "strength": 0.5, "fade": "0.1s",
+          "profiles": { "safe": { "fade": "1s" } } },
+        { "type": "shadow_whip", "speed": 3 },
+        { "type": "chromatic_glitch", "at": "10.0s", "duration": "0.6s", "strength": 0.8,
+          "profiles": { "safe": { "strength": 0.2, "slices": false } } },
+        { "type": "camera_shake", "at": "8.0s", "duration": "1.2s", "amplitude": { "from": 1.2, "to": 0 }, "frequency": 14, "curve": "ease_out",
+          "profiles": { "safe": { "amplitude": { "from": 0.2, "to": 0 } } } },
+        { "type": "bloom", "from": "8s", "to": "20s", "intensity": { "from": 0.4, "to": 1.5 } },
+        { "type": "sound", "at": "8.0s", "sound": "liveevents:supernova.shatter", "volume": 1.2, "delay_by_distance": false },
+        { "type": "sound", "at": "8.1s", "sound": "liveevents:supernova.xray", "volume": 0.5, "delay_by_distance": false },
+        { "type": "sound_loop", "sound": "liveevents:supernova.crackle", "from": "8.2s", "to": "20s", "bpm": 90, "volume": 0.5 },
+        { "type": "status_effect", "at": "8.1s", "effect": "liveevents:radiation_burn", "amplifier": 0, "duration": "20s", "requires_sky": true },
+        { "type": "gaze_check", "from": "8.0s", "to": "8.5s", "cone_deg": 20,
+          "then": [
+            { "type": "status_effect", "effect": "minecraft:blindness", "duration": "3s" },
+            { "type": "damage_area", "damage_type": "liveevents:stellar_burn", "amount": 2 }
+          ] }
+      ]
+    },
+    {
+      "id": "demon_sun", "from": "20s", "to": "35s",
+      "title": "event.liveevents.supernova.phase.demon_sun",
+      "description": {
+        "sky": "Blanco ciego y fuego dorado tóxico.",
+        "chaos": "La noche ha sido asesinada: un sol demonio quema la pantalla en blanco y anillos supersónicos rizan el cielo."
+      },
+      "modules": [
+        { "type": "celestial_body", "shape": "sun", "color": "$white", "core": "$white", "corona": "$gold", "size_deg": { "from": 4, "to": 15 }, "curve": "ease_out" },
+        { "type": "lens_flare", "colors": ["$pulsar", "$magenta"], "intensity": 0.9 },
+        { "type": "sky_tint", "color": "$gold", "horizon": "$magenta", "strength": 0.55, "fade": "0.5s" },
+        { "type": "atmo_rings", "color": "#FFF2CC", "interval": "2.5s", "speed_deg": 50, "distortion": 0.6,
+          "profiles": { "safe": { "distortion": 0 } } },
+        { "type": "artificial_day", "color": "#FFF6E0", "burn_undead": true },
+        { "type": "whiteout", "peak": 0.85, "peak_time": "1s", "sustain": 0.35,
+          "profiles": { "cinematic": { "peak": 1.0, "peak_time": "1.5s", "sustain": 0.7 }, "safe": { "peak": 0.4, "sustain": 0.2 } } },
+        { "type": "chromatic_glitch", "at": "20.0s", "duration": "0.8s", "strength": 0.9,
+          "profiles": { "safe": { "strength": 0 } } },
+        { "type": "bloom", "intensity": 2.0 },
+        { "type": "camera_shake", "at": "20.0s", "duration": "1.5s", "amplitude": { "from": 1.5, "to": 0.1 }, "frequency": 10, "curve": "ease_out",
+          "profiles": { "safe": { "amplitude": { "from": 0.3, "to": 0 } } } },
+        { "type": "sound_loop", "sound": "liveevents:supernova.roar", "bpm": 24, "volume": 1.0 },
+        { "type": "sound", "at": "20.0s", "sound": "liveevents:supernova.blast", "volume": 1.4, "delay_by_distance": false },
+        { "type": "sound", "at": "22.0s", "sound": "liveevents:supernova.tinnitus", "volume": 0.35, "delay_by_distance": false },
+        { "type": "audio_duck", "from": "22s", "to": "26s", "level": 0.3 },
+        { "type": "status_effect", "from": "25s", "to": "35s", "effect": "liveevents:radiation_burn", "amplifier": 1, "duration": "10s", "interval": "5s", "requires_sky": true },
+        { "type": "ignite", "from": "25s", "to": "35s", "seconds": 3, "interval": "3s", "requires_sky": true },
+        { "type": "melt", "per_second": 600, "radius": 160 }
+      ]
+    },
+    {
+      "id": "plasma_storm", "from": "35s", "to": "48s",
+      "title": "event.liveevents.supernova.phase.plasma_storm",
+      "description": {
+        "sky": "Un infierno en expansión, como un time-lapse frenético.",
+        "chaos": "El plasma devora el cielo pasando a naranja volcánico y púrpura podrido; auroras gigantes se cruzan en el cénit."
+      },
+      "modules": [
+        { "type": "plasma_shell", "colors": ["$white", "$orange", "$rot_purple"], "coverage": { "from": 0.1, "to": 0.7 }, "turbulence": 1.5 },
+        { "type": "aurora", "colors": ["$aurora_green", "$crimson"], "intensity": 0.8, "speed": 1.6,
+          "profiles": { "safe": { "speed": 0.6 } } },
+        { "type": "light_cut", "cuts": [["35s", "$orange"]], "strength": 0.25, "mode": "fade", "fade": "2s" },
+        { "type": "bloom", "intensity": { "from": 2.0, "to": 1.2 } },
+        { "type": "screen_overlay", "color": "#FF4500", "vignette": 0.25, "tint": 0.05 },
+        { "type": "sound_loop", "sound": "liveevents:supernova.plasma", "bpm": 40, "volume": 0.9 },
+        { "type": "sound_loop", "sound": "liveevents:supernova.whistler", "bpm": 12, "volume": 0.5, "pitch": { "from": 1.2, "to": 0.8 } },
+        { "type": "lightning_storm", "max": 12, "interval": "1.2s", "distance": 28, "fire": false },
+        { "type": "status_effect", "at": "35s", "effect": "liveevents:radiation_burn", "amplifier": 0, "duration": "13s", "requires_sky": true },
+        { "type": "block_transform", "palette": "liveevents:scorched", "chance": 0.15, "radius": 160, "per_second": 500,
+          "profiles": { "cinematic": { "chance": 0.35 } } }
+      ]
+    },
+    {
+      "id": "eternal_scar", "from": "48s", "to": "60s",
+      "title": "event.liveevents.supernova.phase.eternal_scar",
+      "description": {
+        "sky": "Una telaraña de gas venenoso y un cadáver que late.",
+        "chaos": "Queda una nebulosa colosal con venas de hidrógeno y encajes de oxígeno; en su centro late un púlsar."
+      },
+      "modules": [
+        { "type": "nebula", "colors": ["$hydrogen", "$oxygen", "$sulfur"], "span_deg": 180, "opacity": { "from": 0, "to": 0.65 } },
+        { "type": "pulsar", "color": "$pulsar", "hz": 30, "beam_rpm": 40,
+          "profiles": { "safe": { "hz": 1, "beam_rpm": 10 } } },
+        { "type": "lens_flare", "colors": ["$pulsar"], "intensity": 0.3 },
+        { "type": "bloom", "intensity": { "from": 1.2, "to": 0 }, "to": "54s" },
+        { "type": "sound_loop", "sound": "liveevents:supernova.wind", "volume": { "from": 0.8, "to": 0 }, "bpm": 10 },
+        { "type": "sound_loop", "sound": "liveevents:supernova.pulsar", "bpm": 120, "volume": 0.25 }
+      ]
+    }
+  ],
+  "aftermath": { "persistent": ["nebula", "pulsar"], "duration": "3d" }
+}

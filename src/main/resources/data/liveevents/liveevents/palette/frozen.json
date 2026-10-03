@@ -1,0 +1,17 @@
+{
+  "format_version": 1,
+  "rules": [
+    {
+      "from": "minecraft:water",
+      "to": "minecraft:ice"
+    },
+    {
+      "from": "minecraft:grass_block",
+      "to": "minecraft:snow_block"
+    },
+    {
+      "from": "#minecraft:leaves",
+      "to": "minecraft:powder_snow"
+    }
+  ]
+}

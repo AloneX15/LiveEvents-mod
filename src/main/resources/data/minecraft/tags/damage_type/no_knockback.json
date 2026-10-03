@@ -1,0 +1,8 @@
+{
+  "replace": false,
+  "values": [
+    "liveevents:radiation",
+    "liveevents:seismic",
+    "liveevents:acid"
+  ]
+}

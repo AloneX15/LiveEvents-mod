@@ -1,0 +1,28 @@
+{
+  "format_version": 1,
+  "id": "liveevents_test:harm",
+  "scope": "localized",
+  "lethal": false,
+  "affects": [
+    "passive"
+  ],
+  "params": {
+    "radius": 6
+  },
+  "phases": [
+    {
+      "id": "hurt",
+      "from": "0s",
+      "to": "3s",
+      "modules": [
+        {
+          "type": "damage_area",
+          "damage_type": "liveevents:stellar_burn",
+          "amount": 50,
+          "radius": 8,
+          "interval": "0.5s"
+        }
+      ]
+    }
+  ]
+}

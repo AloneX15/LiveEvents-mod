@@ -1,0 +1,10 @@
+{
+  "event.example.blood_moon": "Blood Moon",
+  "event.example.blood_moon.description": "A huge red moon rises and the night hunts. Example event from the LiveEvents Example Pack.",
+  "event.example.blood_moon.title": "The Blood Moon rises",
+  "event.example.blood_moon.subtitle": "Stay close to the light",
+  "event.example.blood_moon.phase.rise": "The Rising",
+  "event.example.blood_moon.phase.hunt": "The Hunt",
+  "event.example.blood_moon.phase.set": "The Setting",
+  "subtitles.example.blood_moon.howl": "Something howls"
+}

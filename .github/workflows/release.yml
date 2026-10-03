@@ -1,0 +1,161 @@
+name: Release
+
+# Al subir un tag vX.Y.Z: comprueba que coincide con mod.version, compila y prueba cada versión de Minecraft y crea una
+# release de GitHub con los jars y la sección del CHANGELOG. Todo lo demás es opcional y se activa con variables:
+#   Modrinth:    vars.MODRINTH_ID   + secrets.MODRINTH_TOKEN
+#   CurseForge:  vars.CURSEFORGE_ID + secrets.CURSEFORGE_TOKEN
+#   Maven (API): vars.MAVEN_URL     + secrets.MAVEN_USERNAME + secrets.MAVEN_PASSWORD
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  prepare:
+    name: Check tag and changelog
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Tag must match mod.version
+        run: |
+          version="$(sed -n 's/^mod\.version *= *"\(.*\)".*/\1/p' stonecutter.properties.toml | head -1)"
+          if [ "$GITHUB_REF_NAME" != "v$version" ]; then
+            echo "::error::El tag $GITHUB_REF_NAME no coincide con mod.version ($version) de stonecutter.properties.toml"
+            exit 1
+          fi
+
+      - name: Extract release notes from CHANGELOG.md
+        run: |
+          # Toma la sección "## X.Y.Z ..." (o "## [X.Y.Z]") hasta el siguiente "## "
+          v="${GITHUB_REF_NAME#v}"
+          awk -v v="$v" '
+            /^## / { if (found) exit; if (index($0, "## " v) == 1 || index($0, "## [" v "]") == 1) { found = 1; next } }
+            found { print }
+          ' CHANGELOG.md > notes.md
+          if [ ! -s notes.md ]; then
+            echo "::warning::CHANGELOG.md no tiene sección para $v; se usan notas genéricas"
+            echo "Ver CHANGELOG.md." > notes.md
+          fi
+          cat notes.md
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: release-notes
+          path: notes.md
+
+  build:
+    name: Build MC ${{ matrix.minecraft }}
+    needs: prepare
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: true
+      matrix:
+        # una entrada por versión; game-versions = versiones de MC en Modrinth/CurseForge
+        include:
+          - minecraft: "26.1.2"
+            game-versions: |
+              26.1
+              26.1.1
+              26.1.2
+          - minecraft: "26.2"
+            game-versions: |
+              26.2
+          - minecraft: "26.3"
+            game-versions: |
+              26.3
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: 25
+
+      - uses: gradle/actions/setup-gradle@v6
+
+      - name: Build and test
+        run: ./gradlew :${{ matrix.minecraft }}:build :${{ matrix.minecraft }}:runGameTest --stacktrace
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: liveevents-mc${{ matrix.minecraft }}
+          path: |
+            versions/${{ matrix.minecraft }}/build/libs/*.jar
+            !versions/${{ matrix.minecraft }}/build/libs/*-sources.jar
+            !versions/${{ matrix.minecraft }}/build/libs/*-api.jar
+          if-no-files-found: error
+
+      - name: Publish API to Maven
+        if: ${{ vars.MAVEN_URL != '' }}
+        env:
+          MAVEN_URL: ${{ vars.MAVEN_URL }}
+          MAVEN_USERNAME: ${{ secrets.MAVEN_USERNAME }}
+          MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
+        run: ./gradlew :${{ matrix.minecraft }}:publish --stacktrace
+
+      - uses: actions/download-artifact@v8
+        if: ${{ vars.MODRINTH_ID != '' || vars.CURSEFORGE_ID != '' }}
+        with:
+          name: release-notes
+
+      - name: Publish to Modrinth / CurseForge
+        if: ${{ vars.MODRINTH_ID != '' || vars.CURSEFORGE_ID != '' }}
+        uses: Kir-Antipov/mc-publish@v3.3
+        with:
+          modrinth-id: ${{ vars.MODRINTH_ID }}
+          modrinth-token: ${{ secrets.MODRINTH_TOKEN }}
+          curseforge-id: ${{ vars.CURSEFORGE_ID }}
+          curseforge-token: ${{ secrets.CURSEFORGE_TOKEN }}
+          files: |
+            versions/${{ matrix.minecraft }}/build/libs/*.jar
+            !versions/${{ matrix.minecraft }}/build/libs/*-sources.jar
+            !versions/${{ matrix.minecraft }}/build/libs/*-api.jar
+          name: LiveEvents ${{ github.ref_name }} for MC ${{ matrix.minecraft }}
+          version: ${{ github.ref_name }}+mc${{ matrix.minecraft }}
+          # Tags con guion (v1.0.0-beta.1) salen como beta
+          version-type: ${{ contains(github.ref_name, '-') && 'beta' || 'release' }}
+          changelog-file: notes.md
+          loaders: fabric
+          game-versions: ${{ matrix.game-versions }}
+          java: 25
+          dependencies: |
+            fabric-api(required)
+
+  github-release:
+    name: GitHub release
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          pattern: liveevents-mc*
+          path: jars
+          merge-multiple: true
+
+      - uses: actions/download-artifact@v8
+        with:
+          name: release-notes
+
+      - name: Create release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          {
+            echo "Un jar por versión de Minecraft (26.1.2, 26.2 y 26.3). Requiere Fabric Loader y Fabric API."
+            echo
+            cat notes.md
+            echo
+            echo "Creado por TakumiStudios."
+          } > body.md
+          prerelease=""
+          case "$GITHUB_REF_NAME" in *-*) prerelease="--prerelease" ;; esac
+          gh release create "$GITHUB_REF_NAME" jars/*.jar \
+            --title "LiveEvents $GITHUB_REF_NAME" \
+            --notes-file body.md \
+            --verify-tag $prerelease

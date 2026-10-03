@@ -1,0 +1,107 @@
+{
+  "$schema": "https://raw.githubusercontent.com/AloneX15/LiveEvents-mod/main/schema/liveevents-event.schema.json",
+  "format_version": 1,
+  "id": "liveevents:acid_rain",
+  "display_name": "event.liveevents.acid_rain",
+  "description": "event.liveevents.acid_rain.description",
+  "scope": "regional",
+  "lethal": true,
+  "allowed_dimensions": [
+    "minecraft:overworld"
+  ],
+  "params": {
+    "radius": 96
+  },
+  "palette": {
+    "sick": "#9ACD32",
+    "toxic": "#7FFF00",
+    "murk": "#3E4A1E"
+  },
+  "phases": [
+    {
+      "id": "clouds",
+      "from": "0s",
+      "to": "15s",
+      "title": "event.liveevents.acid_rain.phase.clouds",
+      "modules": [
+        {
+          "type": "weather",
+          "set": "rain",
+          "to": "80s"
+        },
+        {
+          "type": "sky_tint",
+          "color": "$murk",
+          "strength": {
+            "from": 0,
+            "to": 0.55
+          },
+          "fade": "3s",
+          "to": "80s"
+        },
+        {
+          "type": "sound_loop",
+          "sound": "liveevents:meteor.rumble",
+          "bpm": 10,
+          "volume": 0.4
+        }
+      ]
+    },
+    {
+      "id": "downpour",
+      "from": "15s",
+      "to": "65s",
+      "title": "event.liveevents.acid_rain.phase.downpour",
+      "modules": [
+        {
+          "type": "screen_overlay",
+          "color": "$toxic",
+          "vignette": 0.3,
+          "tint": 0.06
+        },
+        {
+          "type": "damage_area",
+          "damage_type": "liveevents:acid",
+          "amount": 1,
+          "interval": "2s",
+          "requires_sky": true
+        },
+        {
+          "type": "block_transform",
+          "palette": "liveevents:corroded",
+          "chance": 0.12,
+          "per_second": 300
+        },
+        {
+          "type": "particle_emitter",
+          "particle": "minecraft:falling_spore_blossom",
+          "rate": 40,
+          "radius": 14,
+          "height": 8
+        },
+        {
+          "type": "sound_loop",
+          "sound": "liveevents:meteor.sizzle",
+          "bpm": 30,
+          "volume": 0.6
+        }
+      ]
+    },
+    {
+      "id": "drizzle",
+      "from": "65s",
+      "to": "80s",
+      "title": "event.liveevents.acid_rain.phase.drizzle",
+      "modules": [
+        {
+          "type": "screen_overlay",
+          "color": "$toxic",
+          "vignette": {
+            "from": 0.3,
+            "to": 0
+          }
+        }
+      ]
+    }
+  ]
+}

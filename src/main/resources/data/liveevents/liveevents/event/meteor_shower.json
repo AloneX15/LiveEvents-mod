@@ -1,0 +1,74 @@
+{
+  "$schema": "https://raw.githubusercontent.com/AloneX15/LiveEvents-mod/main/schema/liveevents-event.schema.json",
+  "format_version": 1,
+  "id": "liveevents:meteor_shower",
+  "display_name": "event.liveevents.meteor_shower",
+  "description": "event.liveevents.meteor_shower.description",
+  "scope": "localized",
+  "allowed_dimensions": ["minecraft:overworld", "minecraft:the_nether", "minecraft:the_end"],
+  "night_override": "none",
+  "cooldown": "30s",
+  "params": { "radius": 128, "count": 40 },
+  "palette": {
+    "night": "#0B1020", "core": "#FFF4D6", "magnesium": "#7CFF6B", "trail": "#FF7A1A",
+    "smoke": "#3A3A3A", "crater_glow": "#FF3B00"
+  },
+  "phases": [
+    {
+      "id": "omen", "from": "0s", "to": "10s",
+      "title": "event.liveevents.meteor_shower.phase.omen",
+      "description": {
+        "sky": "La noche se espesa. Estrellas fugaces lejanas, cada vez más seguidas.",
+        "chaos": "Algo viene. Una chispa roja cruza el horizonte demasiado despacio y es demasiado grande."
+      },
+      "modules": [
+        { "type": "sky_tint", "color": "$night", "strength": 0.45, "fade": "3s", "to": "90s" },
+        { "type": "meteor_trail", "rate": { "from": 0.3, "to": 3 }, "color": "$trail", "core": "$core" },
+        { "type": "sound_loop", "sound": "liveevents:meteor.rumble", "bpm": 20, "volume": { "from": 0.2, "to": 0.6 } },
+        { "type": "boss_bar", "to": "90s", "color": "red" },
+        { "type": "title", "at": "0.5s", "title": "event.liveevents.meteor_shower.title", "subtitle": "event.liveevents.meteor_shower.subtitle" }
+      ]
+    },
+    {
+      "id": "first_blood", "from": "10s", "to": "25s",
+      "title": "event.liveevents.meteor_shower.phase.first_blood",
+      "description": {
+        "sky": "Un bólido enorme cruza de horizonte a horizonte, con destellos verdes, y se parte en tres.",
+        "chaos": "Primero el resplandor en el horizonte y un hongo de polvo. Segundos después, el estampido."
+      },
+      "modules": [
+        { "type": "meteor_trail", "rate": 2, "color": "$magnesium", "core": "$core" },
+        { "type": "meteor_impacts", "count": 3, "first_big": true, "crater_radius": { "from": 5, "to": 7 }, "damage": 14, "blast_radius": 9, "warning": "2s", "fire": true, "from": "12s", "to": "24s" }
+      ]
+    },
+    {
+      "id": "judgement", "from": "25s", "to": "65s",
+      "title": "event.liveevents.meteor_shower.phase.judgement",
+      "description": {
+        "sky": "Decenas de estelas a la vez. El cielo es una red de líneas incandescentes.",
+        "chaos": "Un círculo de brasas aparece 1,5 s antes de cada impacto. Corre."
+      },
+      "modules": [
+        { "type": "meteor_trail", "rate": 6, "color": "$trail", "core": "$core" },
+        { "type": "meteor_impacts", "count": "$count", "crater_radius": { "from": 2, "to": 5 }, "damage": 8, "blast_radius": 6, "warning": "1.5s", "fire": true,
+          "profiles": { "safe": { "warning": "2.5s" } } },
+        { "type": "sound_loop", "sound": "liveevents:meteor.rumble", "bpm": 30, "volume": 0.8 }
+      ]
+    },
+    {
+      "id": "smoking_scars", "from": "65s", "to": "90s",
+      "title": "event.liveevents.meteor_shower.phase.smoking_scars",
+      "description": {
+        "sky": "Las últimas chispas. Columnas de humo suben de cada cráter.",
+        "chaos": "Silencio, brasas y roca que aún brilla."
+      },
+      "modules": [
+        { "type": "meteor_trail", "rate": { "from": 1, "to": 0 } },
+        { "type": "particle_emitter", "particle": "minecraft:campfire_cosy_smoke", "rate": { "from": 30, "to": 5 }, "around": "center", "radius": "$radius * 0.5", "height": 1 },
+        { "type": "ash_fall", "rate": { "from": 40, "to": 0 } },
+        { "type": "sound_loop", "sound": "liveevents:meteor.sizzle", "bpm": 20, "volume": { "from": 0.6, "to": 0 } },
+        { "type": "audio_duck", "from": "65s", "to": "75s", "level": 0.6 }
+      ]
+    }
+  ]
+}

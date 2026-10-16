@@ -443,7 +443,7 @@ public final class VisualDirector {
             return;
         }
         float v = (float) (volume * ClientConfig.get().event_volume);
-        if (v <= 0.01f || sounds.size() > 64) {
+        if (v <= 0.01f || sounds.size() >= 64) {
             return; // tope de voces
         }
         sounds.add(new PendingSound(System.nanoTime() + (long) (delaySeconds * 1e9), key, v, pitch, x, y, z));

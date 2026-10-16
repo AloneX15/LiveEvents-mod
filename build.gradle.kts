@@ -118,6 +118,7 @@ tasks {
     }
 
     jar {
+        from(rootProject.file("CREDITS.md"))
         from(rootProject.file("LICENSE")) { rename { "${it}_$modId" } }
         manifest.attributes(
             "Implementation-Title" to modName,

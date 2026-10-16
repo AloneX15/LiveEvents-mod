@@ -110,6 +110,17 @@ class WorkSchedulerTest {
     }
 
     @Test
+    void rechecksBudgetAfterPreemptionBeforeStartingWork() {
+        AtomicInteger reads=new AtomicInteger(),runs=new AtomicInteger();
+        WorkScheduler scheduler=new WorkScheduler(2,100,()->reads.getAndIncrement()<2?0:3_000_000);
+        scheduler.submit("paused",Priority.BLOCKS,a->{runs.incrementAndGet();return Result.done(1);});
+        scheduler.tick();
+        assertEquals(0,runs.get());assertEquals(1,scheduler.pending());
+        assertTrue(scheduler.stats().lastSliceStartMs()<=2);
+        scheduler.tick();assertEquals(1,runs.get());
+    }
+
+    @Test
     void failuresCarryTheirOwner() {
         WorkScheduler scheduler = new WorkScheduler(2.0, 100, System::nanoTime);
         scheduler.submit("broken", Priority.GAMEPLAY, a -> {

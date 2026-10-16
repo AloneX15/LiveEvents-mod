@@ -155,7 +155,7 @@ public final class WorkScheduler {
             while (!q.isEmpty()) {
                 // Se para si el siguiente trozo (coste medio estimado) ya no cabe; al menos una tarea por tick
                 long elapsed = nanoClock.getAsLong() - start;
-                if (tasks > 0 && elapsed + (long) avgSliceNanos >= budgetNanos) {
+                if (elapsed >= budgetNanos || tasks > 0 && elapsed + (long) avgSliceNanos >= budgetNanos) {
                     break outer;
                 }
                 int allowance = blockBudget - blocks;
@@ -165,6 +165,8 @@ public final class WorkScheduler {
                 Owned o = q.pollFirst();
                 Result r;
                 long sliceStart = nanoClock.getAsLong();
+                // The OS/GC can pause us between the earlier check and dequeuing the task.
+                if (sliceStart-start>=budgetNanos) { q.addFirst(o); break outer; }
                 lastSliceStart = sliceStart - start;
                 try {
                     // Trozos pequeños: el tiempo se comprueba entre trozos, así una tarea no se pasa del presupuesto

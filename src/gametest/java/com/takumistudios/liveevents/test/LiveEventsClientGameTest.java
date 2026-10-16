@@ -38,7 +38,7 @@ public class LiveEventsClientGameTest implements FabricClientGameTest {
             server.runCommand("gamemode creative @a");
             server.runCommand("execute as @p at @s run tp @s ~ ~12 ~ -20 -45");
             context.waitTicks(40);
-            context.takeScreenshot("liveevents_00_night_sky");
+            ScreenshotWorkaround.capture(context, "liveevents_00_night_sky");
 
             meteorWorldAcceptance(context, world);
             if (Boolean.getBoolean("liveevents.meteorOnly")) return;
@@ -64,7 +64,7 @@ public class LiveEventsClientGameTest implements FabricClientGameTest {
             int last = start(context, server, "le start supernova profile=gameplay");
             server.runCommand("le seek " + last + " 59.5");
             context.waitTicks(80);
-            context.takeScreenshot("supernova_09_aftermath");
+            ScreenshotWorkaround.capture(context, "supernova_09_aftermath");
 
             server.runCommand("le scars clear all");
 
@@ -78,7 +78,7 @@ public class LiveEventsClientGameTest implements FabricClientGameTest {
             server.runCommand("execute as @p at @s run tp @s ~ ~ ~ 0 30");
             server.runCommand("le seek " + meteor + " 12.5");
             context.waitTicks(110); // el impacto es a los ~15 s: esperar a que se abra el cráter
-            context.takeScreenshot("great_meteor_crater");
+            ScreenshotWorkaround.capture(context, "great_meteor_crater");
             stop(context, server, meteor);
 
             // Lluvia de meteoritos: mirar al horizonte desde una altura
@@ -86,9 +86,9 @@ public class LiveEventsClientGameTest implements FabricClientGameTest {
             int meteors = start(context, server, "le start meteor_shower radius=40 count=40");
             server.runCommand("le seek " + meteors + " 28");
             context.waitTicks(45);
-            context.takeScreenshot("meteor_shower_01_rain");
+            ScreenshotWorkaround.capture(context, "meteor_shower_01_rain");
             context.waitTicks(40);
-            context.takeScreenshot("meteor_shower_02_impacts");
+            ScreenshotWorkaround.capture(context, "meteor_shower_02_impacts");
             stop(context, server, meteors);
 
             // Terremoto con el overlay de depuración
@@ -96,7 +96,7 @@ public class LiveEventsClientGameTest implements FabricClientGameTest {
             int quake = start(context, server, "le start earthquake");
             server.runCommand("le seek " + quake + " 14");
             context.waitTicks(30);
-            context.takeScreenshot("earthquake_01_s_wave_debug");
+            ScreenshotWorkaround.capture(context, "earthquake_01_s_wave_debug");
             server.runCommand("execute as @p run le debug timeline");
             stop(context, server, quake);
 
@@ -104,14 +104,14 @@ public class LiveEventsClientGameTest implements FabricClientGameTest {
             int panel = start(context, server, "le start meteor_shower");
             server.runCommand("execute as @p run le gui");
             context.waitTicks(20);
-            context.takeScreenshot("admin_panel");
+            ScreenshotWorkaround.capture(context, "admin_panel");
             context.runOnClient(mc -> mc.setScreenAndShow(null));
             stop(context, server, panel);
 
             // Opciones del cliente
             context.runOnClient(mc -> mc.setScreenAndShow(new ConfigScreen(null)));
             context.waitTicks(10);
-            context.takeScreenshot("client_options");
+            ScreenshotWorkaround.capture(context, "client_options");
             context.runOnClient(mc -> mc.setScreenAndShow(null));
         }
     }
@@ -146,28 +146,35 @@ public class LiveEventsClientGameTest implements FabricClientGameTest {
                 if(event.meteors.values().stream().noneMatch(m->m.index()>=1000000000 && m.surface().equals(surface))) throw new AssertionError("Missing server-fixed "+surface+" meteor");
                 setHudHidden(mc,true);
             });
-            context.takeScreenshot("meteor_v2_"+surface+"_warning_f1");
+            ScreenshotWorkaround.capture(context, "meteor_v2_"+surface+"_warning_f1");
             context.waitTicks(50);
-            context.takeScreenshot("meteor_v2_"+surface+"_impact_f1");
+            ScreenshotWorkaround.capture(context, "meteor_v2_"+surface+"_impact_f1");
             if(surface.equals("earth")) {
                 context.waitTicks(45);
-                context.takeScreenshot("meteor_v2_earth_mushroom_front");
+                ScreenshotWorkaround.capture(context, "meteor_v2_earth_mushroom_front");
                 server.runCommand("tp @a 24 108 0 90 10");context.waitTicks(4);
-                context.takeScreenshot("meteor_v2_earth_mushroom_side");
+                ScreenshotWorkaround.capture(context, "meteor_v2_earth_mushroom_side");
                 server.runCommand("tp @a 0 126 -12 0 65");context.waitTicks(4);
-                context.takeScreenshot("meteor_v2_earth_mushroom_above");
+                ScreenshotWorkaround.capture(context, "meteor_v2_earth_mushroom_above");
                 server.runCommand("tp @a 0 108 -24 0 10");
                 server.runCommand("fill -12 100 -8 12 122 -7 stone");context.waitTicks(4);
-                context.takeScreenshot("meteor_v2_earth_occluded");
+                ScreenshotWorkaround.capture(context, "meteor_v2_earth_occluded");
                 server.runCommand("fill -12 100 -8 12 122 -7 air");
             }
             context.runOnClient(mc->setHudHidden(mc,false));
             stop(context,server,id);
         }
         context.runOnClient(mc->com.takumistudios.liveevents.client.render.MeteorWorldRenderer.resetMetrics());
+        server.runCommand("fill -12 96 -12 12 99 12 stone");
+        server.runCommand("fill -12 99 -12 12 99 12 grass_block");
+        server.runCommand("fill -12 100 -12 12 124 12 air");
         int stress=start(context,server,"le start meteor_shower at 0 100 0 radius=32 count=1 destructive_power=0");
         server.runCommand("le seek "+stress+" 12");context.waitTicks(3);
-        for(int k=0;k<12;k++) server.runCommand("le meteor strike "+stress+" at "+((k%4)*6-9)+" 100 "+((k/4)*6-6)+" power=0");
+        for(int k=0;k<12;k++) server.runCommand("le meteor strike "+stress+" at "+((k%4)*6-9)+" 100 "+((k/4)*6-6)+" power=0.7");
+        server.runOnServer(s->{
+            long count=LiveEventsServer.get().director().get(stress).orElseThrow().meteors.announced().stream().filter(m->m.index()>=1000000000).count();
+            if(count!=12)throw new AssertionError("Expected twelve stress impacts, got "+count);
+        });
         context.waitTicks(100);
         context.runOnClient(mc->{
             int peak=com.takumistudios.liveevents.client.render.MeteorWorldRenderer.peakQuads();
@@ -175,7 +182,7 @@ public class LiveEventsClientGameTest implements FabricClientGameTest {
             com.takumistudios.liveevents.LiveEvents.LOGGER.info("METEOR_PERF impacts=12 peak_quads={} average_extraction_ms={} fps={}",peak,
                     com.takumistudios.liveevents.client.render.MeteorWorldRenderer.averageExtractionMs(),mc.getFps());
         });
-        context.takeScreenshot("meteor_v2_stress_12");stop(context,server,stress);
+        ScreenshotWorkaround.capture(context, "meteor_v2_stress_12");stop(context,server,stress);
         server.runCommand("gamemode creative @a");
         server.runCommand("tp @a 0 110 -24 -20 -45");
     }
@@ -201,7 +208,7 @@ public class LiveEventsClientGameTest implements FabricClientGameTest {
         server.runCommand(look);
         server.runCommand("le seek " + id + " " + second);
         context.waitTicks(30);
-        context.takeScreenshot(name);
+        ScreenshotWorkaround.capture(context, name);
         stop(context, server, id);
     }
 
@@ -211,7 +218,7 @@ public class LiveEventsClientGameTest implements FabricClientGameTest {
         context.waitTicks(4);
         server.runCommand("le pause " + id);
         context.waitTicks(8);
-        context.takeScreenshot(name);
+        ScreenshotWorkaround.capture(context, name);
         server.runCommand("le resume " + id);
     }
 }

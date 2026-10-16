@@ -27,6 +27,8 @@ public final class MeteorController {
     private final Map<String, AnnouncedMeteor> announced = new LinkedHashMap<>();
     private final Set<String> applied = new LinkedHashSet<>();
     private final Map<UUID, Double> restedUntil = new HashMap<>();
+    private record RestZone(Vec3 center,double until) { }
+    private final List<RestZone> restZones = new ArrayList<>();
     private String mode = "random";
     private UUID player;
     private Vec3 coordinates;
@@ -58,8 +60,9 @@ public final class MeteorController {
                 || min < 3 || min > 64 || !Double.isFinite(radius) || radius < 1 || radius > 128
                 || !Double.isFinite(spread) || spread < 0 || spread > 128
                 || !Double.isFinite(randomWeight) || randomWeight < 0 || !Double.isFinite(groupWeight) || groupWeight < 0
-                || randomWeight + groupWeight <= 0) throw new IllegalArgumentException("Invalid meteor targeting settings");
-        if (mode.equals("player") && (player == null || instance.level().getPlayerByUUID(player) == null))
+                || !Double.isFinite(randomWeight+groupWeight) || randomWeight + groupWeight <= 0) throw new IllegalArgumentException("Invalid meteor targeting settings");
+        if (mode.equals("player") && (player == null || instance.level().getPlayerByUUID(player) == null
+                || instance.level().getPlayerByUUID(player).isSpectator() || !validPoint(instance.level().getPlayerByUUID(player).position())))
             throw new IllegalArgumentException("Player is not in the event dimension");
         if (mode.equals("coordinates") && (point == null || !validPoint(point)))
             throw new IllegalArgumentException("Target must be loaded and within the event area");
@@ -85,6 +88,8 @@ public final class MeteorController {
     }
 
     private Vec3 select(MeteorPlan.Impact candidate, long seed) {
+        restZones.removeIf(zone -> zone.until()<=instance.eventTicks());
+        restedUntil.values().removeIf(until -> until<=instance.eventTicks());
         DeterministicRandom random = new DeterministicRandom(seed);
         String selected = mode;
         if (selected.equals("mixed")) selected = random.nextDouble() * (randomWeight + groupWeight) < groupWeight ? "groups" : "random";
@@ -98,7 +103,9 @@ public final class MeteorController {
         if (selected.equals("coordinates")) return around(coordinates, random);
         if (selected.equals("groups")) {
             List<ServerPlayer> eligible = instance.level().players().stream()
-                    .filter(p -> !p.isSpectator() && (includeCreative || !p.isCreative()) && validPoint(p.position()))
+                    .sorted(Comparator.comparing(p -> p.getUUID().toString())).limit(128)
+                    .filter(p -> !p.isSpectator() && (includeCreative || !p.isCreative()) && validPoint(p.position())
+                            && restZones.stream().noneMatch(zone -> zone.center().distanceToSqr(p.position())<groupRadius*groupRadius))
                     .sorted(Comparator.comparing(p -> p.getUUID().toString())).toList();
             Set<UUID> visited = new HashSet<>();
             List<List<ServerPlayer>> groups = new ArrayList<>();
@@ -109,12 +116,15 @@ public final class MeteorController {
                 near.forEach(p -> visited.add(p.getUUID()));
                 if (near.size() >= minGroup && near.stream().noneMatch(p -> restedUntil.getOrDefault(p.getUUID(), 0.0) > instance.eventTicks())) groups.add(near);
             }
-            if (!groups.isEmpty()) {
+            if (!groups.isEmpty() && restZones.size()<128) {
                 List<ServerPlayer> group = groups.get(random.nextInt(groups.size()));
                 Vec3 center = Vec3.ZERO;
                 for (ServerPlayer p : group) center = center.add(p.position());
                 Vec3 target = around(center.scale(1.0 / group.size()), random);
-                if (target != null) group.forEach(p -> restedUntil.put(p.getUUID(), instance.eventTicks() + restTicks));
+                if (target != null) {
+                    group.forEach(p -> restedUntil.put(p.getUUID(), instance.eventTicks() + restTicks));
+                    restZones.add(new RestZone(target,instance.eventTicks()+restTicks));
+                }
                 return target;
             }
             if(waitWhenEmpty) return null;
@@ -153,17 +163,28 @@ public final class MeteorController {
             String key = ctx.spec().index() + ":" + candidate.index();
             if (announced.containsKey(key) || applied.contains(key) || candidate.tick() < ctx.eventTicks()) continue;
             if (candidate.tick() - APPROACH_TICKS > ctx.eventTicks()) break;
-            if (applied.size() > 4096) applied.remove(applied.iterator().next());
+            while (applied.size() > 4096) applied.remove(applied.iterator().next());
             applied.add(key); // A rejected launch is not retried every tick.
             double brutality = instance.vars().getOrDefault("brutality", 0.5);
             long seed = DeterministicRandom.derive(ctx.moduleSeed(), candidate.index());
-            if (new DeterministicRandom(seed).nextDouble() > Math.min(1, 0.2 + brutality * 1.6)) continue;
+            if (new DeterministicRandom(seed).nextDouble() >= com.takumistudios.liveevents.core.plan.MeteorIntensity.retain(brutality)) continue;
             if (ctx.eventTicks() - lastAnnouncement < 4 || announced.values().stream().filter(m -> m.tick() > ctx.eventTicks()).count() >= 24) { throttled++; continue; }
             Vec3 target = select(candidate, seed);
             if (target == null) continue;
             double power = instance.vars().getOrDefault("destructive_power",instance.vars().getOrDefault("power", 0.7));
             announce(ctx.spec().index(), candidate.index(), Math.max(candidate.tick(), ctx.eventTicks() + APPROACH_TICKS), target,
                     candidate.craterRadius() * (0.5 + power), power, candidate.entryAzimuth(), candidate.entryAngle(), candidate.big(), seed, instance.vars().getOrDefault("visual_power",instance.vars().getOrDefault("power",power)));
+            double extraChance=com.takumistudios.liveevents.core.plan.MeteorIntensity.extra(brutality);
+            DeterministicRandom burst=new DeterministicRandom(seed ^ 0x6d6574656f72L);
+            if(burst.nextDouble()<extraChance && announced.values().stream().filter(m->m.tick()>ctx.eventTicks()).count()<24) {
+                double az=burst.range(0,Math.PI*2),distance=Math.sqrt(burst.nextDouble())*instance.vars().getOrDefault("radius",128.0);
+                var extraCandidate=new MeteorPlan.Impact(candidate.index()+10000000,candidate.tick()+4,Math.cos(az)*distance,Math.sin(az)*distance,
+                        candidate.craterRadius(),candidate.entryAzimuth(),candidate.entryAngle(),burst.nextDouble()<extraChance*0.25);
+                Vec3 extraTarget=select(extraCandidate,seed+1);
+                if(extraTarget!=null) announce(ctx.spec().index(),extraCandidate.index(),Math.max(extraCandidate.tick(),ctx.eventTicks()+APPROACH_TICKS+4),
+                        extraTarget,extraCandidate.craterRadius()*(0.5+power)*(extraCandidate.big()?1.4:1),power,extraCandidate.entryAzimuth(),extraCandidate.entryAngle(),
+                        extraCandidate.big(),seed+1,instance.vars().getOrDefault("visual_power",instance.vars().getOrDefault("power",power)));
+            }
             lastAnnouncement = ctx.eventTicks();
         }
     }
@@ -181,6 +202,8 @@ public final class MeteorController {
         if (!Double.isFinite(power) || power < 0 || power > 1 || !validPoint(at)) throw new IllegalArgumentException("Invalid impact target or power");
         if (instance.eventTicks() + APPROACH_TICKS + 30 >= instance.durationSeconds()*20 || announced.values().stream().filter(m -> m.tick() > instance.eventTicks()).count() >= 24)
             throw new IllegalArgumentException("Meteor launch budget exhausted");
+        int expectedY=instance.level().getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES,(int)Math.floor(at.x),(int)Math.floor(at.z));
+        if(Math.abs(at.y-expectedY)>1) throw new IllegalArgumentException("Impact coordinates must identify the loaded surface");
         // Manual targets use the exact requested coordinates, fixed before the warning.
         double physicalPower=instance.vars().getOrDefault("destructive_power",power);
         double visualPower=instance.vars().getOrDefault("visual_power",power);

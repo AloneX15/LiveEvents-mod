@@ -230,13 +230,34 @@ if VARIANT == 'snow':
     for node in ground.node_tree.nodes:
         if node.type == 'BSDF_PRINCIPLED': node.inputs['Base Color'].default_value = (0.65, 0.76, 0.86, 1)
 
+# A noisy emissive volume softens the silhouette of the tapered trail geometry.
+trail_volume=bpy.data.materials.new('Turbulent incandescent trail');trail_volume.use_nodes=True
+nodes=trail_volume.node_tree.nodes;nodes.clear();links=trail_volume.node_tree.links
+output=nodes.new('ShaderNodeOutputMaterial');flame=nodes.new('ShaderNodeVolumePrincipled')
+flame.inputs['Color'].default_value=(1,0.16,0.01,1)
+flame.inputs['Emission Color'].default_value=(1,0.23,0.025,1)
+flame.inputs['Emission Strength'].default_value=5
+coords=nodes.new('ShaderNodeTexCoord');noise=nodes.new('ShaderNodeTexNoise');noise.inputs['Scale'].default_value=6;noise.inputs['Detail'].default_value=3
+links.new(coords.outputs['Generated'],noise.inputs['Vector'])
+contrast=nodes.new('ShaderNodeMapRange');contrast.inputs['From Min'].default_value=0.3;contrast.inputs['From Max'].default_value=0.7
+contrast.inputs['To Min'].default_value=0;contrast.inputs['To Max'].default_value=2.5;contrast.clamp=True
+links.new(noise.outputs['Fac'],contrast.inputs['Value']);links.new(contrast.outputs['Result'],flame.inputs['Density'])
+links.new(flame.outputs['Volume'],output.inputs['Volume'])
+scene.world.use_nodes=True
+background=scene.world.node_tree.nodes.get('Background')
+background.inputs['Color'].default_value=(0.004,0.008,0.02,1);background.inputs['Strength'].default_value=0.3
+scene.use_nodes=True
+compositor=bpy.data.node_groups.new('Meteor preview compositor','CompositorNodeTree');scene.compositing_node_group=compositor
+render_layer=compositor.nodes.new('CompositorNodeRLayers');glare=compositor.nodes.new('CompositorNodeGlare');glare.inputs['Type'].default_value='Fog Glow';glare.inputs['Quality'].default_value='Medium';glare.inputs['Threshold'].default_value=1.2
+compositor.interface.new_socket(name='Image',in_out='OUTPUT',socket_type='NodeSocketColor');destination=compositor.nodes.new('NodeGroupOutput');compositor.links.new(render_layer.outputs['Image'],glare.inputs['Image']);compositor.links.new(glare.outputs['Image'],destination.inputs['Image'])
+
 def beam(name, start, end, width, mat):
     middle = (Vector(start) + Vector(end)) * 0.5
     bpy.ops.mesh.primitive_cone_add(vertices=12, radius1=width, radius2=0.02, depth=(Vector(end)-Vector(start)).length, location=middle)
     obj = bpy.context.object
     obj.name = name
     obj.rotation_euler = (Vector(end)-Vector(start)).to_track_quat('Z','Y').to_euler()
-    obj.data.materials.append(mat)
+    obj.data.materials.append(trail_volume)
     return obj
 
 # Parent approach, then three continuous fragments. Each has a warning and a matching impact.
@@ -280,6 +301,35 @@ for obj in scene.objects:
                         for point in curve.keyframe_points:
                             point.interpolation='CONSTANT' if obj.name.startswith('Warning') else 'LINEAR'
 
+# Incandescent fissures are on the visible rock surface, rather than a hidden inner sphere.
+meteor_surface=rock.copy();meteor_surface.name='Meteor crust with incandescent fissures'
+shader=next(n for n in meteor_surface.node_tree.nodes if n.type=='BSDF_PRINCIPLED')
+voronoi=meteor_surface.node_tree.nodes.new('ShaderNodeTexVoronoi');voronoi.feature='DISTANCE_TO_EDGE';voronoi.inputs['Scale'].default_value=7
+fissures=meteor_surface.node_tree.nodes.new('ShaderNodeValToRGB')
+fissures.color_ramp.elements[0].position=0.018;fissures.color_ramp.elements[0].color=(1,0.18,0.008,1)
+fissures.color_ramp.elements[1].position=0.05;fissures.color_ramp.elements[1].color=(0,0,0,1)
+meteor_surface.node_tree.links.new(voronoi.outputs['Distance'],fissures.inputs['Fac'])
+meteor_surface.node_tree.links.new(fissures.outputs['Color'],shader.inputs['Emission Color']);shader.inputs['Emission Strength'].default_value=4
+for obj in scene.objects:
+    if obj.name=='Meteor' or obj.name.startswith('Flight fragment'): obj.data.materials[0]=meteor_surface
+
+# A deforming terrain bowl replaces the flat plane for land impacts; water stays a plane.
+if VARIANT!='water':
+    old_ground=bpy.data.objects['Preview ground (not exported)'];old_ground.hide_render=True;old_ground.hide_viewport=True
+    rings=[0.02,0.5,1,2,3,4,5,6,8,12,20,40,80];segments=64
+    vertices=[(math.cos(j*math.tau/segments)*radius,math.sin(j*math.tau/segments)*radius,0) for radius in rings for j in range(segments)]
+    faces=[]
+    for ring_index in range(len(rings)-1):
+        for j in range(segments):faces.append((ring_index*segments+j,ring_index*segments+(j+1)%segments,(ring_index+1)*segments+(j+1)%segments,(ring_index+1)*segments+j))
+    terrain_mesh=bpy.data.meshes.new('Crater terrain mesh');terrain_mesh.from_pydata(vertices,[],faces);terrain_mesh.update()
+    terrain=bpy.data.objects.new('Deforming terrain reference',terrain_mesh);scene.collection.objects.link(terrain);terrain.data.materials.append(ground)
+    terrain.shape_key_add(name='Before impact');bowl=terrain.shape_key_add(name='Impact bowl')
+    for vertex in bowl.data:
+        radius=math.hypot(vertex.co.x,vertex.co.y)
+        if radius<4:vertex.co.z=-1.5*(1-(radius/4)**2)
+        elif radius<6:vertex.co.z=0.45*math.sin((radius-4)*math.pi/2)
+    bowl.value=0;bowl.keyframe_insert(data_path='value',frame=71);bowl.value=1;bowl.keyframe_insert(data_path='value',frame=76)
+
 # Surface-specific dynamics and aftermath.
 if VARIANT == 'water':
     for i in range(36):
@@ -293,9 +343,9 @@ if VARIANT == 'water':
         obj=bpy.context.object;obj.name='Water ripple %d'%i;obj.data.materials.append(water_mat)
         key(obj,72+i*8,scale=0.001);key(obj,85+i*8,scale=2);key(obj,230,scale=18-i*2);key(obj,240,scale=0.001)
 else:
-    bpy.ops.mesh.primitive_uv_sphere_add(segments=32,ring_count=12,radius=1,location=(0,0,-0.4))
+    bpy.ops.mesh.primitive_uv_sphere_add(segments=32,ring_count=12,radius=1,location=(0,0,-1.3))
     crater=bpy.context.object;crater.name='Cooling crater reference';crater.data.materials.append(rock)
-    key(crater,71,scale=0.001);key(crater,75,scale=(4,4,0.6));key(crater,240,scale=(4,4,0.6))
+    key(crater,71,scale=0.001);key(crater,75,scale=(3,3,0.15));key(crater,240,scale=(3,3,0.15))
     if VARIANT=='earth':
         for i in range(12):
             a=random.uniform(0,math.tau)

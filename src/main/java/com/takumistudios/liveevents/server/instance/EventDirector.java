@@ -164,6 +164,16 @@ public final class EventDirector {
         Profile profile = requested.min(services.config().maxProfile());
         Map<String, Double> overrides = new LinkedHashMap<>(req.params());
         Map<String, Double> vars = EventInstance.mergeVars(def, overrides);
+        if (!Double.isFinite(req.timescale()) || vars.values().stream().anyMatch(v -> v==null || !Double.isFinite(v)))
+            return StartResult.fail("liveevents.error.options","Non-finite event parameter");
+        if (def.id().equals("liveevents:meteor_shower")) {
+            for (String key : List.of("power","brutality","visual_power","destructive_power"))
+                if (vars.containsKey(key) && (vars.get(key)<0 || vars.get(key)>1)) return StartResult.fail("liveevents.error.options",key+" must be 0..1");
+            if(vars.getOrDefault("duration",90.0)<3 || vars.getOrDefault("duration",90.0)>86400)
+                return StartResult.fail("liveevents.error.options","duration must be 3..86400s");
+            if(vars.getOrDefault("radius",128.0)<8 || vars.getOrDefault("radius",128.0)>1024)
+                return StartResult.fail("liveevents.error.options","radius must be 8..1024");
+        }
         JsonObject overridesJson = new JsonObject();
         overrides.forEach(overridesJson::addProperty);
         WorldMode worldMode = def.worldMode().orElse(services.config().defaultWorldMode());
@@ -637,6 +647,12 @@ public final class EventDirector {
     }
 
     public void onJoin(ServerPlayer player) {
+        if (!ServerNet.hasMod(player)) {
+            String message=services.config().missing_mod_message;
+            player.connection.disconnect(message.isBlank() ? Component.translatable("liveevents.client.update_required",LiveEvents.version(),
+                    "https://github.com/AloneX15/LiveEvents-mod/releases/tag/dev") : Component.literal(message));
+            return;
+        }
         ServerNet.send(player, new Payloads.Handshake(Payloads.PROTOCOL, LiveEvents.version(), services.config().max_profile,
                 services.config().photosensitivity_notice));
         ServerNet.sendDefinitions(player, services.registry().syncJson());

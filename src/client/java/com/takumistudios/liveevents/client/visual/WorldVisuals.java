@@ -77,7 +77,7 @@ final class WorldVisuals {
     static final class AshFall implements ClientVisual {
         @Override
         public void tick(VisualContext ctx) {
-            int n = ctx.particleBudget(clamp(ctx.params.range("rate", ctx.progress, 60), 0, 2000) / 20.0 * ctx.fade);
+            int n = ctx.particleBudget(clamp(ctx.params.range("rate", ctx.progress, 60), 0, 2000) / 20.0 * ctx.fade * ctx.exposure);
             DeterministicRandom r = new DeterministicRandom(ctx.nowNanos ^ ctx.seed());
             for (int i = 0; i < n; i++) {
                 ctx.director.spawn(i % 3 == 0 ? ParticleTypes.WHITE_ASH : ParticleTypes.ASH, ctx.camera.x + r.range(-16, 16),
@@ -194,10 +194,10 @@ final class WorldVisuals {
                 double remaining=m.tick()-ctx.t;
                 double distance=ctx.camera.distanceTo(new Vec3(m.x(),m.y(),m.z()));
                 if(remaining>0 && remaining<=40 && state.warned.add(m.key()) && distance<96)
-                    ctx.director.playSoundAt("liveevents:meteor.whistle",0.8f,0.8f,0,m.x(),m.y(),m.z());
+                    ctx.director.playSoundAt("liveevents:meteor.whistle",(float)(0.8*ctx.exposure),0.8f,0,m.x(),m.y(),m.z());
                 if(remaining<=0 && state.heard.add(m.key()) && remaining>-4) {
                     String sound=m.surface().equals("water")?"minecraft:entity.generic.splash":m.surface().equals("snow")?"minecraft:block.powder_snow.break":distance<64?"liveevents:meteor.impact_near":"liveevents:meteor.impact_far";
-                    ctx.director.playSoundAt(sound,(float)clamp(2-distance/200,0.2,2),1,VisualDirector.soundDelaySeconds(distance),m.x(),m.y(),m.z());
+                    ctx.director.playSoundAt(sound,(float)(clamp(2-distance/200,0.2,2)*ctx.exposure),1,VisualDirector.soundDelaySeconds(distance),m.x(),m.y(),m.z());
                 }
                 if(remaining<0 && remaining>-400 && distance<192) {
                     int n=ctx.director.particleBudget(remaining>-40?4:1,distance);

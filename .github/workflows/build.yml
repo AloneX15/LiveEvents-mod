@@ -154,6 +154,9 @@ jobs:
         env:
           # Renderizado por software (Mesa): 26.3 necesita un visual GLX de 24 bits y acaba usando Vulkan con lavapipe
           LIBGL_ALWAYS_SOFTWARE: "1"
+          MESA_GL_VERSION_OVERRIDE: "4.6"
+          MESA_GLSL_VERSION_OVERRIDE: "460"
+          SDL_VIDEO_X11_FORCE_EGL: "1"
         run: xvfb-run -a -s "-screen 0 1920x1080x24 +extension GLX +render" ./gradlew :${{ matrix.minecraft }}:runClientGameTest ${{ matrix.renderer != 'vanilla' && format('-P{0}', matrix.renderer) || '' }} --stacktrace
 
       - name: Upload screenshots

@@ -32,6 +32,11 @@ class MeteorPipelineTest {
         assertTrue(MeteorTimeline.phaseTime(3000,3600)<1300);
         assertEquals(1300,MeteorTimeline.phaseTime(3100,3600));
     }
+    @Test void brutalityHasDistinctCalmNominalAndMaximumPressure() {
+        assertEquals(0,MeteorIntensity.retain(0));
+        assertEquals(1,MeteorIntensity.retain(0.5));assertEquals(0,MeteorIntensity.extra(0.5));
+        assertEquals(1,MeteorIntensity.extra(1));
+    }
     @Test void launchControlsAreValidated() {
         assertEquals(120,StartOptions.parse("power=0.7 brutality=0.5 duration=120s").params().get("duration"));
         assertThrows(IllegalArgumentException.class,()->StartOptions.parse("power=2"));

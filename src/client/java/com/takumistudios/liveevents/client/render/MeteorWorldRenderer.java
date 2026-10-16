@@ -95,6 +95,7 @@ public final class MeteorWorldRenderer {
         Vec3 right = new Vec3(r.x,r.y,r.z), up = new Vec3(u.x,u.y,u.z);
         long now = System.nanoTime();
         int detail = VisualDirector.get().quality().ordinal();
+        int warningSegments=Math.max(4,Math.min(24,1800/Math.max(1,ClientEventState.get().instances().size()*24)));
         // Reserve warnings and a minimal trajectory for every announced hazard before decoration.
         for (var instance : ClientEventState.get().instances()) {
             if (!instance.dimension.equals(dim)) continue;
@@ -103,7 +104,7 @@ public final class MeteorWorldRenderer {
                 double remaining=m.tick()-tick;
                 if(remaining<=0 || remaining>60 || out.size()>MAX_QUADS-32) continue;
                 Vec3 target=new Vec3(m.x(),m.y(),m.z()).subtract(camera);
-                if(remaining<=30 && target.lengthSqr()<256*256) ring(out,target.add(0,0.12,0),m.radius()+1,0.15,0xDCFF7A1A,24);
+                if(remaining<=30 && target.lengthSqr()<256*256) ring(out,target.add(0,0.12,0),m.radius()+1,0.15,0xDCFF7A1A,warningSegments);
                 double az=Math.toRadians(m.azimuth()),el=Math.toRadians(m.angle());
                 Vec3 direction=new Vec3(Math.sin(az)*Math.cos(el),Math.sin(el),-Math.cos(az)*Math.cos(el));
                 Vec3 head=target.add(direction.scale(remaining*5));
@@ -236,6 +237,6 @@ public final class MeteorWorldRenderer {
     }
     private static void vertex(VertexConsumer v,PoseStack.Pose pose,Vec3 p,float u,float w,int color) {
         v.addVertex(pose,(float)p.x,(float)p.y,(float)p.z).setColor(color).setUv(u,w)
-                .setOverlay(0).setLight(0xF000F0).setNormal(pose,0,1,0);
+                .setOverlay(net.minecraft.client.renderer.texture.OverlayTexture.NO_OVERLAY).setLight(0xF000F0).setNormal(pose,0,1,0);
     }
 }

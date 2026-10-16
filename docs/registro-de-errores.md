@@ -65,3 +65,11 @@ Cada error resuelto: síntoma, causa, solución y test que lo reproduce.
 - Una columna de cráter podía superar el cupo del planificador: operaciones reanudables por posición y geometría asíncrona.
 - F1 podía congelar la última amplitud de cámara: cálculo visual en extracción del mundo, HUD como consumidor.
 - Blender 5.2 requiere media_type=VIDEO antes de elegir FFMPEG; modos y exportaciones revisados.
+
+### CI y compatibilidad
+
+- Un cambio de contexto del SO entre la comprobación del tiempo y el inicio de una tarea permitía empezar fuera
+  de presupuesto. Se comprueba otra vez justo antes de ejecutar y se devuelve la tarea a la cola. Regresión con reloj
+  simulado que salta de 0 a 3 ms entre esas dos lecturas; no se ha relajado el presupuesto de 2 ms del GameTest.
+- Las capturas del arnés 26.1.2 omiten `GameRenderer.update` y Sodium falla con `Global terrain uniforms have not
+  been updated` (Fabric API #5466). Workaround exclusivamente en el mod de pruebas, documentado en MIXINS.md.

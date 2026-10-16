@@ -32,7 +32,7 @@ public final class ServerNet {
     }
 
     public static boolean hasMod(ServerPlayer player) {
-        return ServerPlayNetworking.canSend(player, Payloads.Handshake.TYPE);
+        return ServerPlayNetworking.canSend(player, Payloads.Handshake.TYPE) && ServerPlayNetworking.canSend(player, Payloads.Meteor.TYPE);
     }
 
     /** Divide el JSON de definiciones en trozos que caben en un paquete. */

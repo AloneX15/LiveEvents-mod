@@ -306,9 +306,8 @@ public final class EventInstance implements LiveEventInfo {
 
         @Override
         public boolean setBlock(BlockPos pos, BlockState state) {
-            if (preview) {
-                return false;
-            }
+            if (preview) return false;
+            if (spec.shortType().equals("meteor_impacts") && Math.hypot(pos.getX()-center.x,pos.getZ()-center.z)>vars.getOrDefault("radius",128.0)) return false;
             return BlockChanger.set(EventInstance.this, level, pos, state);
         }
 

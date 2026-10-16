@@ -215,5 +215,6 @@
   "subtitles.liveevents.earthquake.crack": "Rock cracks",
   "subtitles.liveevents.ui.warning": "Event warning",
   "liveevents.meteor.updated": "Meteor event #%s: %s updated",
-  "liveevents.meteor.status": "Event #%s: power=%s brutality=%s elapsed=%ss remaining=%ss mode=%s launches=%s throttled=%s"
+  "liveevents.meteor.status": "Event #%s: power=%s brutality=%s elapsed=%ss remaining=%ss mode=%s launches=%s throttled=%s",
+  "liveevents.client.update_required": "This server requires LiveEvents %s (protocol 2) on the client. Download: %s"
 }

@@ -25,7 +25,7 @@ final class MeteorCommands {
                                 var services = LiveEventsServer.get();
                                 var instance = services.director().get(IntegerArgumentType.getInteger(c, "id")).orElseThrow(() -> new IllegalArgumentException("Unknown instance"));
                                 var module = instance.definition().allModules().stream().filter(m -> m.shortType().equals("meteor_impacts"))
-                                        .filter(m -> m.fromTicks() <= instance.eventTicks() && instance.eventTicks() < m.toTicks() + 600)
+                                        .filter(m -> m.fromTicks() <= instance.eventTicks() && instance.eventTicks() < instance.durationSeconds()*20)
                                         .findFirst().orElseThrow(() -> new IllegalArgumentException("No active meteor module"));
                                 String text = StringArgumentType.getString(c, "options");
                                 String[] tokens = text.split("\\s+");

@@ -5,11 +5,18 @@
   "name": "LiveEvents GameTests",
   "environment": "*",
   "entrypoints": {
-    "fabric-gametest": ["com.takumistudios.liveevents.test.LiveEventsGameTests"],
-    "fabric-client-gametest": ["com.takumistudios.liveevents.test.LiveEventsClientGameTest"]
+    "fabric-gametest": [
+      "com.takumistudios.liveevents.test.LiveEventsGameTests"
+    ],
+    "fabric-client-gametest": [
+      "com.takumistudios.liveevents.test.LiveEventsClientGameTest"
+    ]
   },
   "depends": {
     "liveevents": "*",
     "fabric-gametest-api-v1": "*"
-  }
+  },
+  "mixins": [
+    "liveevents-test.mixins.json"
+  ]
 }

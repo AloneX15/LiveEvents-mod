@@ -117,12 +117,13 @@ final class CompositeModules {
                 }
                 cooling.addLast(new Cooling(impact.tick() + COOLING_DELAY_TICKS, ground, impact.radius()));
             }
-            double blast = Math.max(0, ctx.params().number("blast_radius", 6)) * (impact.big() ? 1.5 : 1);
-            float damage = (float) Math.max(0, ctx.params().number("damage", 8)) * (impact.big() ? 1.75f : 1f) * (float) (0.3 + impact.power());
+            double blast = Math.max(0, Math.min(128,ctx.params().number("blast_radius", 6))) * (impact.big() ? 1.5 : 1);
+            float damage = (float) Math.max(0, Math.min(1000,ctx.params().number("damage", 8))) * (impact.big() ? 1.75f : 1f) * (float) (0.3 + impact.power());
             Vec3 at = Vec3.atBottomCenterOf(ground);
             if (ctx.event().preview() || impact.power()<=0) return;
             for (LivingEntity e : level.getEntitiesOfClass(LivingEntity.class, new net.minecraft.world.phys.AABB(ground).inflate(blast), e -> true)) {
                 EventInstance instance = (EventInstance) ctx.event();
+                if (Math.hypot(e.getX()-c.x,e.getZ()-c.z)>instance.vars().getOrDefault("radius",128.0)) continue;
                 if (!instance.accepts(e) || com.takumistudios.liveevents.server.integration.ProtectionCompat.protectedAt(level,e.blockPosition())
                         || com.takumistudios.liveevents.server.journal.BlockChanger.inExcludedRegion(level,e.blockPosition())) {
                     continue;

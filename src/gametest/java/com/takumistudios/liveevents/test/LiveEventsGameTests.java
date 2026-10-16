@@ -77,6 +77,14 @@ public class LiveEventsGameTests {
     }
 
     @GameTest
+    public void meteorApiRejectsOutOfRangePower(GameTestHelper helper) {
+        var result=services().director().start(new EventDirector.StartRequest("liveevents:meteor_shower",helper.getLevel(),
+                helper.absoluteVec(new Vec3(4,2,4)),Optional.empty(),1,Map.of("power",2.0),false,null,false,true,"test",0));
+        if(result.ok()) throw helper.assertionException("Out-of-range API power accepted");
+        helper.succeed();
+    }
+
+    @GameTest
     public void modIsLoaded(GameTestHelper helper) {
         if (!FabricLoader.getInstance().isModLoaded(LiveEvents.MOD_ID)) {
             throw helper.assertionException("LiveEvents no está cargado");

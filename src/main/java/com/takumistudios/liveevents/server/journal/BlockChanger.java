@@ -22,7 +22,7 @@ public final class BlockChanger {
     }
 
     public static boolean set(EventInstance instance, ServerLevel level, BlockPos pos, BlockState to) {
-        if (!level.isLoaded(pos) || pos.getY() < level.getMinY() || pos.getY() > level.getMaxY()) {
+        if (!level.isLoaded(pos) || !level.getWorldBorder().isWithinBounds(pos) || pos.getY() < level.getMinY() || pos.getY() > level.getMaxY()) {
             return false;
         }
         BlockState from = level.getBlockState(pos);

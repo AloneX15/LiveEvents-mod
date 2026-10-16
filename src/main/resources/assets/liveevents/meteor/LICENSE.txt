@@ -1,0 +1,6 @@
+Copyright TakumiStudios. All rights reserved.
+
+The meteor meshes, meteor_*.png textures and art/meteor_shower visual resources may be distributed
+as part of LiveEvents Mod and modpacks containing the mod. Separate redistribution is not granted.
+The generators and renderer code remain under the repository MIT license.
+Existing v1 resources retain their original CC0 license. See CREDITS.md.

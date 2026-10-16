@@ -135,10 +135,10 @@ public final class MeteorController {
     }
 
     private AnnouncedMeteor announce(int module, int index, double tick, Vec3 at, double radius, double power,
-                                     double azimuth, double angle, boolean big, long seed) {
+                                     double azimuth, double angle, boolean big, long seed, double visualPower) {
         AnnouncedMeteor meteor = new AnnouncedMeteor(module, index, tick, at.x, at.y, at.z,
                 Math.max(0.5, Math.min(48, radius)), power, azimuth, angle, big, variant(at), seed,
-                instance.vars().getOrDefault("visual_power",instance.vars().getOrDefault("power",power)));
+                visualPower);
         announced.put(meteor.key(), meteor);
         launched++;
         ServerNet.send(instance.viewers(), new Payloads.Meteor(instance.instanceId(), GSON.toJson(meteor)));
@@ -163,7 +163,7 @@ public final class MeteorController {
             if (target == null) continue;
             double power = instance.vars().getOrDefault("destructive_power",instance.vars().getOrDefault("power", 0.7));
             announce(ctx.spec().index(), candidate.index(), Math.max(candidate.tick(), ctx.eventTicks() + APPROACH_TICKS), target,
-                    candidate.craterRadius() * (0.5 + power), power, candidate.entryAzimuth(), candidate.entryAngle(), candidate.big(), seed);
+                    candidate.craterRadius() * (0.5 + power), power, candidate.entryAzimuth(), candidate.entryAngle(), candidate.big(), seed, instance.vars().getOrDefault("visual_power",instance.vars().getOrDefault("power",power)));
             lastAnnouncement = ctx.eventTicks();
         }
     }
@@ -182,8 +182,10 @@ public final class MeteorController {
         if (instance.eventTicks() + APPROACH_TICKS + 30 >= instance.durationSeconds()*20 || announced.values().stream().filter(m -> m.tick() > instance.eventTicks()).count() >= 24)
             throw new IllegalArgumentException("Meteor launch budget exhausted");
         // Manual targets use the exact requested coordinates, fixed before the warning.
+        double physicalPower=instance.vars().getOrDefault("destructive_power",power);
+        double visualPower=instance.vars().getOrDefault("visual_power",power);
         AnnouncedMeteor meteor = announce(module, manualIndex++, instance.eventTicks() + APPROACH_TICKS, at,
-                2 + power * 5, power, 35, 45, power > 0.8, DeterministicRandom.derive(instance.seed(), manualIndex));
+                2 + physicalPower * 5, physicalPower, 35, 45, visualPower > 0.8, DeterministicRandom.derive(instance.seed(), manualIndex),visualPower);
         return meteor;
     }
 

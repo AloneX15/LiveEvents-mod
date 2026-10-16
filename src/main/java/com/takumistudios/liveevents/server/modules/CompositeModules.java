@@ -53,7 +53,7 @@ final class CompositeModules {
                 crater = new double[]{ctx.params().range("crater_radius", 0, 2), ctx.params().range("crater_radius", 1, 5)};
             }
             plan = MeteorPlan.generate(ctx.moduleSeed(), ctx.params().integer("count", 40),
-                    Math.max(8, ctx.params().number("radius", 128)), ctx.spec().fromTicks(), ctx.spec().toTicks(),
+                    Math.max(8, Math.min(1024,ctx.params().number("radius",((EventInstance)ctx.event()).vars().getOrDefault("radius",128.0)))), ctx.spec().fromTicks(), ctx.spec().toTicks(),
                     crater[0], crater[1], ctx.params().bool("first_big", false));
         }
 
@@ -66,7 +66,7 @@ final class CompositeModules {
                     cycle=wanted;
                     double from=ctx.spec().toTicks()+(cycle-1)*800;
                     plan=MeteorPlan.generate(DeterministicRandom.derive(ctx.moduleSeed(),cycle),ctx.params().integer("count",40),
-                            Math.max(8,ctx.params().number("radius",128)),from,from+800,2,5,false).stream()
+                            Math.max(8,Math.min(1024,ctx.params().number("radius",instance.vars().getOrDefault("radius",128.0)))),from,from+800,2,5,false).stream()
                             .map(m->new MeteorPlan.Impact((int)(cycle*1000)+m.index(),m.tick(),m.dx(),m.dz(),m.craterRadius(),m.entryAzimuth(),m.entryAngle(),m.big())).toList();
                 }
             }

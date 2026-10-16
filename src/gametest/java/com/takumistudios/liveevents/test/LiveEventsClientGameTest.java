@@ -133,7 +133,7 @@ public class LiveEventsClientGameTest implements FabricClientGameTest {
             server.runCommand("fill -12 96 -12 12 99 12 stone");
             server.runCommand("fill -12 100 -12 12 110 12 air");
             server.runCommand("fill -12 99 -12 12 99 12 "+(surface.equals("water")?"water":surface.equals("snow")?"snow_block":"grass_block"));
-            int id=start(context,server,"le start meteor_shower at 0 100 0 radius=32 count=1");
+            int id=start(context,server,"le start meteor_shower at 0 100 0 radius=32 count=1 brutality=0");
             server.runCommand("le seek "+id+" 12"); context.waitTicks(3);
             server.runCommand("le meteor strike "+id+" at 0 100 0 in minecraft:overworld power=0.7");
             server.runOnServer(s->{
@@ -168,7 +168,7 @@ public class LiveEventsClientGameTest implements FabricClientGameTest {
         server.runCommand("fill -12 96 -12 12 99 12 stone");
         server.runCommand("fill -12 99 -12 12 99 12 grass_block");
         server.runCommand("fill -12 100 -12 12 124 12 air");
-        int stress=start(context,server,"le start meteor_shower at 0 100 0 radius=32 count=1 destructive_power=0");
+        int stress=start(context,server,"le start meteor_shower at 0 100 0 radius=32 count=1 brutality=0 destructive_power=0");
         server.runCommand("le seek "+stress+" 12");context.waitTicks(3);
         for(int k=0;k<12;k++) server.runCommand("le meteor strike "+stress+" at "+((k%4)*6-9)+" 100 "+((k/4)*6-6)+" power=0.7");
         server.runOnServer(s->{

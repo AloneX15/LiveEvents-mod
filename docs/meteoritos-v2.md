@@ -100,8 +100,9 @@ Common Protection API: https://github.com/Patbox/common-protection-api
 
 ## Presupuestos y validación
 
-El servidor limita nuevos anuncios a 24 impactos pendientes por evento y como mínimo cuatro ticks entre anuncios
-automáticos. Brutalidad ajusta la aceptación de candidatos dentro de esos topes. El perfil visual reduce humo y detalle
+El servidor limita nuevos anuncios a 24 impactos pendientes por evento y como mínimo cuatro ticks entre ráfagas
+automáticas. `brutality=0` suprime caídas automáticas; 0,5 conserva el número nominal y 1 permite un segundo
+meteorito por candidato y una mayor proporción de bólidos grandes, siempre dentro de los topes. El perfil visual reduce humo y detalle
 lejano antes de consumir la reserva de avisos y trayectorias. El renderizador limita la geometría a 2048 quads por fotograma.
 Cráteres: geometría pura en `LiveEvents-Geometry`, lecturas y cambios del mundo exclusivamente en el hilo del servidor.
 Aplicación de bloques y enfriamiento usan tareas reanudables con un máximo de ocho cambios por trozo del planificador.
@@ -119,3 +120,11 @@ clientes reales, latencia, packs de shaders y proveedores de claims siguen neces
 En 26.3, el ensayo de doce impactos registró **1.894 quads**, **0,358 ms** de extracción media y una lectura de
 **119 FPS** (límite del arnés cercano a 120). Son datos del renderizador y escenario indicados; no una comparación
 controlada de FPS ni una garantía para otras tarjetas gráficas. Los logs completos se suben como artifacts de CI cuando falla un job.
+
+### Compatibilidad comprobada en GPU local
+
+Meteoritos con Sodium 26.1.2 e Iris 26.3 completaron el ensayo de tres superficies, F1, vistas múltiples,
+oclusiones y doce impactos simultáneos en la GTX 1660 SUPER, sin pack de shaders externo.
+La CI usa Mesa y Xvfb; en SDL3 se selecciona EGL y se omite la exigencia de una ventana sRGB para ese entorno.
+Es un ajuste del runner, no una modificación de la configuración gráfica distribuida a los jugadores.
+Referencias: https://wiki.libsdl.org/SDL3/SDL_HINT_VIDEO_FORCE_EGL · https://wiki.libsdl.org/SDL3/SDL_HINT_OPENGL_FORCE_SRGB_FRAMEBUFFER

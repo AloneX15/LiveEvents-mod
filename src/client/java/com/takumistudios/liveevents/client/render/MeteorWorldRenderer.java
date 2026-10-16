@@ -183,7 +183,9 @@ public final class MeteorWorldRenderer {
                         if (snow) height*=0.7;
                         Vec3 at = origin.add(Math.cos(angle)*radius+seconds*0.22, height*visualRadius*life+seconds*0.16, Math.sin(angle)*radius);
                         float size = (float)((0.4+random.nextDouble())*visualRadius*(cap?0.8:0.5)*Math.min(1,seconds*2));
-                        puff(out,at,right,up,size, ((int)(95*fade)<<24)|color,true);
+                        Vec3 rotatedRight=right.scale(Math.cos(angle)).add(up.scale(Math.sin(angle)));
+                        Vec3 rotatedUp=up.scale(Math.cos(angle)).subtract(right.scale(Math.sin(angle)));
+                        puff(out,at,rotatedRight,rotatedUp,size, ((int)(95*fade)<<24)|color,true);
                     }
                     if (seconds<2.5) for(int j=0;j<(detail<=1?8:20);j++) {
                         double angle=random.range(0,Math.PI*2), speed=random.range(3,12)*(0.5+m.power());

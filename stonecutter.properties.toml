@@ -3,11 +3,13 @@
 mod.id = "liveevents"
 mod.name = "LiveEvents"
 mod.group = "com.takumistudios.liveevents"
-mod.version = "1.0.0"
+mod.version = "1.1.0"
 
 deps.fabric_loader = "0.19.5"
 
 ["26.1.2"]
+compat.sodium = "tZQ3jqnf"
+compat.iris = "sZbVsl2Q"
 mod.mc_compat = ">=26.1 <26.2-"
 mod.mc_releases = ["26.1", "26.1.1", "26.1.2"]
 deps.fabric_api = "0.155.3+26.1.2"
@@ -17,6 +19,8 @@ compat.modmenu = "18.0.2"
 compat.placeholder_api = "3.0.0+26.1"
 
 ["26.2"]
+compat.sodium = "xJZxADzI"
+compat.iris = "gxZWWnKH"
 mod.mc_compat = "~26.2"
 mod.mc_releases = ["26.2"]
 deps.fabric_api = "0.161.0+26.2"
@@ -26,6 +30,8 @@ compat.modmenu = "20.0.3"
 compat.placeholder_api = "3.1.0-beta.1+26.2"
 
 ["26.3"]
+compat.sodium = "bAZQdGpg"
+compat.iris = "vTN4NRGW"
 mod.mc_compat = "~26.3"
 mod.mc_releases = ["26.3"]
 deps.fabric_api = "0.161.0+26.3"

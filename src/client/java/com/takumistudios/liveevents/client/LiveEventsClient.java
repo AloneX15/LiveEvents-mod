@@ -49,6 +49,7 @@ public final class LiveEventsClient implements ClientModInitializer {
             }
         });
         receive(Payloads.DefinitionSync.TYPE, state::onDefinitionChunk);
+        receive(Payloads.Meteor.TYPE, state::onMeteor);
         receive(Payloads.EventStart.TYPE, p -> state.onStart(p, System.nanoTime()));
         receive(Payloads.EventPhase.TYPE, p -> state.onPhase(p, System.nanoTime()));
         receive(Payloads.EventKeyframe.TYPE, state::onKeyframe);
@@ -64,6 +65,7 @@ public final class LiveEventsClient implements ClientModInitializer {
         receive(Payloads.DebugOverlay.TYPE, state::onDebug);
         receive(Payloads.OpenGui.TYPE, p -> Minecraft.getInstance().setScreenAndShow(new AdminScreen(p.eventsJson())));
 
+        com.takumistudios.liveevents.client.render.MeteorWorldRenderer.register();
         HudRenderer hud = new HudRenderer();
         HudElementRegistry.addFirst(Identifier.fromNamespaceAndPath(LiveEvents.MOD_ID, "effects"), (g, delta) -> {
             if (!hudEnabled) {

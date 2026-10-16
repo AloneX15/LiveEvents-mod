@@ -52,3 +52,10 @@ elevados.
 ---
 
 Creado por **TakumiStudios**.
+
+## Dirección de meteoritos v2
+
+`/le meteor` exige `liveevents:edit` (OP 3). Los modos dirigidos y los impactos puntuales también comprueban
+`liveevents:meteor.target.groups`, `liveevents:meteor.target.mixed`, `liveevents:meteor.target.player` o
+`liveevents:meteor.target.coordinates` según corresponda, todos con OP 3 de respaldo. No conceden permiso para
+ignorar protecciones ni cargar chunks. `/le status <id>` usa `liveevents:list`.

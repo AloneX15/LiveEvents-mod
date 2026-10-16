@@ -57,6 +57,7 @@ public final class EventInstance implements LiveEventInfo {
     final Vec3 center;
     final long seed;
     final Profile profile;
+    public final com.takumistudios.liveevents.server.modules.MeteorController meteors = new com.takumistudios.liveevents.server.modules.MeteorController(this);
     double timescale;
     final Map<String, Double> vars;
     final JsonObject paramOverrides;
@@ -69,6 +70,7 @@ public final class EventInstance implements LiveEventInfo {
     double eventTicks;
     boolean paused;
     int phaseIndex = -1;
+    public boolean meteorActivityClosed;
     boolean weatherCleared;
     boolean wasRaining;
     boolean wasThundering;
@@ -139,12 +141,12 @@ public final class EventInstance implements LiveEventInfo {
 
     @Override
     public double durationSeconds() {
-        return Durations.ticksToSeconds(def.durationTicks());
+        return vars.getOrDefault("duration", Durations.ticksToSeconds(def.durationTicks()));
     }
 
     @Override
     public Optional<String> currentPhase() {
-        return def.phaseAt(eventTicks).map(PhaseDef::id);
+        return phaseIndex>=0 && phaseIndex<def.phases().size() ? Optional.of(def.phases().get(phaseIndex).id()) : def.phaseAt(eventTicks).map(PhaseDef::id);
     }
 
     @Override
@@ -407,7 +409,7 @@ public final class EventInstance implements LiveEventInfo {
     static Map<String, Double> mergeVars(EventDefinition def, Map<String, Double> overrides) {
         Map<String, Double> vars = new LinkedHashMap<>(def.params());
         vars.putAll(overrides);
-        vars.put("duration", Durations.ticksToSeconds(def.durationTicks()));
+        vars.putIfAbsent("duration", Durations.ticksToSeconds(def.durationTicks()));
         return vars;
     }
 }

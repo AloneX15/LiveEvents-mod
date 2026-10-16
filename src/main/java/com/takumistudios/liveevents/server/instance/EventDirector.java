@@ -170,7 +170,7 @@ public final class EventDirector {
         int id = nextId++;
         WorldJournal.Journal journal = req.preview() || !def.modifiesWorld() || worldMode == WorldMode.PERMANENT
                 ? null : services.journal().open(def.id(), id, worldMode == WorldMode.REVERT_ON_END);
-        long seed = DeterministicRandom.derive(System.nanoTime() ^ req.level().getGameTime(), def.id());
+        long seed = req.params().containsKey("seed") ? req.params().get("seed").longValue() : DeterministicRandom.derive(System.nanoTime() ^ req.level().getGameTime(), def.id());
         EventInstance instance = new EventInstance(id, def, req.level(), req.center(), seed, profile,
                 Math.max(0.1, Math.min(2.0, req.timescale())), vars, overridesJson, req.actor(), req.preview(),
                 req.previewViewer() == null ? null : req.previewViewer().getUUID(), worldMode, journal, 0);
@@ -280,7 +280,13 @@ public final class EventDirector {
             return;
         }
         i.eventTicks += i.timescale;
-        int phase = i.def.phaseIndexAt(i.eventTicks);
+        double phaseTime=i.eventTicks;
+        if(i.def.id().equals("liveevents:meteor_shower")) {
+            if(i.eventTicks>=i.durationSeconds()*20-500) i.meteorActivityClosed=true;
+            phaseTime=com.takumistudios.liveevents.core.plan.MeteorTimeline.phaseTime(i.eventTicks,i.durationSeconds()*20);
+        }
+        int phase = i.def.phaseIndexAt(phaseTime);
+        if(i.meteorActivityClosed) phase=Math.max(phase,i.phaseIndex);
         if (phase != i.phaseIndex && phase >= 0) {
             i.phaseIndex = phase;
             ServerNet.send(i.viewers(), new Payloads.EventPhase(i.id, phase, i.eventTicks));
@@ -301,7 +307,7 @@ public final class EventDirector {
                 }
                 if (rt.started) {
                     rt.impl.tick(rt);
-                    if (i.eventTicks >= rt.spec.toTicks()) {
+                    if (i.eventTicks >= (rt.spec.shortType().equals("meteor_impacts") ? i.durationSeconds()*20 : rt.spec.toTicks())) {
                         rt.ended = true;
                         rt.impl.end(rt);
                     }
@@ -313,7 +319,7 @@ public final class EventDirector {
         if (ticks % 20 == 0) {
             ServerNet.send(i.viewers(), new Payloads.EventClock(i.id, i.eventTicks, i.timescale));
         }
-        if (i.eventTicks >= i.def.durationTicks()) {
+        if (i.eventTicks >= i.durationSeconds() * 20) {
             finish(i, "completed", false);
         }
     }
@@ -591,6 +597,15 @@ public final class EventDirector {
 
     /** /le set: cambia un parámetro en vivo. */
     public void set(EventInstance i, String param, double value) {
+        if (!Double.isFinite(value)) throw new IllegalArgumentException("Non-finite parameter");
+        if ((param.equals("power") || param.equals("visual_power") || param.equals("destructive_power") || param.equals("brutality")) && (value < 0 || value > 1)) throw new IllegalArgumentException("Expected 0..1");
+        if (param.equals("remaining") || param.equals("duration")) {
+            double requested = param.equals("remaining") ? i.eventTicks / 20 + value : value;
+            if (value < 0 || requested > 86400) throw new IllegalArgumentException("Duration out of range");
+            double minimum = Math.max(i.eventTicks + 500, i.meteors.lastImpactTick() + 30) / 20;
+            value = Math.max(requested, minimum);
+            param = "duration";
+        }
         i.vars.put(param, value);
         i.paramOverrides.addProperty(param, value);
         for (EventInstance.ModuleRuntime rt : i.modules) {
@@ -615,6 +630,7 @@ public final class EventDirector {
         for (EventInstance i : instances.values()) {
             if (i.viewers().contains(player)) {
                 ServerNet.send(player, startPayload(i));
+                i.meteors.sync(player);
             }
         }
         ServerNet.send(player, new Payloads.SkyScarState(services.scars().json(player.level().dimension().identifier().toString())));

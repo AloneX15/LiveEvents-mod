@@ -44,7 +44,7 @@ public final class HudRenderer {
     }
 
     public void render(GuiGraphicsExtractor g, DeltaTracker delta) {
-        FrameState f = VisualDirector.get().computeFrame();
+        FrameState f = VisualDirector.get().frame();
         Camera camera = CameraShake.camera();
         Minecraft mc = Minecraft.getInstance();
         if (camera == null || mc.level == null) {

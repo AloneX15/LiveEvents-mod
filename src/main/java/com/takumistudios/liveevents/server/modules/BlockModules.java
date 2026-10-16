@@ -192,53 +192,35 @@ final class BlockModules {
      * el planificador columna a columna.
      */
     static void carve(ServerModuleContext ctx, int cx, int cz, double radius, double depthFactor, BlockState rim, BlockState core, long seed) {
-        int r = (int) Math.ceil(Math.max(1, Math.min(48, radius)));
-        List<int[]> columns = new ArrayList<>();
-        for (int dx = -r - 1; dx <= r + 1; dx++) {
-            for (int dz = -r - 1; dz <= r + 1; dz++) {
-                columns.add(new int[]{dx, dz});
-            }
-        }
-        double depth = Math.max(1, radius * Math.max(0.1, Math.min(2, depthFactor)));
+        var future = java.util.concurrent.CompletableFuture.supplyAsync(
+                () -> com.takumistudios.liveevents.core.plan.CraterShape.generate(radius, depthFactor, seed, cx, cz),
+                LiveEventsServer.get().compute());
         ctx.submit(Priority.BLOCKS, new com.takumistudios.liveevents.core.scheduler.WorkScheduler.Task() {
             private int next;
-
-            @Override
-            public Result run(int allowance) {
-                ServerLevel level = ctx.level();
-                int changed = 0;
-                while (next < columns.size() && changed < allowance) {
-                    int[] col = columns.get(next++);
-                    int x = cx + col[0], z = cz + col[1];
-                    double dist = Math.sqrt(col[0] * col[0] + col[1] * col[1]);
-                    double edge = radius * (1 + 0.18 * DeterministicRandom.noise2(seed, x * 0.35, z * 0.35));
-                    if (!loaded(level, x, z)) {
+            private final java.util.ArrayDeque<java.util.Map.Entry<BlockPos,BlockState>> pending = new java.util.ArrayDeque<>();
+            @Override public Result run(int allowance) {
+                if (!future.isDone()) return Result.more(0);
+                var columns = future.join();
+                int changed=0, scanned=0;
+                while (changed<allowance && scanned++<64) {
+                    if (!pending.isEmpty()) {
+                        var op=pending.removeFirst();
+                        if (ctx.setBlock(op.getKey(),op.getValue())) changed++;
                         continue;
                     }
-                    int surface = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z) - 1;
-                    BlockPos top = new BlockPos(x, surface, z);
-                    if (!level.isLoaded(top)) {
-                        continue;
-                    }
-                    if (dist <= edge) {
-                        double t = dist / edge;
-                        int hole = (int) Math.round(depth * (1 - t * t));
-                        for (int y = 0; y < hole; y++) {
-                            if (ctx.setBlock(top.below(y), Blocks.AIR.defaultBlockState())) {
-                                changed++;
-                            }
-                        }
-                        BlockPos floor = top.below(Math.max(0, hole));
-                        if (!level.getBlockState(floor).isAir() && ctx.setBlock(floor, t < 0.5 ? core : rim)) {
-                            changed++;
-                        }
-                    } else if (dist <= edge + 1.5) {
-                        if (ctx.setBlock(top.above(), rim)) { // borde levantado
-                            changed++;
-                        }
+                    if(next>=columns.size()) return Result.done(changed);
+                    var column=columns.get(next++);
+                    int x=cx+column.dx(),z=cz+column.dz();
+                    if(!loaded(ctx.level(),x,z)) continue;
+                    BlockPos top=new BlockPos(x,ctx.level().getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES,x,z)-1,z);
+                    if(column.rim()) pending.add(java.util.Map.entry(top.above(),rim));
+                    else {
+                        for(int y=0;y<column.depth();y++) pending.add(java.util.Map.entry(top.below(y),Blocks.AIR.defaultBlockState()));
+                        BlockPos floor=top.below(column.depth());
+                        if(!ctx.level().getBlockState(floor).isAir()) pending.add(java.util.Map.entry(floor,column.core()?core:rim));
                     }
                 }
-                return next >= columns.size() ? Result.done(changed) : Result.more(changed);
+                return Result.more(changed);
             }
         });
     }

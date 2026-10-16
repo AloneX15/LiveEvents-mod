@@ -3,6 +3,12 @@
 Correspondencia entre `LiveEvents_Plan.md` y lo implementado en la versión 1.0.0. ✅ hecho · ⚠️ hecho con una
 adaptación · ⏳ pendiente.
 
+## Meteoritos v2 (1.1.0)
+
+Ver [implementación y validación de meteoritos](meteoritos-v2.md). Hay geometría en el mundo para meteoritos,
+anuncios fijados por servidor, tres superficies y controles de objetivos. La tabla siguiente describe la base 1.0.0;
+sus marcas no equivalen a una validación nueva de todo el diseño ni de todos los shaderpacks.
+
 ## Hoja de ruta (§17)
 
 | Fase | Estado | Notas |

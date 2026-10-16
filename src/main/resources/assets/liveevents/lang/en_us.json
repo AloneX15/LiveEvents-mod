@@ -213,5 +213,7 @@
   "subtitles.liveevents.earthquake.thump": "Ground thump",
   "subtitles.liveevents.earthquake.rumble": "Earthquake rumbles",
   "subtitles.liveevents.earthquake.crack": "Rock cracks",
-  "subtitles.liveevents.ui.warning": "Event warning"
+  "subtitles.liveevents.ui.warning": "Event warning",
+  "liveevents.meteor.updated": "Meteor event #%s: %s updated",
+  "liveevents.meteor.status": "Event #%s: power=%s brutality=%s elapsed=%ss remaining=%ss mode=%s launches=%s throttled=%s"
 }

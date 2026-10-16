@@ -1,0 +1,35 @@
+{
+  "author": "TakumiStudios",
+  "variant": "water",
+  "seed": 2107,
+  "status": "prototype; not integrated or performance-tested in Minecraft",
+  "atlas": "smoke_atlas.png",
+  "columns": 4,
+  "rows": 2,
+  "tile_size": 256,
+  "order": "left-to-right, top-to-bottom",
+  "alpha": "straight",
+  "frames": [
+    72,
+    82,
+    95,
+    115,
+    140,
+    170,
+    205,
+    240
+  ],
+  "fps": 24,
+  "impact_frame": 72,
+  "times_after_impact_seconds": [
+    0.0,
+    0.4166666666666667,
+    0.9583333333333334,
+    1.7916666666666667,
+    2.8333333333333335,
+    4.083333333333333,
+    5.541666666666667,
+    7.0
+  ],
+  "limitation": "Single-view distant LOD sprites; use 3D or multi-view for close impacts"
+}

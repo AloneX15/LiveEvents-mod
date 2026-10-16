@@ -42,6 +42,40 @@ public class LiveEventsGameTests {
         return result.instance();
     }
 
+    @GameTest(maxTicks=140, skyAccess=true)
+    public void announcedWaterImpactStaysFixedAndDoesNotCarve(GameTestHelper helper) {
+        for(int x=1;x<8;x++) for(int z=1;z<8;z++) {
+            helper.setBlock(new BlockPos(x,0,z),Blocks.STONE);
+            helper.setBlock(new BlockPos(x,1,z),Blocks.WATER);
+        }
+        EventInstance event=start(helper,"liveevents_test:meteor",new Vec3(4.5,2,4.5));
+        int module=event.definition().allModules().stream().filter(m->m.shortType().equals("meteor_impacts")).findFirst().orElseThrow().index();
+        Vec3 target=helper.absoluteVec(new Vec3(4.5,2,4.5));
+        var announced=event.meteors.strike(module,target,0.4);
+        if(!announced.surface().equals("water") || announced.tick()!=60) throw helper.assertionException("Incorrect immutable announcement");
+        services().director().set(event,"power",1);
+        if(announced.power()!=0.4 || announced.x()!=target.x) throw helper.assertionException("Announced power/position changed");
+        helper.runAfterDelay(90,()->{
+            helper.assertBlockPresent(Blocks.STONE,new BlockPos(4,0,4));
+            services().director().finish(event,"test",true); helper.succeed();
+        });
+    }
+
+    @GameTest(maxTicks=140, skyAccess=true)
+    public void targetedMeteorCarvesAndRecordsJournal(GameTestHelper helper) {
+        for(int x=0;x<9;x++) for(int z=0;z<9;z++) for(int y=0;y<4;y++) helper.setBlock(new BlockPos(x,y,z),Blocks.STONE);
+        EventInstance event=start(helper,"liveevents_test:meteor",new Vec3(4.5,4,4.5));
+        int module=event.definition().allModules().stream().filter(m->m.shortType().equals("meteor_impacts")).findFirst().orElseThrow().index();
+        event.meteors.strike(module,helper.absoluteVec(new Vec3(4.5,4,4.5)),0.4);
+        services().director().set(event,"remaining",1);
+        if(event.durationSeconds()<25) throw helper.assertionException("Closure omitted the announced impact");
+        helper.runAfterDelay(100,()->{
+            helper.assertBlockPresent(Blocks.AIR,new BlockPos(4,3,4));
+            if(event.journal()==null || services().journal().forInstance(event.instanceId()).map(m->m.entries).orElse(0)==0) throw helper.assertionException("Crater not journaled");
+            services().director().finish(event,"test",true);helper.succeed();
+        });
+    }
+
     @GameTest
     public void modIsLoaded(GameTestHelper helper) {
         if (!FabricLoader.getInstance().isModLoaded(LiveEvents.MOD_ID)) {

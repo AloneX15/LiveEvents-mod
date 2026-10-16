@@ -1,0 +1,30 @@
+{
+  "author": "TakumiStudios",
+  "variant": "earth",
+  "seed": 2107,
+  "fps": 24,
+  "impact_frame": 72,
+  "warning_frame": 36,
+  "fragment_count": 3,
+  "status": "Blender reference; runtime shading is reconstructed in Minecraft",
+  "smoke": "procedural, not fluid simulation",
+  "mesh_format": "liveevents.mesh.v1",
+  "runtime_coordinates": "Minecraft Y-up",
+  "frames": [
+    72,
+    82,
+    95,
+    115,
+    140,
+    170,
+    205,
+    240
+  ],
+  "columns": 4,
+  "rows": 2,
+  "tile_size": 256,
+  "atlas": "smoke_atlas.png",
+  "alpha": "straight",
+  "order": "left-to-right, top-to-bottom",
+  "limitation": "Single-view atlas for distant LOD only"
+}

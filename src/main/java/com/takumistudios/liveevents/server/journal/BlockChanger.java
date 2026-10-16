@@ -50,6 +50,7 @@ public final class BlockChanger {
         }
         ServerConfig config = LiveEventsServer.get().config();
         if (config.respect_protections) {
+            if (com.takumistudios.liveevents.server.integration.ProtectionCompat.protectedAt(level,pos)) return false;
             String dim = level.dimension().identifier().toString();
             for (ServerConfig.Region r : config.excluded_regions) {
                 if (r.contains(dim, pos.getX(), pos.getY(), pos.getZ())) {

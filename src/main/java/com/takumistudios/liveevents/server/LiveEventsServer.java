@@ -24,6 +24,10 @@ public final class LiveEventsServer {
     private static volatile LiveEventsServer current;
 
     private final MinecraftServer server;
+    private final ExecutorService compute = Executors.newFixedThreadPool(2, r -> {
+        Thread t = new Thread(r, "LiveEvents-Geometry"); t.setDaemon(true); return t;
+    });
+    public ExecutorService compute() { return compute; }
     private final ExecutorService io;
     private final Path configDir;
     private final Path worldDir;
@@ -89,6 +93,7 @@ public final class LiveEventsServer {
         } catch (RuntimeException e) {
             LiveEvents.LOGGER.error("Error while stopping LiveEvents", e);
         }
+        compute.shutdownNow();
         io.shutdown();
         try {
             if (!io.awaitTermination(10, TimeUnit.SECONDS)) {

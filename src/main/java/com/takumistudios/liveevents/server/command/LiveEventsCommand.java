@@ -86,10 +86,17 @@ public final class LiveEventsCommand {
 
     private static LiteralArgumentBuilder<CommandSourceStack> build(String name) {
         return literal(name).requires(Perms.require(Perms.COMMAND, OP2))
+                .then(MeteorCommands.build())
                 .then(literal("list").requires(Perms.require(Perms.LIST, OP2))
                         .executes(c -> listDefinitions(c.getSource()))
                         .then(literal("definitions").executes(c -> listDefinitions(c.getSource())))
                         .then(literal("active").executes(c -> listActive(c.getSource()))))
+                .then(literal("status").requires(Perms.require(Perms.LIST, OP2))
+                        .then(argument("id", IntegerArgumentType.integer(1)).suggests(INSTANCES).executes(c -> instance(c).map(i -> {
+                            c.getSource().sendSuccess(() -> Component.translatable("liveevents.meteor.status",i.instanceId(),trim(i.vars().getOrDefault("power",0.7)),
+                                    trim(i.vars().getOrDefault("brutality",0.5)),trim(i.elapsedSeconds()),trim(Math.max(0,i.durationSeconds()-i.elapsedSeconds())),
+                                    i.meteors.mode(),i.meteors.launched(),i.meteors.throttled()),false);return 1;
+                        }).orElse(0))))
                 .then(literal("info").requires(Perms.require(Perms.LIST, OP2))
                         .then(argument("event", IdentifierArgument.id()).suggests(EVENTS)
                                 .executes(c -> info(c.getSource(), eventId(c, "event")))))
@@ -120,7 +127,7 @@ public final class LiveEventsCommand {
                 .then(literal("set").requires(Perms.require(Perms.EDIT, OP3))
                         .then(argument("id", IntegerArgumentType.integer(1)).suggests(INSTANCES)
                                 .then(argument("param", StringArgumentType.word()).suggests(PARAMS)
-                                        .then(argument("value", DoubleArgumentType.doubleArg()).executes(LiveEventsCommand::set)))))
+                                        .then(argument("value", StringArgumentType.word()).executes(LiveEventsCommand::set)))))
                 .then(literal("stop").requires(Perms.require(Perms.STOP, OP2))
                         .then(literal("all").executes(c -> stopAll(c.getSource(), false))
                                 .then(literal("confirm").executes(c -> stopAll(c.getSource(), true))))
@@ -431,15 +438,22 @@ public final class LiveEventsCommand {
 
     private static int set(CommandContext<CommandSourceStack> c) {
         String param = StringArgumentType.getString(c, "param");
-        double value = DoubleArgumentType.getDouble(c, "value");
+        double value;
+        try {
+            String text = StringArgumentType.getString(c, "value");
+            value = (param.equals("duration") || param.equals("remaining")) ? com.takumistudios.liveevents.core.time.Durations.parseTicks(text) / 20.0 : Double.parseDouble(text);
+        } catch (RuntimeException e) {
+            c.getSource().sendFailure(Component.translatable("liveevents.error.options", "value")); return 0;
+        }
         if (!param.matches("[a-z0-9_]+") || !Double.isFinite(value)) {
             c.getSource().sendFailure(Component.translatable("liveevents.error.options", param));
             return 0;
         }
         return instance(c).map(i -> {
-            services().director().set(i, param, value);
+            try { services().director().set(i, param, value); }
+            catch (IllegalArgumentException e) { c.getSource().sendFailure(Component.translatable("liveevents.error.options", e.getMessage())); return 0; }
             services().audit().log(c.getSource().getTextName(), "set", i.definitionId() + " #" + i.instanceId() + " " + param + "=" + value);
-            c.getSource().sendSuccess(() -> Component.translatable("liveevents.set", i.instanceId(), param, trim(value)), true);
+            c.getSource().sendSuccess(() -> Component.translatable("liveevents.set", i.instanceId(), param, trim(param.equals("remaining") ? i.durationSeconds()-i.elapsedSeconds() : i.vars().getOrDefault(param,value))), true);
             return 1;
         }).orElse(0);
     }

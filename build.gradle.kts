@@ -56,6 +56,13 @@ dependencies {
     compileOnly("maven.modrinth:modmenu:${sc.properties.get<String>("compat.modmenu")}")
     compileOnly("maven.modrinth:placeholder-api:${sc.properties.get<String>("compat.placeholder_api")}")
 
+    if (project.hasProperty("sodium") || project.hasProperty("iris")) {
+        localRuntime("maven.modrinth:sodium:${sc.properties.get<String>("compat.sodium")}")
+    }
+    if (project.hasProperty("iris")) {
+        localRuntime("maven.modrinth:iris:${sc.properties.get<String>("compat.iris")}")
+    }
+
     // Modpack de compatibilidad (va en la CI): ./gradlew :26.3:runGameTest -PcompatPack
     if (project.hasProperty("compatPack")) {
         localRuntime("maven.modrinth:lithium:${sc.properties.get<String>("compat.lithium")}")
@@ -79,6 +86,10 @@ tasks {
         options.release = 25
         options.encoding = "UTF-8"
         options.compilerArgs.addAll(listOf("-Xlint:deprecation", "-Xlint:unchecked"))
+    }
+
+    withType<JavaExec>().configureEach {
+        if (project.hasProperty("meteorOnly")) systemProperty("liveevents.meteorOnly", "true")
     }
 
     test {

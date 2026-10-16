@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.1.0
+
+- Meteor impacts now use server-fixed positions, surface variants and immutable announced power (network protocol 2).
+- Added world-space meteor mesh, tapered trails, 3D smoke clusters, impact warnings and distant Blender atlases.
+- Added administrative meteor targeting and manual strikes; power, brutality and duration controls.
+- Crater preparation runs off-thread; block application and cooling resume within their work budgets.
+- Optional Common Protection API bridge rejects protected impact targets and block changes.
+- Blender v2 scenes, videos, multiview reviews and validated exports for earth, water and snow.
+- Added meteor regression tests and asset validation to GitHub CI.
+
+
 ## 1.0.0
 
 Primera versión pública. Minecraft 26.1.x, 26.2 y 26.3 (Fabric, Java 25).

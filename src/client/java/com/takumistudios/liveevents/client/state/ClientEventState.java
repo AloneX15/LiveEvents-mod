@@ -118,11 +118,20 @@ public final class ClientEventState {
         Map<String, Double> overrides = parseParams(p.params());
         Profile requested = Profile.parse(p.profile()).orElse(Profile.GAMEPLAY);
         Profile effective = Profile.resolve(requested, serverMaxProfile, ClientConfig.get().maxProfile());
-        double start = Math.max(0, Math.min(def.durationTicks(), p.eventTicks()));
+        double start = Math.max(0, Math.min(overrides.getOrDefault("duration",def.durationTicks()/20)*20, p.eventTicks()));
         double timescale = Math.max(0.05, Math.min(4, p.timescale()));
         Vec3 center = new Vec3(clampCoord(p.x()), Math.max(-4096, Math.min(4096, p.y())), clampCoord(p.z()));
         instances.put(p.instanceId(), new ClientInstance(p.instanceId(), def, p.dimension(), center, p.seed(), effective,
                 p.preview(), start, timescale, overrides, p.paused(), nowNanos));
+    }
+
+    public void onMeteor(Payloads.Meteor packet) {
+        ClientInstance instance = instances.get(packet.instanceId());
+        if (instance == null || protocolMismatch()) return;
+        var meteor = new com.google.gson.Gson().fromJson(packet.json(), com.takumistudios.liveevents.core.plan.AnnouncedMeteor.class);
+        if (meteor == null || !meteor.valid()) return;
+        instance.meteors.values().removeIf(m -> m.tick() < instance.t - 600);
+        if (instance.meteors.size() < 512 || instance.meteors.containsKey(meteor.key())) instance.meteors.put(meteor.key(), meteor);
     }
 
     public void onPhase(Payloads.EventPhase p, long nowNanos) {

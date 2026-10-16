@@ -37,6 +37,20 @@ y efectos reales y reversibles en el mundo. Pensado para eventos de servidor, se
 |---|---|---|
 | Tormenta de plasma | Lluvia de meteoritos | Agujero negro |
 
+## Meteoritos v2
+
+[Guía de meteoritos, Blender y estado de validación](docs/meteoritos-v2.md).
+
+```mcfunction
+/le start meteor_shower power=0.7 brutality=0.5 duration=120s seed=2107
+/le meteor mode 1 groups min=3 group_radius=24 fallback=random rest=10
+/le meteor strike 1 at 0 64 0 in minecraft:overworld power=0.7
+/le status 1
+/le set 1 remaining 45s
+```
+
+Los objetivos deben estar dentro del área del evento y en chunks cargados. El servidor fija cada impacto antes del aviso.
+
 ## Instalación
 
 1. Instala [Fabric Loader](https://fabricmc.net/use/) y [Fabric API](https://modrinth.com/mod/fabric-api).
@@ -62,7 +76,8 @@ Build de desarrollo (último `main`, ya probado): [release `dev`](https://github
 | 26.3.x | ✅ |
 
 Probado en la CI junto a Lithium y FerriteCore. Integraciones opcionales: LuckPerms, Mod Menu y Text Placeholder API.
-Los efectos se dibujan en el HUD, así que no dependen del cielo ni del post-procesado vanilla (Sodium e Iris).
+Los meteoritos v2 se dibujan en el mundo, con profundidad y oclusión; los demás eventos conservan el backend por HUD.
+Los perfiles de desarrollo `-Psodium` y `-Piris` permiten comprobar cada renderizador.
 Más en [Rendimiento y compatibilidad](docs/rendimiento-y-compatibilidad.md). Si encuentras un conflicto con otro mod,
 abre un [issue](https://github.com/AloneX15/LiveEvents-mod/issues).
 
@@ -93,7 +108,7 @@ en [docs/estado-del-plan.md](docs/estado-del-plan.md).
 
 ## Licencia
 
-Código bajo [MIT](LICENSE). Texturas generadas por el propio proyecto (`tools/gen-textures.mjs`, CC0); los sonidos
+Código bajo [MIT](LICENSE). Los recursos originales de v1 son CC0; los recursos nuevos de meteoritos v2 tienen derechos reservados a TakumiStudios. Los sonidos
 reutilizan eventos de sonido de Minecraft sin redistribuir archivos. Ver [CREDITS.md](CREDITS.md).
 
 ---

@@ -13,7 +13,7 @@ import net.minecraft.resources.Identifier;
  */
 public final class Payloads {
     /** Versión del protocolo de red. Cambiarla cuando cambie el formato de cualquier paquete. */
-    public static final int PROTOCOL = 1;
+    public static final int PROTOCOL = 2;
     public static final int MAX_ID = 128;
     public static final int MAX_JSON = 32 * 1024;
     public static final int MAX_REASON = 256;
@@ -251,9 +251,19 @@ public final class Payloads {
         }
     }
 
+    /** Server-fixed impact, including surface and immutable announced power. */
+    public record Meteor(int instanceId, String json) implements CustomPacketPayload {
+        public static final Type<Meteor> TYPE = typeOf("meteor");
+        public static final StreamCodec<RegistryFriendlyByteBuf, Meteor> CODEC = CustomPacketPayload.codec(
+                (p, b) -> { b.writeVarInt(p.instanceId); b.writeUtf(p.json, MAX_JSON); },
+                b -> new Meteor(b.readVarInt(), b.readUtf(MAX_JSON)));
+        @Override public Type<Meteor> type() { return TYPE; }
+    }
+
     public static void register() {
         PayloadTypeRegistry<RegistryFriendlyByteBuf> s2c = PayloadTypeRegistry.clientboundPlay();
         s2c.register(Handshake.TYPE, Handshake.CODEC);
+        s2c.register(Meteor.TYPE, Meteor.CODEC);
         s2c.register(DefinitionSync.TYPE, DefinitionSync.CODEC);
         s2c.register(EventStart.TYPE, EventStart.CODEC);
         s2c.register(EventPhase.TYPE, EventPhase.CODEC);

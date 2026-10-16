@@ -8,7 +8,7 @@
   "allowed_dimensions": ["minecraft:overworld", "minecraft:the_nether", "minecraft:the_end"],
   "night_override": "none",
   "cooldown": "30s",
-  "params": { "radius": 128, "count": 40 },
+  "params": { "radius": 128, "count": 40, "power": 0.7, "brutality": 0.5 },
   "palette": {
     "night": "#0B1020", "core": "#FFF4D6", "magnesium": "#7CFF6B", "trail": "#FF7A1A",
     "smoke": "#3A3A3A", "crater_glow": "#FF3B00"

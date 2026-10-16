@@ -1,0 +1,29 @@
+{
+  "format_version": 1,
+  "id": "liveevents_test:meteor",
+  "display_name": "Meteor test",
+  "scope": "localized",
+  "cooldown": "0s",
+  "params": {
+    "radius": 16,
+    "power": 0.7,
+    "brutality": 0.5
+  },
+  "phases": [
+    {
+      "id": "test",
+      "from": "0s",
+      "to": "35s",
+      "modules": [
+        {
+          "type": "meteor_impacts",
+          "count": 1,
+          "from": "0s",
+          "to": "30s",
+          "crater_radius": 2,
+          "fire": false
+        }
+      ]
+    }
+  ]
+}

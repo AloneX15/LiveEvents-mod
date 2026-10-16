@@ -213,5 +213,7 @@
   "subtitles.liveevents.earthquake.thump": "Golpe subterráneo",
   "subtitles.liveevents.earthquake.rumble": "Rugido del terremoto",
   "subtitles.liveevents.earthquake.crack": "Roca crujiendo",
-  "subtitles.liveevents.ui.warning": "Aviso de evento"
+  "subtitles.liveevents.ui.warning": "Aviso de evento",
+  "liveevents.meteor.updated": "Evento de meteoritos #%s: %s actualizado",
+  "liveevents.meteor.status": "Evento #%s: fuerza=%s brutalidad=%s transcurrido=%ss restante=%ss modo=%s lanzados=%s limitados=%s"
 }

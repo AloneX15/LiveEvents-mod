@@ -42,8 +42,9 @@ final class CompositeModules {
 
         private static final double COOLING_DELAY_TICKS = 20 * 20;
         private List<MeteorPlan.Impact> plan;
+        private long cycle;
         private final java.util.ArrayDeque<Cooling> cooling = new java.util.ArrayDeque<>();
-        private int next;
+
 
         @Override
         public void start(ServerModuleContext ctx) {
@@ -58,12 +59,20 @@ final class CompositeModules {
 
         @Override
         public void tick(ServerModuleContext ctx) {
-            while (plan != null && next < plan.size() && plan.get(next).tick() <= ctx.eventTicks()) {
-                impact(ctx, plan.get(next++));
+            EventInstance instance = (EventInstance) ctx.event();
+            if (ctx.spec().fromTicks() >= 500 && ctx.spec().toTicks() >= 1300 && ctx.eventTicks() >= ctx.spec().toTicks()) {
+                long wanted = 1 + (long)((ctx.eventTicks()-ctx.spec().toTicks())/800);
+                if (wanted != cycle) {
+                    cycle=wanted;
+                    double from=ctx.spec().toTicks()+(cycle-1)*800;
+                    plan=MeteorPlan.generate(DeterministicRandom.derive(ctx.moduleSeed(),cycle),ctx.params().integer("count",40),
+                            Math.max(8,ctx.params().number("radius",128)),from,from+800,2,5,false).stream()
+                            .map(m->new MeteorPlan.Impact((int)(cycle*1000)+m.index(),m.tick(),m.dx(),m.dz(),m.craterRadius(),m.entryAzimuth(),m.entryAngle(),m.big())).toList();
+                }
             }
-            while (!cooling.isEmpty() && cooling.peekFirst().tick() <= ctx.eventTicks()) {
-                cool(ctx, cooling.pollFirst());
-            }
+            if (plan != null) instance.meteors.prepare(ctx, plan);
+            for (var meteor : instance.meteors.due(ctx)) impact(ctx, meteor);
+            while (!cooling.isEmpty() && cooling.peekFirst().tick() <= ctx.eventTicks()) cool(ctx, cooling.pollFirst());
         }
 
         @Override
@@ -76,47 +85,46 @@ final class CompositeModules {
         private void cool(ServerModuleContext ctx, Cooling c) {
             int r = (int) Math.ceil(c.radius()) + 1;
             ServerLevel level = ctx.level();
+            java.util.Iterator<BlockPos> positions = BlockPos.betweenClosed(c.center().offset(-r, -r - 2, -r), c.center().offset(r, 2, r)).iterator();
             ctx.submit(Priority.CLEANUP, allowance -> {
-                int changed = 0;
-                for (BlockPos pos : BlockPos.betweenClosed(c.center().offset(-r, -r - 2, -r), c.center().offset(r, 2, r))) {
-                    if (changed >= allowance) {
-                        break;
-                    }
+                int changed = 0, scanned = 0;
+                while (positions.hasNext() && changed < allowance && scanned++ < 64) {
+                    BlockPos pos = positions.next().immutable();
                     if (level.isLoaded(pos) && level.getBlockState(pos).is(Blocks.MAGMA_BLOCK)
-                            && ctx.setBlock(pos.immutable(), Blocks.OBSIDIAN.defaultBlockState())) {
-                        changed++;
-                    }
+                            && ctx.setBlock(pos, Blocks.OBSIDIAN.defaultBlockState())) changed++;
                 }
-                return Result.done(changed);
+                return positions.hasNext() ? Result.more(changed) : Result.done(changed);
             });
         }
 
-        private void impact(ServerModuleContext ctx, MeteorPlan.Impact impact) {
+        private void impact(ServerModuleContext ctx, com.takumistudios.liveevents.core.plan.AnnouncedMeteor impact) {
             ServerLevel level = ctx.level();
             Vec3 c = ctx.event().center();
-            int x = (int) Math.floor(c.x + impact.dx()), z = (int) Math.floor(c.z + impact.dz());
+            int x = (int) Math.floor(impact.x()), z = (int) Math.floor(impact.z());
             if (!BlockModules.loaded(level, x, z)) {
                 return; // en chunks descargados el meteorito se ve, pero no cambia nada
             }
-            BlockPos ground = new BlockPos(x, level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z), z);
+            BlockPos ground = BlockPos.containing(impact.x(), impact.y(), impact.z());
             if (!level.isLoaded(ground)) {
                 return; // en chunks descargados el meteorito se ve, pero no cambia nada
             }
-            if (!ctx.event().preview()) {
+            if (!ctx.event().preview() && impact.power()>0 && !impact.surface().equals("water")) {
                 long seed = DeterministicRandom.derive(ctx.moduleSeed(), impact.index());
-                BlockModules.carve(ctx, x, z, impact.craterRadius(), 0.55,
+                BlockModules.carve(ctx, x, z, impact.radius(), 0.55,
                         Blocks.BASALT.defaultBlockState(), Blocks.MAGMA_BLOCK.defaultBlockState(), seed);
-                if (ctx.params().bool("fire", true)) {
-                    BlockModules.placeFires(ctx, x + 0.5, z + 0.5, impact.craterRadius() + 3, (int) Math.round(impact.craterRadius() * 2), seed + 7);
+                if (impact.surface().equals("earth") && ctx.params().bool("fire", true)) {
+                    BlockModules.placeFires(ctx, x + 0.5, z + 0.5, impact.radius() + 3, (int) Math.round(impact.radius() * 2), seed + 7);
                 }
-                cooling.addLast(new Cooling(impact.tick() + COOLING_DELAY_TICKS, ground, impact.craterRadius()));
+                cooling.addLast(new Cooling(impact.tick() + COOLING_DELAY_TICKS, ground, impact.radius()));
             }
             double blast = Math.max(0, ctx.params().number("blast_radius", 6)) * (impact.big() ? 1.5 : 1);
-            float damage = (float) Math.max(0, ctx.params().number("damage", 8)) * (impact.big() ? 1.75f : 1f);
+            float damage = (float) Math.max(0, ctx.params().number("damage", 8)) * (impact.big() ? 1.75f : 1f) * (float) (0.3 + impact.power());
             Vec3 at = Vec3.atBottomCenterOf(ground);
+            if (ctx.event().preview() || impact.power()<=0) return;
             for (LivingEntity e : level.getEntitiesOfClass(LivingEntity.class, new net.minecraft.world.phys.AABB(ground).inflate(blast), e -> true)) {
                 EventInstance instance = (EventInstance) ctx.event();
-                if (!instance.accepts(e)) {
+                if (!instance.accepts(e) || com.takumistudios.liveevents.server.integration.ProtectionCompat.protectedAt(level,e.blockPosition())
+                        || com.takumistudios.liveevents.server.journal.BlockChanger.inExcludedRegion(level,e.blockPosition())) {
                     continue;
                 }
                 double d = e.position().distanceTo(at);

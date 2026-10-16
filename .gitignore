@@ -33,3 +33,9 @@ Thumbs.db
 
 # Wiki generada desde docs/ (node tools/build-wiki.mjs)
 wiki/
+
+# Meteor authoring and local validation
+*.blend[0-9]
+__pycache__/
+/*.log
+/art/meteor_shower/*.log

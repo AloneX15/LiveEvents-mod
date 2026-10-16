@@ -40,6 +40,9 @@ public class LiveEventsClientGameTest implements FabricClientGameTest {
             context.waitTicks(40);
             context.takeScreenshot("liveevents_00_night_sky");
 
+            meteorWorldAcceptance(context, world);
+            if (Boolean.getBoolean("liveevents.meteorOnly")) return;
+
             // Supernova en cinematic: un fotograma por segmento del guion
             int id = start(context, server, "le start supernova profile=cinematic");
             double[] moments = {4.0, 7.5, 8.3, 10.1, 15.0, 27.0, 40.0, 52.0};
@@ -111,6 +114,70 @@ public class LiveEventsClientGameTest implements FabricClientGameTest {
             context.takeScreenshot("client_options");
             context.runOnClient(mc -> mc.setScreenAndShow(null));
         }
+    }
+
+    private static void setHudHidden(net.minecraft.client.Minecraft mc, boolean hidden) {
+        //? if >=26.2 {
+        if(mc.gui.hud.isHidden()!=hidden) mc.gui.hud.toggle();
+        //?} else {
+        /*mc.options.hideGui=hidden;
+        *///?}
+    }
+
+    private static void meteorWorldAcceptance(ClientGameTestContext context, TestSingleplayerContext world) {
+        TestServerContext server=world.getServer();
+        server.runCommand("gamemode spectator @a");
+        server.runCommand("tp @a 0 108 -24 0 10");
+        context.waitTicks(30); waitForChunks(world);
+        for(String surface:new String[]{"earth","water","snow"}) {
+            server.runCommand("fill -12 96 -12 12 99 12 stone");
+            server.runCommand("fill -12 100 -12 12 110 12 air");
+            server.runCommand("fill -12 99 -12 12 99 12 "+(surface.equals("water")?"water":surface.equals("snow")?"snow_block":"grass_block"));
+            int id=start(context,server,"le start meteor_shower at 0 100 0 radius=32 count=1");
+            server.runCommand("le seek "+id+" 12"); context.waitTicks(3);
+            server.runCommand("le meteor strike "+id+" at 0 100 0 in minecraft:overworld power=0.7");
+            server.runOnServer(s->{
+                var event=LiveEventsServer.get().director().get(id).orElseThrow();
+                event.viewers().forEach(p->LiveEventsServer.get().director().syncPlayer(p));
+            });
+            context.waitTicks(35);
+            context.runOnClient(mc->{
+                var event=com.takumistudios.liveevents.client.state.ClientEventState.get().instances().stream().filter(i->i.id==id).findFirst().orElseThrow();
+                if(event.meteors.values().stream().noneMatch(m->m.index()>=1000000000 && m.surface().equals(surface))) throw new AssertionError("Missing server-fixed "+surface+" meteor");
+                setHudHidden(mc,true);
+            });
+            context.takeScreenshot("meteor_v2_"+surface+"_warning_f1");
+            context.waitTicks(50);
+            context.takeScreenshot("meteor_v2_"+surface+"_impact_f1");
+            if(surface.equals("earth")) {
+                context.waitTicks(45);
+                context.takeScreenshot("meteor_v2_earth_mushroom_front");
+                server.runCommand("tp @a 24 108 0 90 10");context.waitTicks(4);
+                context.takeScreenshot("meteor_v2_earth_mushroom_side");
+                server.runCommand("tp @a 0 126 -12 0 65");context.waitTicks(4);
+                context.takeScreenshot("meteor_v2_earth_mushroom_above");
+                server.runCommand("tp @a 0 108 -24 0 10");
+                server.runCommand("fill -12 100 -8 12 122 -7 stone");context.waitTicks(4);
+                context.takeScreenshot("meteor_v2_earth_occluded");
+                server.runCommand("fill -12 100 -8 12 122 -7 air");
+            }
+            context.runOnClient(mc->setHudHidden(mc,false));
+            stop(context,server,id);
+        }
+        context.runOnClient(mc->com.takumistudios.liveevents.client.render.MeteorWorldRenderer.resetMetrics());
+        int stress=start(context,server,"le start meteor_shower at 0 100 0 radius=32 count=1 destructive_power=0");
+        server.runCommand("le seek "+stress+" 12");context.waitTicks(3);
+        for(int k=0;k<12;k++) server.runCommand("le meteor strike "+stress+" at "+((k%4)*6-9)+" 100 "+((k/4)*6-6)+" power=0");
+        context.waitTicks(100);
+        context.runOnClient(mc->{
+            int peak=com.takumistudios.liveevents.client.render.MeteorWorldRenderer.peakQuads();
+            if(peak<=0 || peak>2048) throw new AssertionError("Meteor geometry budget: "+peak);
+            com.takumistudios.liveevents.LiveEvents.LOGGER.info("METEOR_PERF impacts=12 peak_quads={} average_extraction_ms={} fps={}",peak,
+                    com.takumistudios.liveevents.client.render.MeteorWorldRenderer.averageExtractionMs(),mc.getFps());
+        });
+        context.takeScreenshot("meteor_v2_stress_12");stop(context,server,stress);
+        server.runCommand("gamemode creative @a");
+        server.runCommand("tp @a 0 110 -24 -20 -45");
     }
 
     /** Lanza con un comando de consola y devuelve el número de la instancia creada. */

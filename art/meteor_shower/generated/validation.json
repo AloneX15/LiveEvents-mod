@@ -1,0 +1,41 @@
+{
+  "earth": {
+    "validated": true,
+    "nontransparent_pixels_per_frame": [
+      0,
+      379,
+      1402,
+      5187,
+      10143,
+      9668,
+      4545,
+      0
+    ]
+  },
+  "water": {
+    "validated": true,
+    "nontransparent_pixels_per_frame": [
+      0,
+      342,
+      1341,
+      4862,
+      9134,
+      8503,
+      3920,
+      0
+    ]
+  },
+  "snow": {
+    "validated": true,
+    "nontransparent_pixels_per_frame": [
+      0,
+      358,
+      1363,
+      5097,
+      10010,
+      9536,
+      4292,
+      0
+    ]
+  }
+}

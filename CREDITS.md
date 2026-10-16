@@ -8,7 +8,7 @@ LiveEvents, bajo licencia [MIT](LICENSE).
 
 ## Texturas
 
-Todas las texturas de `src/main/resources/assets/liveevents/textures/effect/` y el icono del mod
+Las texturas originales enumeradas abajo, dentro de `src/main/resources/assets/liveevents/textures/effect/` y el icono del mod
 (`assets/liveevents/icon.png`) se generan de forma procedural con `tools/gen-textures.mjs` (ruido y degradados
 propios). Son obra del proyecto y se publican como **CC0**.
 
@@ -34,3 +34,15 @@ los mismos ids.
 - [Fabric](https://fabricmc.net/) (Loader, API, Loom) y [Stonecutter](https://stonecutter.kikugie.dev/).
 - Integraciones opcionales: [Mod Menu](https://modrinth.com/mod/modmenu), [Text Placeholder API](https://modrinth.com/mod/placeholder-api)
   y [LuckPerms](https://luckperms.net/) (a través de la API de permisos de Fabric).
+
+## Recursos de meteoritos v2
+
+Las escenas, imágenes, atlas, vídeos y mallas de `art/meteor_shower/`, la malla de
+`assets/liveevents/meteor/meteor_mesh.json` y las texturas `meteor_*.png` son recursos propios de TakumiStudios,
+con **todos los derechos reservados**. Se distribuyen con LiveEvents Mod para su uso en el mod y sus modpacks;
+no se concede su redistribución independiente. Esta condición no modifica la licencia CC0 de los recursos previos.
+
+- Escenas, atlas y malla: `art/meteor_shower/create_preview_v2.py`, Blender 5.2.2 LTS.
+- Roca y humo neutro: `tools/generate-meteor-textures.py`, semilla 2107.
+- Código de los generadores: MIT, como el resto del código del repositorio.
+- No se distribuyen recursos de Veil, Photon, packs de shaders ni otros juegos.

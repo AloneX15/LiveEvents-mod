@@ -16,6 +16,7 @@ import java.util.Map;
  * semilla, así que entrar a mitad de evento basta con fijar el reloj (§9.3).
  */
 public final class ClientInstance {
+    public final Map<String, com.takumistudios.liveevents.core.plan.AnnouncedMeteor> meteors = new java.util.LinkedHashMap<>();
     public final int id;
     public final EventDefinition def;
     public final String dimension;
@@ -25,6 +26,7 @@ public final class ClientInstance {
     public final boolean preview;
     public final SmoothClock clock;
     public final Map<String, Double> vars = new HashMap<>();
+    private final Map<Integer, ModuleSpec> visualSpecs = new HashMap<>();
     private final Map<Integer, ModuleParams> params = new HashMap<>();
     private final Map<Integer, Object> state = new HashMap<>();
     /** Tiempo (nanos) en que terminó, para el fundido de salida; -1 mientras está activa. */
@@ -58,8 +60,14 @@ public final class ClientInstance {
         vars.putAll(def.params());
         // El servidor ya validó los valores; aquí solo se recortan a rangos razonables
         overrides.forEach((k, v) -> vars.put(k, Double.isFinite(v) ? Math.max(-1e6, Math.min(1e6, v)) : 0));
-        vars.put("duration", def.durationTicks() / 20.0);
+        vars.putIfAbsent("duration", def.durationTicks() / 20.0);
         params.clear();
+        visualSpecs.clear();
+    }
+
+    public ModuleSpec visualSpec(ModuleSpec spec) {
+        if(!def.id().equals("liveevents:meteor_shower")) return spec;
+        return visualSpecs.computeIfAbsent(spec.index(), key -> com.takumistudios.liveevents.core.plan.MeteorTimeline.visual(spec,vars.getOrDefault("duration",90.0)*20));
     }
 
     public ModuleParams params(ModuleSpec spec) {

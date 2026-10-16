@@ -172,8 +172,9 @@ public final class VisualDirector {
     }
 
     private void runFrame(ClientInstance i, ClientLevel level, Vec3 cam, long now, double fade) {
-        for (ModuleSpec spec : i.def.allModules()) {
-            if (!spec.side().onClient() || !spec.activeAt(i.t) && fade >= 1) {
+        for (ModuleSpec original : i.def.allModules()) {
+            ModuleSpec spec = i.visualSpec(original);
+            if (!spec.side().onClient() || !(spec.activeAt(i.t) || spec.shortType().equals("meteor_impacts") && i.t >= spec.fromTicks() && i.t < i.vars.getOrDefault("duration",i.def.durationTicks()/20)*20) && fade >= 1) {
                 continue;
             }
             if (fade < 1 && !spec.activeAt(Math.min(i.t, i.def.durationTicks() - 0.01))) {
@@ -332,8 +333,9 @@ public final class VisualDirector {
             }
             double t = i.clock.advance(now);
             i.t = t;
-            for (ModuleSpec spec : i.def.allModules()) {
-                if (!spec.side().onClient() || !spec.activeAt(t)) {
+            for (ModuleSpec original : i.def.allModules()) {
+            ModuleSpec spec = i.visualSpec(original);
+                if (!spec.side().onClient() || !(spec.activeAt(t) || spec.shortType().equals("meteor_impacts") && t >= spec.fromTicks() && t < i.vars.getOrDefault("duration",i.def.durationTicks()/20)*20)) {
                     continue;
                 }
                 ClientVisual visual = VISUALS.get(spec.type());

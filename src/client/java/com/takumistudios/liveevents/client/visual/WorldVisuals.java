@@ -138,6 +138,7 @@ final class WorldVisuals {
     static final class MeteorTrail implements ClientVisual {
         @Override
         public void frame(VisualContext ctx, FrameState f) {
+            if (ctx.instance.def.id().equals("liveevents:meteor_shower")) return;
             double rate = clamp(ctx.params.range("rate", ctx.progress, 1), 0, 30);
             if (rate <= 0) {
                 return;
@@ -166,111 +167,44 @@ final class WorldVisuals {
         }
     }
 
-    /** Parte de cliente de meteor_impacts: aviso en el suelo, bólido, impacto, temblor y sonido con retraso. */
+    /** Screen effects and budgeted particles consume server-fixed impacts. */
     static final class MeteorImpacts implements ClientVisual {
         static final class State {
-            List<MeteorPlan.Impact> plan;
-            int nextImpact;
-            int nextWarning;
+            final java.util.Set<String> heard = new java.util.HashSet<>();
+            final java.util.Set<String> warned = new java.util.HashSet<>();
+            final java.util.Set<String> flashed = new java.util.HashSet<>();
         }
-
-        static List<MeteorPlan.Impact> plan(VisualContext ctx) {
-            ModuleParams p = ctx.params;
-            double[] crater = p.bounds("crater_radius", 3);
-            if (p.json().has("crater_radius") && p.json().get("crater_radius").isJsonObject()) {
-                crater = new double[]{p.range("crater_radius", 0, 2), p.range("crater_radius", 1, 5)};
-            }
-            return MeteorPlan.generate(ctx.seed(), p.integer("count", 40), Math.max(8, p.number("radius", 128)),
-                    ctx.spec.fromTicks(), ctx.spec.toTicks(), crater[0], crater[1], p.bool("first_big", false));
-        }
-
-        @Override
-        public void frame(VisualContext ctx, FrameState f) {
-            State s = ctx.instance.state(ctx.spec, State::new);
-            if (s.plan == null) {
-                s.plan = plan(ctx);
-            }
-            Vec3 c = ctx.instance.center;
-            double fall = 60; // ticks de caída visibles
-            for (MeteorPlan.Impact impact : s.plan) {
-                double remaining = impact.tick() - ctx.t;
-                double ix = c.x + impact.dx(), iz = c.z + impact.dz();
-                if (remaining > 0 && remaining < fall) {
-                    double az = Math.toRadians(impact.entryAzimuth()), el = Math.toRadians(impact.entryAngle());
-                    double dx = Math.sin(az) * Math.cos(el), dy = Math.sin(el), dz = -Math.cos(az) * Math.cos(el);
-                    double speed = impact.big() ? 5 : 7; // bloques por tick
-                    double iy = groundY(ctx, ix, iz, c.y);
-                    double hx = ix + dx * remaining * speed, hy = iy + dy * remaining * speed, hz = iz + dz * remaining * speed;
-                    double tail = Math.min(remaining + 25, fall) * speed;
-                    int color = impact.big() && (int) (ctx.t / 4) % 3 == 0 ? 0x7CFF6B : 0xFF7A1A;
-                    f.line(hx, hy, hz, hx + dx * tail, hy + dy * tail, hz + dz * tail, color, 0.85f * (float) ctx.fade, impact.big() ? 9 : 5);
-                    f.line(hx, hy, hz, hx + dx * tail * 0.3, hy + dy * tail * 0.3, hz + dz * tail * 0.3, 0xFFF4D6, (float) ctx.fade, impact.big() ? 4 : 2);
-                } else if (remaining <= 0 && remaining > -20) {
-                    // Destello y temblor del impacto según la distancia
-                    double d = Math.hypot(ctx.camera.x - ix, ctx.camera.z - iz);
-                    double near = clamp(1 - d / 96, 0, 1);
-                    f.addShake((float) (near * (impact.big() ? 2.0 : 1.2) * (1 + remaining / 20)), 14, 0);
-                    if (near > 0.5) {
-                        f.addFlash(0xFFE0B0, (float) (0.25 * near * (1 + remaining / 20)));
-                    }
-                }
+        @Override public void frame(VisualContext ctx, FrameState f) {
+            State state = ctx.instance.state(ctx.spec, State::new);
+            for (var m : ctx.instance.meteors.values()) {
+                if (m.module() != ctx.spec.index()) continue;
+                double age = ctx.t - m.tick();
+                if (age < 0 || age > 20) continue;
+                double distance = ctx.camera.distanceTo(new Vec3(m.x(),m.y(),m.z()));
+                double near = clamp(1-distance/96,0,1);
+                f.addShake((float)(near*(m.big()?2:1.2)*(1-age/20)),14,0);
+                if (state.flashed.add(m.key()) && age < 4 && near>0.5 && ctx.requestFlash(0.15,0xFFE0B0))
+                    f.addFlash(0xFFE0B0,(float)(0.2*near));
             }
         }
-
-        @Override
-        public void tick(VisualContext ctx) {
-            State s = ctx.instance.state(ctx.spec, State::new);
-            if (s.plan == null) {
-                s.plan = plan(ctx);
-            }
-            Vec3 c = ctx.instance.center;
-            double warning = Math.max(0, ctx.params.ticks("warning", 30));
-            // Aviso: círculo de brasas en el suelo
-            for (MeteorPlan.Impact impact : s.plan) {
-                double remaining = impact.tick() - ctx.t;
-                if (remaining > 0 && remaining <= warning) {
-                    double ix = c.x + impact.dx(), iz = c.z + impact.dz();
-                    if (Math.hypot(ctx.camera.x - ix, ctx.camera.z - iz) > 128) {
-                        continue;
-                    }
-                    double iy = groundY(ctx, ix, iz, c.y) + 0.1;
-                    int n = ctx.particleBudget(6);
-                    double r = impact.craterRadius() + 1;
-                    for (int k = 0; k < n; k++) {
-                        double a = (ctx.t * 0.3 + k * Math.PI * 2 / Math.max(1, n));
-                        ctx.director.spawn(ParticleTypes.FLAME, ix + Math.cos(a) * r, iy, iz + Math.sin(a) * r, 0, 0.01, 0);
-                    }
+        @Override public void tick(VisualContext ctx) {
+            State state = ctx.instance.state(ctx.spec, State::new);
+            for (var m : ctx.instance.meteors.values()) {
+                if (m.module()!=ctx.spec.index()) continue;
+                double remaining=m.tick()-ctx.t;
+                double distance=ctx.camera.distanceTo(new Vec3(m.x(),m.y(),m.z()));
+                if(remaining>0 && remaining<=40 && state.warned.add(m.key()) && distance<96)
+                    ctx.director.playSoundAt("liveevents:meteor.whistle",0.8f,0.8f,0,m.x(),m.y(),m.z());
+                if(remaining<=0 && state.heard.add(m.key()) && remaining>-4) {
+                    String sound=m.surface().equals("water")?"minecraft:entity.generic.splash":m.surface().equals("snow")?"minecraft:block.powder_snow.break":distance<64?"liveevents:meteor.impact_near":"liveevents:meteor.impact_far";
+                    ctx.director.playSoundAt(sound,(float)clamp(2-distance/200,0.2,2),1,VisualDirector.soundDelaySeconds(distance),m.x(),m.y(),m.z());
                 }
-            }
-            while (s.nextImpact < s.plan.size() && s.plan.get(s.nextImpact).tick() <= ctx.t) {
-                MeteorPlan.Impact impact = s.plan.get(s.nextImpact++);
-                if (ctx.t - impact.tick() > 20) {
-                    continue; // entró tarde: no repetir impactos pasados
-                }
-                double ix = c.x + impact.dx(), iz = c.z + impact.dz();
-                double iy = groundY(ctx, ix, iz, c.y);
-                double d = Math.sqrt(ctx.camera.distanceToSqr(ix, iy, iz));
-                if (d < 160) {
-                    int n = ctx.particleBudget(impact.big() ? 60 : 30);
-                    ctx.director.spawn(ParticleTypes.EXPLOSION_EMITTER, ix, iy + 1, iz, 0, 0, 0);
-                    DeterministicRandom r = new DeterministicRandom(impact.index());
-                    for (int k = 0; k < n; k++) {
-                        double a = r.range(0, Math.PI * 2);
-                        ctx.director.spawn(k % 3 == 0 ? ParticleTypes.LAVA : ParticleTypes.LARGE_SMOKE, ix, iy + 0.5, iz,
-                                Math.cos(a) * r.range(0.1, 0.5), r.range(0.2, 0.9), Math.sin(a) * r.range(0.1, 0.5));
-                    }
-                }
-                String sound = d < 64 ? "liveevents:meteor.impact_near" : "liveevents:meteor.impact_far";
-                ctx.director.playSoundAt(sound, (float) clamp(2.0 - d / 200, 0.2, 2.0), 1.0f, VisualDirector.soundDelaySeconds(d), ix, iy, iz);
-            }
-            // Silbido de los que van a caer cerca
-            if (s.nextWarning < s.plan.size()) {
-                MeteorPlan.Impact next = s.plan.get(s.nextWarning);
-                if (next.tick() - ctx.t <= 40) {
-                    s.nextWarning++;
-                    double ix = c.x + next.dx(), iz = c.z + next.dz();
-                    if (Math.hypot(ctx.camera.x - ix, ctx.camera.z - iz) < 96) {
-                        ctx.director.playSound("liveevents:meteor.whistle", 0.8f, 0.8f, 0, "listener", ctx);
+                if(remaining<0 && remaining>-400 && distance<192) {
+                    int n=ctx.director.particleBudget(remaining>-40?4:1,distance);
+                    DeterministicRandom r=new DeterministicRandom(m.seed()+(long)ctx.t);
+                    for(int j=0;j<n;j++) {
+                        var particle=m.surface().equals("water")?ParticleTypes.SPLASH:m.surface().equals("snow")?ParticleTypes.SNOWFLAKE:remaining>-60?ParticleTypes.FLAME:ParticleTypes.CAMPFIRE_COSY_SMOKE;
+                        ctx.director.spawn(particle,m.x()+r.range(-m.radius(),m.radius()),m.y()+0.1,m.z()+r.range(-m.radius(),m.radius()),r.range(-0.03,0.03),r.range(0.02,0.15),0);
                     }
                 }
             }

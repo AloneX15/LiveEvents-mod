@@ -108,7 +108,10 @@ public record StartOptions(Optional<String[]> at, Optional<String> on, Optional<
                             if (params.size() >= MAX_PARAMS) {
                                 throw new IllegalArgumentException("demasiados parámetros");
                             }
-                            params.put(key, number(key, value));
+                            double parsed = number(key, (key.equals("duration") || key.equals("remaining")) && value.endsWith("s") ? value.substring(0, value.length() - 1) : value);
+                            if ((key.equals("power") || key.equals("visual_power") || key.equals("destructive_power") || key.equals("brutality")) && (parsed < 0 || parsed > 1)) throw new IllegalArgumentException(key + " must be 0..1");
+                            if (key.equals("duration") && (parsed < 3 || parsed > 86400)) throw new IllegalArgumentException("duration must be 3..86400s");
+                            params.put(key, parsed);
                         }
                     }
                 }

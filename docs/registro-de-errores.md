@@ -56,3 +56,12 @@ Cada error resuelto: síntoma, causa, solución y test que lo reproduce.
 | 26.3 | `Level.setBlock(pos, state, flags)` de 3 argumentos desaparece | Variante de 4 argumentos (`512` de límite de recursión) |
 | 26.3 | `RenderPipeline` cambia de paquete | `RenderPipelines.GUI_TEXTURED` sin importar el tipo |
 | 26.3 | `InputConstants.Type.KEYSYM` → `KEYBOARD` | Constructor `KeyMapping(String, int, Category)` |
+
+## Meteoritos v2 · 2026-10-16
+
+- Cliente y servidor resolvían el suelo por separado: anuncios inmutables con coordenadas y superficie del servidor.
+  Regresión: impacto en agua, cambio de potencia y resincronización del cliente.
+- El enfriamiento perdía bloques al alcanzar el cupo: cursor persistente y Result.more hasta completar el recorrido.
+- Una columna de cráter podía superar el cupo del planificador: operaciones reanudables por posición y geometría asíncrona.
+- F1 podía congelar la última amplitud de cámara: cálculo visual en extracción del mundo, HUD como consumidor.
+- Blender 5.2 requiere media_type=VIDEO antes de elegir FFMPEG; modos y exportaciones revisados.

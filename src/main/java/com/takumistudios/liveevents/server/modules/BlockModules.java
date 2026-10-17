@@ -104,6 +104,10 @@ final class BlockModules {
             private final double perTick;
             private long i;
             private double credit;
+            private long creditedGameTick=Long.MIN_VALUE;
+            private BlockPos pendingTop;
+            private int pendingDepth;
+            private DeterministicRandom pendingRandom;
 
             ColumnSweep(ServerModuleContext ctx, BlockPalette palette, Vec3 c, int radius, double perSecond, long seed) {
                 this.ctx = ctx;
@@ -120,14 +124,25 @@ final class BlockModules {
 
             @Override
             public Result run(int allowance) {
-                if (ended.get() || i >= size) {
+                if (ended.get() || i >= size && pendingTop==null) {
                     return Result.DONE;
                 }
-                credit = Math.min(credit + perTick, perTick * 4);
-                int changed = 0;
+                if(creditedGameTick!=ctx.level().getGameTime()) {
+                    creditedGameTick=ctx.level().getGameTime();
+                    credit = Math.min(credit + perTick, perTick * 4);
+                }
+                int changed = 0, scanned=0;
                 ServerLevel level = ctx.level();
                 double chance = Math.max(0, Math.min(1, ctx.params().range("chance", ctx.progress(), fixedPalette != null ? 1 : 0.15)));
-                while (credit >= 1 && changed < allowance && i < size) {
+                while (changed < allowance && scanned++<64 && (pendingTop!=null || credit>=1 && i<size)) {
+                    if(pendingTop!=null) {
+                        BlockPos pos=pendingTop.below(pendingDepth++);
+                        if(!level.isLoaded(pos)) {pendingTop=null;continue;}
+                        Optional<BlockState> to=palette.apply(level.getBlockState(pos),pendingRandom);
+                        if(to.isPresent() && ctx.setBlock(pos,to.get())) changed++;
+                        if(pendingDepth>=2) pendingTop=null;
+                        continue;
+                    }
                     long cell = Math.floorMod(i * step + seed, size);
                     i++;
                     int dx = (int) (cell % side) - radius, dz = (int) (cell / side) - radius;
@@ -144,15 +159,9 @@ final class BlockModules {
                         continue;
                     }
                     BlockPos top = new BlockPos(x, level.getHeight(Heightmap.Types.WORLD_SURFACE, x, z) - 1, z);
-                    for (int depth = 0; depth < 2; depth++) { // la superficie y lo que hay justo debajo (plantas, nieve)
-                        BlockPos pos = top.below(depth);
-                        Optional<BlockState> to = palette.apply(level.getBlockState(pos), r);
-                        if (to.isPresent() && ctx.setBlock(pos, to.get())) {
-                            changed++;
-                        }
-                    }
+                    pendingTop=top;pendingDepth=0;pendingRandom=r;
                 }
-                return i >= size ? Result.done(changed) : Result.more(Math.max(changed, 0));
+                return i >= size && pendingTop==null ? Result.done(changed) : Result.more(Math.max(changed, 0));
             }
         }
     }
@@ -192,6 +201,10 @@ final class BlockModules {
      * el planificador columna a columna.
      */
     static void carve(ServerModuleContext ctx, int cx, int cz, double radius, double depthFactor, BlockState rim, BlockState core, long seed) {
+        carve(ctx,cx,cz,radius,depthFactor,rim,core,seed,null);
+    }
+
+    static void carve(ServerModuleContext ctx, int cx, int cz, double radius, double depthFactor, BlockState rim, BlockState core, long seed, Integer fixedSurfaceY) {
         var future = java.util.concurrent.CompletableFuture.supplyAsync(
                 () -> com.takumistudios.liveevents.core.plan.CraterShape.generate(radius, depthFactor, seed, cx, cz),
                 LiveEventsServer.get().compute());
@@ -212,8 +225,8 @@ final class BlockModules {
                     var column=columns.get(next++);
                     int x=cx+column.dx(),z=cz+column.dz();
                     if(!loaded(ctx.level(),x,z)) continue;
-                    BlockPos top=new BlockPos(x,ctx.level().getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES,x,z)-1,z);
-                    if(column.rim()) pending.add(java.util.Map.entry(top.above(),rim));
+                    BlockPos top=new BlockPos(x,fixedSurfaceY==null?ctx.level().getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES,x,z)-1:fixedSurfaceY-1,z);
+                    if(column.rim()) { if(!ctx.level().getBlockState(top).isAir()) pending.add(java.util.Map.entry(top.above(),rim)); }
                     else {
                         for(int y=0;y<column.depth();y++) pending.add(java.util.Map.entry(top.below(y),Blocks.AIR.defaultBlockState()));
                         BlockPos floor=top.below(column.depth());

@@ -38,6 +38,7 @@ public final class ClientEventState {
     private final Map<String, EventDefinition> definitions = new HashMap<>();
     private final Map<Integer, ClientInstance> instances = new LinkedHashMap<>();
     private final List<ClientInstance> ending = new ArrayList<>();
+    private final List<ClientInstance> residues = new ArrayList<>();
     private final List<Scar> scars = new ArrayList<>();
     private String[] chunks;
     private int serverProtocol = -1;
@@ -118,7 +119,7 @@ public final class ClientEventState {
         Map<String, Double> overrides = parseParams(p.params());
         Profile requested = Profile.parse(p.profile()).orElse(Profile.GAMEPLAY);
         Profile effective = Profile.resolve(requested, serverMaxProfile, ClientConfig.get().maxProfile());
-        double start = Math.max(0, Math.min(overrides.getOrDefault("duration",def.durationTicks()/20)*20, p.eventTicks()));
+        double start = Math.max(0, Math.min(1728000+12000, p.eventTicks()));
         double timescale = Math.max(0.05, Math.min(4, p.timescale()));
         Vec3 center = new Vec3(clampCoord(p.x()), Math.max(-4096, Math.min(4096, p.y())), clampCoord(p.z()));
         instances.put(p.instanceId(), new ClientInstance(p.instanceId(), def, p.dimension(), center, p.seed(), effective,
@@ -130,7 +131,11 @@ public final class ClientEventState {
         if (instance == null || protocolMismatch()) return;
         var meteor = new com.google.gson.Gson().fromJson(packet.json(), com.takumistudios.liveevents.core.plan.AnnouncedMeteor.class);
         if (meteor == null || !meteor.valid()) return;
-        instance.meteors.values().removeIf(m -> m.tick() < instance.t - 600);
+        instance.meteors.values().removeIf(m -> m.tick()+m.lifetimeTicks()<instance.t);
+        if(instance.meteors.size()>=512 && !instance.meteors.containsKey(meteor.key())) {
+            var oldest=instance.meteors.entrySet().stream().filter(e->e.getValue().tick()<instance.t-20).findFirst();
+            oldest.ifPresent(e->instance.meteors.remove(e.getKey()));
+        }
         if (instance.meteors.size() < 512 || instance.meteors.containsKey(meteor.key())) instance.meteors.put(meteor.key(), meteor);
     }
 
@@ -165,7 +170,13 @@ public final class ClientEventState {
     }
 
     public void onEnd(Payloads.EventEnd p, long nowNanos) {
+        residues.removeIf(i->i.id==p.instanceId());
+        ending.removeIf(i->i.id==p.instanceId());
         ClientInstance i = instances.remove(p.instanceId());
+        if(i!=null && p.reason().equals("completed") && !i.meteors.isEmpty()) {
+            if(residues.size()>=MAX_INSTANCES) residues.removeFirst();
+            residues.add(i);
+        }
         if (i != null) {
             i.endedAt = nowNanos;
             ending.add(i); // fundido corto de salida
@@ -175,12 +186,14 @@ public final class ClientEventState {
     public void onReset() {
         instances.clear();
         ending.clear();
+        residues.clear();
     }
 
     /** /le panic del servidor: corte instantáneo, sin fundidos. */
     public void onPanic() {
         instances.clear();
         ending.clear();
+        residues.clear();
     }
 
     public void onScars(Payloads.SkyScarState p) {
@@ -219,6 +232,7 @@ public final class ClientEventState {
     public void onDisconnect() {
         instances.clear();
         ending.clear();
+        residues.clear();
         scars.clear();
         definitions.clear();
         chunks = null;
@@ -231,6 +245,14 @@ public final class ClientEventState {
 
     public Collection<ClientInstance> instances() {
         return instances.values();
+    }
+
+    public List<ClientInstance> meteorInstances(long now) {
+        residues.removeIf(i->{
+            double tick=i.clock.advance(now);
+            return i.meteors.values().stream().noneMatch(m->m.tick()+m.lifetimeTicks()>tick);
+        });
+        List<ClientInstance> visible=new ArrayList<>(instances.values());visible.addAll(residues);return visible;
     }
 
     public List<ClientInstance> ending() {

@@ -162,7 +162,26 @@ public class LiveEventsClientGameTest implements FabricClientGameTest {
                 server.runCommand("fill -12 100 -8 12 122 -7 air");
             }
             context.runOnClient(mc->setHudHidden(mc,false));
+            if(surface.equals("earth")) {
+                server.runOnServer(s->{
+                    var event=LiveEventsServer.get().director().get(id).orElseThrow();
+                    LiveEventsServer.get().director().seek(event,1799);
+                    LiveEventsServer.get().director().finish(event,"completed",false);
+                });
+                context.waitTicks(5);
+                server.runOnServer(s->s.getPlayerList().getPlayers().forEach(p->LiveEventsServer.get().director().syncPlayer(p)));
+                context.waitTicks(5);
+                context.runOnClient(mc->{
+                    if(com.takumistudios.liveevents.client.state.ClientEventState.get().meteorInstances(System.nanoTime()).stream().noneMatch(i->i.id==id))
+                        throw new AssertionError("Completed meteor aftermath was lost during resync");
+                });
+                ScreenshotWorkaround.capture(context,"meteor_v2_earth_aftermath_resync");
+            }
             stop(context,server,id);
+            context.runOnClient(mc->{
+                if(com.takumistudios.liveevents.client.state.ClientEventState.get().meteorInstances(System.nanoTime()).stream().anyMatch(i->i.id==id))
+                    throw new AssertionError("Stopped meteor aftermath remained visible");
+            });
         }
         context.runOnClient(mc->com.takumistudios.liveevents.client.render.MeteorWorldRenderer.resetMetrics());
         server.runCommand("fill -12 96 -12 12 99 12 stone");

@@ -36,14 +36,8 @@ final class CompositeModules {
      * los avisos de los mismos impactos sin recibir datos. Aquí se aplican cráter, daño, empujón y fuego.
      */
     static final class MeteorImpacts implements ServerModule {
-        /** Cráter que se enfría: pasado un tiempo, su magma pasa a obsidiana (en el diario). */
-        private record Cooling(double tick, BlockPos center, double radius) {
-        }
-
-        private static final double COOLING_DELAY_TICKS = 20 * 20;
         private List<MeteorPlan.Impact> plan;
         private long cycle;
-        private final java.util.ArrayDeque<Cooling> cooling = new java.util.ArrayDeque<>();
 
 
         @Override
@@ -72,29 +66,6 @@ final class CompositeModules {
             }
             if (plan != null) instance.meteors.prepare(ctx, plan);
             for (var meteor : instance.meteors.due(ctx)) impact(ctx, meteor);
-            while (!cooling.isEmpty() && cooling.peekFirst().tick() <= ctx.eventTicks()) cool(ctx, cooling.pollFirst());
-        }
-
-        @Override
-        public void end(ServerModuleContext ctx) {
-            while (!cooling.isEmpty()) {
-                cool(ctx, cooling.pollFirst());
-            }
-        }
-
-        private void cool(ServerModuleContext ctx, Cooling c) {
-            int r = (int) Math.ceil(c.radius()) + 1;
-            ServerLevel level = ctx.level();
-            java.util.Iterator<BlockPos> positions = BlockPos.betweenClosed(c.center().offset(-r, -r - 2, -r), c.center().offset(r, 2, r)).iterator();
-            ctx.submit(Priority.CLEANUP, allowance -> {
-                int changed = 0, scanned = 0;
-                while (positions.hasNext() && changed < allowance && scanned++ < 64) {
-                    BlockPos pos = positions.next().immutable();
-                    if (level.isLoaded(pos) && level.getBlockState(pos).is(Blocks.MAGMA_BLOCK)
-                            && ctx.setBlock(pos, Blocks.OBSIDIAN.defaultBlockState())) changed++;
-                }
-                return positions.hasNext() ? Result.more(changed) : Result.done(changed);
-            });
         }
 
         private void impact(ServerModuleContext ctx, com.takumistudios.liveevents.core.plan.AnnouncedMeteor impact) {
@@ -110,13 +81,13 @@ final class CompositeModules {
             }
             if (!ctx.event().preview() && impact.power()>0 && !impact.surface().equals("water")) {
                 long seed = DeterministicRandom.derive(ctx.moduleSeed(), impact.index());
-                BlockModules.carve(ctx, x, z, impact.radius(), 0.55,
-                        Blocks.BASALT.defaultBlockState(), Blocks.MAGMA_BLOCK.defaultBlockState(), seed);
-                if (impact.surface().equals("earth") && ctx.params().bool("fire", true)) {
-                    BlockModules.placeFires(ctx, x + 0.5, z + 0.5, impact.radius() + 3, (int) Math.round(impact.radius() * 2), seed + 7);
-                }
-                cooling.addLast(new Cooling(impact.tick() + COOLING_DELAY_TICKS, ground, impact.radius()));
+                MeteorAftermath.create(ctx,impact,tracked->{
+                    BlockModules.carve(tracked,x,z,impact.radius(),0.55,Blocks.BASALT.defaultBlockState(),Blocks.MAGMA_BLOCK.defaultBlockState(),seed,ground.getY());
+                    if(impact.surface().equals("earth") && ctx.params().bool("fire",true))
+                        BlockModules.placeFires(tracked,x+0.5,z+0.5,impact.radius()+3,(int)Math.round(impact.radius()*2),seed+7);
+                });
             }
+
             double blast = Math.max(0, Math.min(128,ctx.params().number("blast_radius", 6))) * (impact.big() ? 1.5 : 1);
             float damage = (float) Math.max(0, Math.min(1000,ctx.params().number("damage", 8))) * (impact.big() ? 1.75f : 1f) * (float) (0.3 + impact.power());
             Vec3 at = Vec3.atBottomCenterOf(ground);

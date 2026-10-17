@@ -6,7 +6,9 @@ adaptación · ⏳ pendiente.
 ## Meteoritos v2 (1.1.0)
 
 Ver [implementación y validación de meteoritos](meteoritos-v2.md). Hay geometría en el mundo para meteoritos,
-anuncios fijados por servidor, tres superficies y controles de objetivos. La tabla siguiente describe la base 1.0.0;
+anuncios fijados por servidor, tres superficies, controles de objetivos y secuelas térmicas persistentes.
+Meteoritos v2 usa profundidad real y conserva su geometría con F1; las descripciones de HUD inferiores corresponden
+a los demás efectos de la base anterior. La tabla siguiente describe la base 1.0.0;
 sus marcas no equivalen a una validación nueva de todo el diseño ni de todos los shaderpacks.
 
 ## Hoja de ruta (§17)

@@ -67,12 +67,57 @@ public class LiveEventsGameTests {
         EventInstance event=start(helper,"liveevents_test:meteor",new Vec3(4.5,4,4.5));
         int module=event.definition().allModules().stream().filter(m->m.shortType().equals("meteor_impacts")).findFirst().orElseThrow().index();
         event.meteors.strike(module,helper.absoluteVec(new Vec3(4.5,4,4.5)),0.4);
+        helper.runAfterDelay(30,()->helper.setBlock(new BlockPos(4,6,4),Blocks.STONE));
         services().director().set(event,"remaining",1);
         if(event.durationSeconds()<25) throw helper.assertionException("Closure omitted the announced impact");
         helper.runAfterDelay(100,()->{
             helper.assertBlockPresent(Blocks.AIR,new BlockPos(4,3,4));
+            helper.assertBlockPresent(Blocks.STONE,new BlockPos(4,6,4)); // later construction must not move the announced height
             if(event.journal()==null || services().journal().forInstance(event.instanceId()).map(m->m.entries).orElse(0)==0) throw helper.assertionException("Crater not journaled");
             services().director().finish(event,"test",true);helper.succeed();
+        });
+    }
+
+    @GameTest(maxTicks=300, skyAccess=true)
+    public void meteorCoolsOnlyItsOwnBlocks(GameTestHelper helper) {
+        for(int x=0;x<9;x++)for(int z=0;z<9;z++)for(int y=0;y<4;y++)helper.setBlock(new BlockPos(x,y,z),Blocks.STONE);
+        helper.setBlock(new BlockPos(8,3,8),Blocks.MAGMA_BLOCK);
+        EventInstance event=start(helper,"liveevents_test:meteor",new Vec3(4.5,4,4.5));
+        event.vars().put("brutality",0.0);event.vars().put("cooling_seconds",1.0);event.vars().put("smoke_seconds",1.0);
+        int module=event.definition().allModules().stream().filter(m->m.shortType().equals("meteor_impacts")).findFirst().orElseThrow().index();
+        var meteor=event.meteors.strike(module,helper.absoluteVec(new Vec3(4.5,4,4.5)),0.4);
+        if(meteor.coolingSeconds()!=1) throw helper.assertionException("Cooling snapshot="+meteor.coolingSeconds());
+        helper.succeedWhen(()->{
+            helper.assertBlockPresent(Blocks.OBSIDIAN,new BlockPos(4,1,4));
+            helper.assertBlockPresent(Blocks.MAGMA_BLOCK,new BlockPos(8,3,8));
+            services().director().finish(event,"test",true);
+        });
+    }
+
+    @GameTest(maxTicks=400, skyAccess=true)
+    public void persistedMeteorCoolingRecoversAndRemainsRevertible(GameTestHelper helper) {
+        BlockPos relative=new BlockPos(4,1,4),absolute=helper.absolutePos(relative);
+        helper.setBlock(relative,Blocks.MAGMA_BLOCK);
+        var journal=services().journal().open("liveevents_test:meteor",900000,false);
+        journal.record(helper.getLevel().dimension().identifier().toString(),absolute.asLong(),
+                net.minecraft.commands.arguments.blocks.BlockStateParser.serialize(Blocks.STONE.defaultBlockState()),
+                net.minecraft.commands.arguments.blocks.BlockStateParser.serialize(Blocks.MAGMA_BLOCK.defaultBlockState()));
+        services().journal().close(journal);
+        var cell=new com.takumistudios.liveevents.server.modules.MeteorCoolingRecovery.Cell(journal.id(),
+                helper.getLevel().dimension().identifier().toString(),"liveevents_test:meteor",900000,absolute.asLong(),false);
+        var path=services().worldDir().resolve("cooling-recovery-test.json");
+        var recovery=new com.takumistudios.liveevents.server.modules.MeteorCoolingRecovery(services(),path);
+        services().io().execute(()->{
+            try { com.takumistudios.liveevents.util.AtomicFiles.writeString(path,new com.google.gson.Gson().toJson(List.of(cell)));recovery.restore(); }
+            catch(java.io.IOException e) { throw new IllegalStateException(e); }
+        });
+        boolean[] reverting={false};
+        helper.succeedWhen(()->{
+            if(!reverting[0]) {
+                helper.assertBlockPresent(Blocks.OBSIDIAN,relative);
+                services().director().revert(journal.meta(),null);reverting[0]=true;
+            }
+            helper.assertBlockPresent(Blocks.STONE,relative);
         });
     }
 

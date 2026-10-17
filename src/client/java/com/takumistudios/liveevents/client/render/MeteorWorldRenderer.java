@@ -95,9 +95,10 @@ public final class MeteorWorldRenderer {
         Vec3 right = new Vec3(r.x,r.y,r.z), up = new Vec3(u.x,u.y,u.z);
         long now = System.nanoTime();
         int detail = VisualDirector.get().quality().ordinal();
+        var visibleInstances=ClientEventState.get().meteorInstances(now);
         int warningSegments=Math.max(4,Math.min(24,1800/Math.max(1,ClientEventState.get().instances().size()*24)));
         // Reserve warnings and a minimal trajectory for every announced hazard before decoration.
-        for (var instance : ClientEventState.get().instances()) {
+        for (var instance : visibleInstances) {
             if (!instance.dimension.equals(dim)) continue;
             double tick=instance.clock.advance(now);
             for(var m:instance.meteors.values()) {
@@ -111,7 +112,7 @@ public final class MeteorWorldRenderer {
                 ribbon(out,head,head.add(direction.scale(20)),right,0.2,0xFFFFF4D6);
             }
         }
-        for (var instance : ClientEventState.get().instances()) {
+        for (var instance : visibleInstances) {
             if (!instance.dimension.equals(dim)) continue;
             double tick = instance.clock.advance(now);
             if(instance.def.id().equals("liveevents:meteor_shower")) for(var original:instance.def.allModules()) {
@@ -134,7 +135,7 @@ public final class MeteorWorldRenderer {
             for (AnnouncedMeteor m : instance.meteors.values()) {
                 if (out.size() > MAX_QUADS - 160) break;
                 double remaining = m.tick() - tick;
-                if (remaining > 60 || remaining < -600) continue;
+                if (remaining > 60 || remaining < -Math.max(40,m.lifetimeTicks())) continue;
                 Vec3 target = new Vec3(m.x(),m.y(),m.z());
                 double distance = camera.distanceTo(target);
                 if (distance > 1024) continue;
@@ -159,7 +160,10 @@ public final class MeteorWorldRenderer {
 
                 } else {
                     double visualRadius=m.radius()*(0.4+m.visualPower())/(0.4+m.power());
-                    double seconds = -remaining/20, life = Math.min(1, seconds/2.8), fade = Math.max(0,1-seconds/12);
+                    double seconds = -remaining/20, life = Math.min(1, seconds/2.8);
+                    boolean residual=seconds>12;
+                    double fade=residual?0.25*Math.max(0,1-seconds/Math.max(1,m.smokeSeconds())):Math.max(0,1-seconds/12);
+                    if(seconds>m.smokeSeconds()) fade=0;
                     boolean water = m.surface().equals("water"), snow = m.surface().equals("snow");
                     int color = water ? 0xB8DAEF : snow ? 0xEDF4FF : 0x827365;
                     if (seconds < 2) ring(out, origin.add(0,0.12,0), (visualRadius+seconds*10), 0.3,
@@ -173,7 +177,7 @@ public final class MeteorWorldRenderer {
                         out.add(new Quad(center.subtract(rr).subtract(uu),center.add(rr).subtract(uu),center.add(rr).add(uu),center.subtract(rr).add(uu),
                                 0xB0FFFFFF,water?4:snow?5:3,u0,v0,u0+0.25f,v0+0.5f));
                     }
-                    int puffs = distance>192 ? 0 : detail<=1 ? 20 : 44;
+                    int puffs = distance>192 ? 0 : fade<=0?0:residual? (detail<=1?3:6) : detail<=1 ? 20 : 44;
                     for(int j=0;j<puffs;j++) {
                         boolean cap = j>=puffs/3;
                         double angle = random.range(0,Math.PI*2);
@@ -181,11 +185,17 @@ public final class MeteorWorldRenderer {
                         double height = cap ? random.range(1.7,2.4) : random.range(0.1,1.8);
                         if (water) { radius*=0.65; height*=1.4; }
                         if (snow) height*=0.7;
-                        Vec3 at = origin.add(Math.cos(angle)*radius+seconds*0.22, height*visualRadius*life+seconds*0.16, Math.sin(angle)*radius);
+                        Vec3 at = origin.add(Math.cos(angle)*radius+seconds*m.windX(), height*visualRadius*life+Math.min(seconds,12)*0.16, Math.sin(angle)*radius+seconds*m.windZ());
                         float size = (float)((0.4+random.nextDouble())*visualRadius*(cap?0.8:0.5)*Math.min(1,seconds*2));
+                        double puffFade=fade;
+                        if(residual) {
+                            double age=(seconds+j*2.0)%12;
+                            at=origin.add(Math.cos(angle)*visualRadius*0.2+age*m.windX(),age*0.7,Math.sin(angle)*visualRadius*0.2+age*m.windZ());
+                            size=(float)(visualRadius*(0.15+age*0.025));puffFade*=Math.sin(age/12*Math.PI);
+                        }
                         Vec3 rotatedRight=right.scale(Math.cos(angle)).add(up.scale(Math.sin(angle)));
                         Vec3 rotatedUp=up.scale(Math.cos(angle)).subtract(right.scale(Math.sin(angle)));
-                        puff(out,at,rotatedRight,rotatedUp,size, ((int)(95*fade)<<24)|color,true);
+                        puff(out,at,rotatedRight,rotatedUp,size, ((int)(95*puffFade)<<24)|color,true);
                     }
                     if (seconds<2.5) for(int j=0;j<(detail<=1?8:20);j++) {
                         double angle=random.range(0,Math.PI*2), speed=random.range(3,12)*(0.5+m.power());
@@ -193,8 +203,8 @@ public final class MeteorWorldRenderer {
                         Vec3 at=origin.add(Math.cos(angle)*speed*seconds,h,Math.sin(angle)*speed*seconds);
                         puff(out,at,right,up,water?0.18:0.12,water?0xB0B8E5FF:snow?0xDDEEF6FF:0xDCFF6D20,false);
                     }
-                    if (!water && !snow && seconds<20) {
-                        double cool=Math.max(0,1-seconds/20);
+                    if (!water && !snow && seconds<m.coolingSeconds()) {
+                        double cool=Math.max(0,1-seconds/Math.max(1,m.coolingSeconds()));
                         ring(out,origin.add(0,0.1,0),visualRadius*0.45,0.25,((int)(65*cool)<<24)|0xFF3B00,24);
                     }
                 }

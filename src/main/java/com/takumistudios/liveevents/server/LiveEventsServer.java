@@ -35,6 +35,7 @@ public final class LiveEventsServer {
     private final EventRegistry registry;
     private final WorkScheduler scheduler;
     private final WorldJournal journal;
+    private final com.takumistudios.liveevents.server.modules.MeteorCoolingRecovery cooling;
     private final AuditLog audit;
     private final SkyScarManager scars;
     private final EventDirector director;
@@ -55,6 +56,7 @@ public final class LiveEventsServer {
         this.registry = new EventRegistry(configDir);
         this.scheduler = new WorkScheduler(config.tick_budget_ms, config.max_block_changes_per_tick, System::nanoTime);
         this.journal = new WorldJournal(worldDir.resolve("journal"), io);
+        this.cooling = new com.takumistudios.liveevents.server.modules.MeteorCoolingRecovery(this,worldDir.resolve("meteor-cooling.json"));
         this.audit = new AuditLog(FabricLoader.getInstance().getGameDir().resolve("logs"), io, config.audit_log);
         this.scars = new SkyScarManager(worldDir.resolve("scars.json"), io);
         this.discord = new DiscordNotifier(this);
@@ -131,6 +133,8 @@ public final class LiveEventsServer {
     public WorkScheduler scheduler() {
         return scheduler;
     }
+
+    public com.takumistudios.liveevents.server.modules.MeteorCoolingRecovery cooling() { return cooling; }
 
     public WorldJournal journal() {
         return journal;

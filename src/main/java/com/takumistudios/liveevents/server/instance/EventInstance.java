@@ -57,6 +57,7 @@ public final class EventInstance implements LiveEventInfo {
     final Vec3 center;
     final long seed;
     final Profile profile;
+    public final List<com.takumistudios.liveevents.server.modules.MeteorAftermath> thermal = new ArrayList<>();
     public final com.takumistudios.liveevents.server.modules.MeteorController meteors = new com.takumistudios.liveevents.server.modules.MeteorController(this);
     double timescale;
     final Map<String, Double> vars;
@@ -68,6 +69,10 @@ public final class EventInstance implements LiveEventInfo {
     final long startGameTime;
     final WorldJournal.Journal journal;
     double eventTicks;
+    long finishedAtGameTime=-1;
+    public double ticksIncludingAftermath() {
+        return finishedAtGameTime<0?eventTicks:eventTicks+Math.max(0,level.getGameTime()-finishedAtGameTime)*timescale;
+    }
     boolean paused;
     int phaseIndex = -1;
     public boolean meteorActivityClosed;

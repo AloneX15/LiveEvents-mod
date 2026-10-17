@@ -111,6 +111,13 @@ public final class WorldJournal {
         return journal;
     }
 
+    /** Reopen an existing journal for crash-recovered cooling, preserving the original revert history. */
+    public synchronized Optional<Journal> resume(String id) {
+        Meta meta=index.get(id);
+        if(meta==null || meta.reverted) return Optional.empty();
+        return Optional.of(open.computeIfAbsent(id,key->new Journal(meta)));
+    }
+
     /** Cierra el diario de una instancia terminada (sus cambios pendientes se escriben). */
     public synchronized void close(Journal journal) {
         flush(journal);

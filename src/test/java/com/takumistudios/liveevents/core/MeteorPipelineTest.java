@@ -9,6 +9,9 @@ class MeteorPipelineTest {
     @Test void announcementsRejectMalformedNetworkValues() {
         var valid=new AnnouncedMeteor(1,2,60,0,64,0,5,0.7,35,45,true,"earth",2107);
         assertTrue(valid.valid());
+        assertEquals(2400,valid.lifetimeTicks());
+        assertFalse(new AnnouncedMeteor(1,2,60,0,64,0,5,0.7,35,45,true,"earth",2107,0.7,601,120,0,0).valid());
+        assertFalse(new AnnouncedMeteor(1,2,60,0,64,0,5,0.7,35,45,true,"earth",2107,0.7,120,120,Double.NaN,0).valid());
         assertFalse(new AnnouncedMeteor(1,2,60,Double.NaN,64,0,5,0.7,35,45,true,"earth",2107).valid());
         assertFalse(new AnnouncedMeteor(1,2,60,0,64,0,49,0.7,35,45,true,"earth",2107).valid());
         assertFalse(new AnnouncedMeteor(1,2,60,0,64,0,5,0.7,35,45,true,null,2107).valid());

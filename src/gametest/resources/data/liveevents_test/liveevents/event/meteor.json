@@ -21,7 +21,7 @@
           "from": "0s",
           "to": "30s",
           "crater_radius": 2,
-          "fire": false
+          "fire": true
         }
       ]
     }

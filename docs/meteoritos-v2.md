@@ -26,6 +26,10 @@ Instalar el jar correcto y Fabric API en servidor y clientes. El protocolo de re
 /le set 1 visual_power 0.9
 /le set 1 destructive_power 0
 /le set 1 brutality 0.8
+/le set 1 cooling_seconds 120
+/le set 1 smoke_seconds 120
+/le set 1 wind_x 0.2
+/le set 1 wind_z 0.05
 /le set 1 duration 180s
 /le set 1 remaining 45s
 /le status 1
@@ -51,6 +55,19 @@ mediante nuevos ciclos deterministas, sin repetir los impactos de ciclos previos
 Los grupos excluyen espectadores y creativos por defecto; `include_creative=true` permite estos últimos.
 Se deduplican grupos y se conserva el descanso por UUID aunque cambie la composición. `fallback=wait` permite esperar
 sin grupos válidos. Por defecto se vuelve a caídas aleatorias. Los objetivos manuales inválidos producen un error.
+
+## Secuelas y reinicios
+
+Cada anuncio fija `cooling_seconds` y `smoke_seconds` (0..600 segundos, 120 por defecto) y el viento
+`wind_x`/`wind_z` (-4..4 bloques por segundo). Cambiarlos afecta a futuros anuncios. Humo y brasas continúan
+tras el cierre normal y se resincronizan al entrar. Se enfría únicamente el magma colocado por el impacto a
+obsidiana y se retira su fuego. Puede retrasarse si se agota el presupuesto. Nunca se cargan chunks para ello.
+
+`stop` y `panic` cortan visuales y nuevas caídas; la limpieza térmica continúa con su presupuesto. No revierten
+el cráter. `revert` restaura el diario y cancela esa limpieza. Las celdas térmicas se guardan cada segundo y al apagar
+en `meteor-cooling.json`; tras reiniciar se limpian las que todavía coinciden con magma/fuego, conservando el diario
+reversible. La política predeterminada cancela el evento sin reproducir impactos ni recuperar las nubes visuales.
+Una caída brusca puede perder el último segundo de la instantánea térmica.
 
 ## Permisos y protección
 

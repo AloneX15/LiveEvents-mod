@@ -171,6 +171,10 @@ public final class EventDirector {
                 if (vars.containsKey(key) && (vars.get(key)<0 || vars.get(key)>1)) return StartResult.fail("liveevents.error.options",key+" must be 0..1");
             if(vars.getOrDefault("duration",90.0)<3 || vars.getOrDefault("duration",90.0)>86400)
                 return StartResult.fail("liveevents.error.options","duration must be 3..86400s");
+            for(String key:List.of("cooling_seconds","smoke_seconds"))
+                if(vars.containsKey(key) && (vars.get(key)<0 || vars.get(key)>600)) return StartResult.fail("liveevents.error.options",key+" must be 0..600s");
+            for(String key:List.of("wind_x","wind_z"))
+                if(vars.containsKey(key) && Math.abs(vars.get(key))>4) return StartResult.fail("liveevents.error.options",key+" must be -4..4");
             if(vars.getOrDefault("radius",128.0)<8 || vars.getOrDefault("radius",128.0)>1024)
                 return StartResult.fail("liveevents.error.options","radius must be 8..1024");
         }
@@ -225,13 +229,14 @@ public final class EventDirector {
 
     static Payloads.EventStart startPayload(EventInstance i) {
         return new Payloads.EventStart(i.id, i.def.id(), i.level.dimension().identifier().toString(), i.center.x, i.center.y,
-                i.center.z, i.seed, i.eventTicks, i.profile.id(), i.timescale, i.paramOverrides.toString(), i.preview, i.paused);
+                i.center.z, i.seed, i.ticksIncludingAftermath(), i.profile.id(), i.timescale, i.paramOverrides.toString(), i.preview, i.paused);
     }
 
     // ================================================================================================ tick
 
     public void tick() {
         ticks++;
+        services.cooling().tick();
         processDelayed();
         // pause_when_empty: se pausa cuando el servidor SE QUEDA vacío y se reanuda al entrar alguien. Un evento
         // lanzado desde la consola sin nadie conectado sigue en marcha.
@@ -248,6 +253,7 @@ public final class EventDirector {
         lastPlayerCount = players;
         if (instances.isEmpty() && draining.isEmpty() && queue.isEmpty()) {
             services.scheduler().tick(); // reversiones pendientes
+            if(ticks%20==0) {services.journal().flushAll();saveCooling();}
             if (ticks % 200 == 0) {
                 expireScars();
             }
@@ -269,13 +275,14 @@ public final class EventDirector {
         Iterator<EventInstance> it = draining.iterator();
         while (it.hasNext()) {
             EventInstance i = it.next();
-            if (services.scheduler().pending(i.owner()) == 0) {
+            if (services.scheduler().pending(i.owner()) == 0 && !i.meteors.hasResidue(i.ticksIncludingAftermath())) {
                 it.remove();
                 closeJournal(i);
             }
         }
         if (ticks % 20 == 0) {
             services.journal().flushAll();
+            saveCooling();
             watchdog();
             sendPerf();
         }
@@ -387,6 +394,7 @@ public final class EventDirector {
         if (instances.remove(i.id) == null) {
             return;
         }
+        i.finishedAtGameTime=i.level.getGameTime();
         for (EventInstance.ModuleRuntime rt : i.modules) {
             if (rt.started && !rt.ended && !rt.disabled && rt.impl != null) {
                 rt.ended = true;
@@ -399,12 +407,13 @@ public final class EventDirector {
         }
         com.takumistudios.liveevents.server.modules.ModuleHooks.clearLightning(i.id);
         if (!reason.equals("panic")) {
-            ServerNet.send(i.viewers(), new Payloads.EventEnd(i.id, reason));
+            ServerNet.send(i.viewers(), new Payloads.EventEnd(i.id, i.worldMode==WorldMode.REVERT_ON_END?"reverted":reason));
         }
         if (i.weatherCleared) {
             runCommand(i.level, "weather " + (i.wasThundering ? "thunder" : i.wasRaining ? "rain" : "clear"));
         }
-        if (cancelWork) {
+        if (cancelWork || i.worldMode==WorldMode.REVERT_ON_END) {
+            if(i.worldMode!=WorldMode.REVERT_ON_END)services.cooling().adopt(i);
             services.scheduler().cancel(i.owner());
             closeJournal(i);
         } else {
@@ -502,6 +511,17 @@ public final class EventDirector {
     public boolean stop(int id, String actor) {
         EventInstance i = instances.get(id);
         if (i == null) {
+            var iterator=draining.iterator();
+            while(iterator.hasNext()) {
+                EventInstance residue=iterator.next();
+                if(residue.id==id) {
+                    services.cooling().adopt(residue);
+                    services.scheduler().cancel(residue.owner());
+                    if(residue.journal!=null)services.journal().close(residue.journal);
+                    ServerNet.send(residue.viewers(),new Payloads.EventEnd(id,"stopped"));iterator.remove();
+                    services.audit().log(actor,"stop_aftermath","#"+id);return true;
+                }
+            }
             return false;
         }
         finish(i, "stopped", true);
@@ -514,6 +534,7 @@ public final class EventDirector {
         for (EventInstance i : new ArrayList<>(instances.values())) {
             finish(i, "stopped", true);
         }
+        for(EventInstance residue:new ArrayList<>(draining)) { if(stop(residue.id,actor))n++; }
         queue.clear();
         delayed.clear();
         services.audit().log(actor, "stop_all", n + " instances");
@@ -531,7 +552,9 @@ public final class EventDirector {
         }
         queue.clear();
         delayed.clear();
+        for(EventInstance i:draining) services.cooling().adopt(i);
         services.scheduler().cancel(null);
+        services.cooling().resetScheduling();
         for (EventInstance i : new ArrayList<>(draining)) {
             closeJournal(i);
         }
@@ -609,6 +632,8 @@ public final class EventDirector {
     public void set(EventInstance i, String param, double value) {
         if (!Double.isFinite(value)) throw new IllegalArgumentException("Non-finite parameter");
         if ((param.equals("power") || param.equals("visual_power") || param.equals("destructive_power") || param.equals("brutality")) && (value < 0 || value > 1)) throw new IllegalArgumentException("Expected 0..1");
+        if ((param.equals("cooling_seconds")||param.equals("smoke_seconds")) && (value<0||value>600)) throw new IllegalArgumentException("Expected 0..600s");
+        if ((param.equals("wind_x")||param.equals("wind_z")) && Math.abs(value)>4) throw new IllegalArgumentException("Expected -4..4 blocks/s");
         if (param.equals("remaining") || param.equals("duration")) {
             double requested = param.equals("remaining") ? i.eventTicks / 20 + value : value;
             if (value < 0 || requested > 86400) throw new IllegalArgumentException("Duration out of range");
@@ -641,6 +666,12 @@ public final class EventDirector {
             if (i.viewers().contains(player)) {
                 ServerNet.send(player, startPayload(i));
                 i.meteors.sync(player);
+            }
+        }
+        for(EventInstance i:draining) {
+            if(i.meteors.hasResidue(i.ticksIncludingAftermath()) && i.viewers().contains(player)) {
+                ServerNet.send(player,startPayload(i));i.meteors.sync(player);
+                ServerNet.send(player,new Payloads.EventEnd(i.id,"completed"));
             }
         }
         ServerNet.send(player, new Payloads.SkyScarState(services.scars().json(player.level().dimension().identifier().toString())));
@@ -767,6 +798,15 @@ public final class EventDirector {
      * estado que puso el evento: si un jugador construyó encima, no se toca.
      */
     public void revert(WorldJournal.Meta meta, CommandSourceStack source) {
+        services.cooling().cancelJournal(meta.id);
+        var remaining=draining.iterator();
+        while(remaining.hasNext()) {
+            EventInstance i=remaining.next();
+            if(i.journal!=null && i.journal.id().equals(meta.id)) {
+                services.scheduler().cancel(i.owner());services.journal().close(i.journal);
+                ServerNet.send(i.viewers(),new Payloads.EventEnd(i.id,"reverted"));remaining.remove();
+            }
+        }
         services.audit().log(source == null ? "revert_on_end" : source.getTextName(), "revert", meta.id);
         services.journal().readAll(meta.id).thenAccept(entries -> server.execute(() -> {
             HolderLookup<Block> blocks = server.registryAccess().lookupOrThrow(Registries.BLOCK);
@@ -835,7 +875,13 @@ public final class EventDirector {
         String actor;
     }
 
+    private void saveCooling() {
+        List<EventInstance> events=new ArrayList<>(instances.values());events.addAll(draining);
+        services.cooling().save(events);
+    }
+
     public void shutdown() {
+        services.journal().flushAll();saveCooling();
         List<Saved> saved = new ArrayList<>();
         for (EventInstance i : instances.values()) {
             if (i.preview) {
@@ -877,6 +923,7 @@ public final class EventDirector {
 
     /** Al arrancar: on_restart = cancel (por defecto) descarta; resume relanza desde el segundo guardado. */
     public void restore() {
+        services.cooling().restore();
         Path file = services.worldDir().resolve("active.json");
         if (!Files.exists(file)) {
             return;

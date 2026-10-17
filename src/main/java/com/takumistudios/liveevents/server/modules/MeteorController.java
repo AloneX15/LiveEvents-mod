@@ -50,6 +50,7 @@ public final class MeteorController {
 
     public String mode() { return mode; }
     public Collection<AnnouncedMeteor> announced() { return Collections.unmodifiableCollection(announced.values()); }
+    public boolean hasResidue(double tick) { return announced.values().stream().anyMatch(m->m.tick()+m.lifetimeTicks()>tick); }
     public double lastImpactTick() {
         return announced.values().stream().mapToDouble(AnnouncedMeteor::tick).max().orElse(instance.eventTicks());
     }
@@ -148,7 +149,8 @@ public final class MeteorController {
                                      double azimuth, double angle, boolean big, long seed, double visualPower) {
         AnnouncedMeteor meteor = new AnnouncedMeteor(module, index, tick, at.x, at.y, at.z,
                 Math.max(0.5, Math.min(48, radius)), power, azimuth, angle, big, variant(at), seed,
-                visualPower);
+                visualPower,instance.vars().getOrDefault("cooling_seconds",120.0),instance.vars().getOrDefault("smoke_seconds",120.0),
+                instance.vars().getOrDefault("wind_x",0.2),instance.vars().getOrDefault("wind_z",0.05));
         announced.put(meteor.key(), meteor);
         launched++;
         ServerNet.send(instance.viewers(), new Payloads.Meteor(instance.instanceId(), GSON.toJson(meteor)));
@@ -157,7 +159,11 @@ public final class MeteorController {
     }
 
     public void prepare(ServerModuleContext ctx, List<MeteorPlan.Impact> plan) {
-        announced.values().removeIf(m -> m.tick() < ctx.eventTicks() - 600);
+        announced.values().removeIf(m -> m.tick()+m.lifetimeTicks()<ctx.eventTicks());
+        while(announced.size()>512) {
+            var oldest=announced.entrySet().stream().filter(e->e.getValue().tick()<ctx.eventTicks()-20).findFirst();
+            if(oldest.isEmpty()) break; announced.remove(oldest.get().getKey());
+        }
         if (instance.meteorActivityClosed || ctx.eventTicks() >= instance.durationSeconds()*20 - 500) return;
         for (MeteorPlan.Impact candidate : plan) {
             String key = ctx.spec().index() + ":" + candidate.index();

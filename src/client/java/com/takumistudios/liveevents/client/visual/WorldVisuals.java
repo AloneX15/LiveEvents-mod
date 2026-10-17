@@ -179,7 +179,17 @@ final class WorldVisuals {
             for (var m : ctx.instance.meteors.values()) {
                 if (m.module() != ctx.spec.index()) continue;
                 double age = ctx.t - m.tick();
-                if (age < 0 || age > 20) continue;
+                if (age < 0 || age > (m.giant()?80:20)) continue;
+                if(m.giant()) {
+                    double distance=ctx.camera.distanceTo(new Vec3(m.x(),m.y(),m.z()));
+                    double flash=com.takumistudios.liveevents.core.plan.MeteorEffects.giantFlash(age,distance);
+                    if(flash>0 && state.flashed.computeIfAbsent(m.key(),key->ctx.requestFlash(1.0,0xFFFFFF)))
+                        f.addFlash(0xFFFFFF,(float)(flash*ctx.fade));
+                    double arrival=distance/4;
+                    if(age>=arrival && age<arrival+16 && distance<300)
+                        f.addShake((float)(3*(1-distance/300)*(1-(age-arrival)/16)),10,0);
+                    continue;
+                }
                 double distance = ctx.camera.distanceTo(new Vec3(m.x(),m.y(),m.z()));
                 double size = com.takumistudios.liveevents.core.plan.MeteorEffects.scale(m.radius());
                 double near = clamp(1-distance/(64+32*Math.sqrt(size)),0,1);

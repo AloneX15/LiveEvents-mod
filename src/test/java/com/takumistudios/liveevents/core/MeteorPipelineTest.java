@@ -13,7 +13,7 @@ class MeteorPipelineTest {
         assertFalse(new AnnouncedMeteor(1,2,60,0,64,0,5,0.7,35,45,true,"earth",2107,0.7,601,120,0,0).valid());
         assertFalse(new AnnouncedMeteor(1,2,60,0,64,0,5,0.7,35,45,true,"earth",2107,0.7,120,120,Double.NaN,0).valid());
         assertFalse(new AnnouncedMeteor(1,2,60,Double.NaN,64,0,5,0.7,35,45,true,"earth",2107).valid());
-        assertFalse(new AnnouncedMeteor(1,2,60,0,64,0,49,0.7,35,45,true,"earth",2107).valid());
+        assertFalse(new AnnouncedMeteor(1,2,60,0,64,0,101,0.7,35,45,true,"earth",2107).valid());
         assertFalse(new AnnouncedMeteor(1,2,60,0,64,0,5,0.7,35,45,true,null,2107).valid());
     }
     @Test void craterPreparationIsDeterministicAndBounded() {
@@ -21,7 +21,7 @@ class MeteorPipelineTest {
         assertEquals(a,CraterShape.generate(7,0.55,2107,10,-30));
         assertTrue(a.stream().anyMatch(c->c.dx()==0&&c.dz()==0&&c.depth()>=3&&c.core()));
         assertTrue(a.stream().anyMatch(CraterShape.Column::rim));
-        assertTrue(CraterShape.generate(100000,100000,2107,0,0).size()<10000);
+        assertTrue(CraterShape.generate(100000,100000,2107,0,0).size()<40000);
         assertThrows(IllegalArgumentException.class,()->CraterShape.generate(Double.NaN,1,0,0,0));
     }
     @Test void meshImporterRejectsWrongCoordinatesAndIndices() {

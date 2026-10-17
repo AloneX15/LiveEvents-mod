@@ -42,6 +42,7 @@ public final class MeteorPlan {
             boolean big = (firstBig && i == 0) || size >= 1.5;
             double crater = Math.clamp(firstBig && i == 0 ? craterMax * 1.4
                     : random.range(craterMin, craterMax) * size, 0.5, 48);
+            if (!(firstBig && i==0) && MeteorEffects.giantRoll(seed,i)) { crater=100;big=true; }
             impacts.add(new Impact(i, tick, Math.cos(angle) * distance, Math.sin(angle) * distance, crater,
                     baseAzimuth + random.range(-25, 25), random.range(25, 55), big));
         }

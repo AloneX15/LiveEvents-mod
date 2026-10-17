@@ -42,6 +42,85 @@ public class LiveEventsGameTests {
         return result.instance();
     }
 
+    @GameTest(maxTicks=1200, skyAccess=true)
+    public void giantCraterUsesJournalAndRespectsBlockProtection(GameTestHelper helper) {
+        for(int x=0;x<9;x++) for(int z=0;z<9;z++) for(int y=0;y<4;y++) helper.setBlock(new BlockPos(x,y,z),Blocks.STONE);
+        EventInstance event=start(helper,"liveevents_test:meteor",new Vec3(4.5,4,4.5));
+        event.vars().put("brutality",0.0);
+        var center=helper.absolutePos(new BlockPos(4,3,4));
+        // Restrict this large footprint to its center column so concurrent test structures remain untouched.
+        com.takumistudios.liveevents.api.LiveEventCallbacks.BEFORE_BLOCK_CHANGE.register((info,level,pos,from,to)->
+                info.instanceId()!=event.instanceId() || pos.getX()==center.getX() && pos.getZ()==center.getZ());
+        com.takumistudios.liveevents.api.LiveEventCallbacks.BEFORE_ENTITY_AFFECTED.register((info,entity,type)->info.instanceId()==event.instanceId()?0:1);
+        int module=event.definition().allModules().stream().filter(m->m.shortType().equals("meteor_impacts")).findFirst().orElseThrow().index();
+        var meteor=event.meteors.strike(module,helper.absoluteVec(new Vec3(4.5,4,4.5)),1,true);
+        if(!meteor.giant() || meteor.bodyRadius()!=30 || meteor.radius()!=100) throw helper.assertionException("Incorrect giant announcement");
+        boolean[] reverting={false};
+        helper.succeedWhen(()->{
+            if(!reverting[0]) {
+                helper.assertBlockPresent(Blocks.AIR,new BlockPos(4,3,4));
+                helper.assertBlockPresent(Blocks.STONE,new BlockPos(5,3,4));
+                var meta=services().journal().forInstance(event.instanceId()).orElseThrow();
+                if(meta.entries==0) throw helper.assertionException("Giant crater was not journaled");
+                services().director().finish(event,"test",true);
+                services().director().revert(meta,null);reverting[0]=true;
+            }
+            helper.assertBlockPresent(Blocks.STONE,new BlockPos(4,3,4));
+            helper.assertBlockPresent(Blocks.STONE,new BlockPos(5,3,4));
+        });
+    }
+
+    @GameTest(maxTicks=160, skyAccess=true)
+    public void giantWaveTravelsOnceAndRespectsExclusions(GameTestHelper helper) {
+        EventInstance event=start(helper,"liveevents_test:meteor",new Vec3(4,4,4));
+        event.vars().put("brutality",0.0);
+        @SuppressWarnings("unchecked")
+        var zombieType=(EntityType<net.minecraft.world.entity.Mob>)(EntityType<?>)BuiltInRegistries.ENTITY_TYPE.getValue(Identifier.withDefaultNamespace("zombie"));
+        var near=helper.spawn(zombieType,new BlockPos(4,8,4));
+        var far=helper.spawn(zombieType,new BlockPos(4,16,4));
+        var excluded=helper.spawn(zombieType,new BlockPos(4,12,4));
+        for(var entity:List.of(near,far,excluded)) { entity.setNoAi(true);entity.setNoGravity(true); }
+        var zone=new com.takumistudios.liveevents.config.ServerConfig.Region();
+        var at=excluded.blockPosition();zone.dimension=helper.getLevel().dimension().identifier().toString();
+        zone.min_x=zone.max_x=at.getX();zone.min_z=zone.max_z=at.getZ();zone.min_y=at.getY()-1;zone.max_y=at.getY()+1;
+        services().config().excluded_regions.add(zone);
+        var task=new java.util.concurrent.atomic.AtomicReference<WorkScheduler.Task>();
+        Map<java.util.UUID,Integer> calls=new java.util.HashMap<>();
+        Map<java.util.UUID,Float> amounts=new java.util.HashMap<>();
+        var ctx=(com.takumistudios.liveevents.api.module.ServerModuleContext)java.lang.reflect.Proxy.newProxyInstance(
+                getClass().getClassLoader(),new Class<?>[]{com.takumistudios.liveevents.api.module.ServerModuleContext.class},(proxy,method,args)->{
+                    return switch(method.getName()) {
+                        case "event" -> event;
+                        case "level" -> helper.getLevel();
+                        case "factorFor" -> 1f;
+                        case "submit" -> { task.set((WorkScheduler.Task)args[1]);yield null; }
+                        case "damage" -> { var e=(LivingEntity)args[0];calls.merge(e.getUUID(),1,Integer::sum);amounts.put(e.getUUID(),(Float)args[2]);yield null; }
+                        default -> throw new AssertionError("Unexpected context method "+method.getName());
+                    };
+                });
+        var origin=helper.absoluteVec(new Vec3(4,4,4));
+        var meteor=new com.takumistudios.liveevents.core.plan.AnnouncedMeteor(0,0,event.eventTicks(),origin.x,origin.y,origin.z,100,1,35,45,true,"earth",2107);
+        com.takumistudios.liveevents.server.modules.MeteorShockwave.launch(ctx,meteor);
+        task.get().run(8);
+        if(!calls.isEmpty()) throw helper.assertionException("Wave applied damage before reaching an entity");
+        helper.runAfterDelay(2,()->{
+            task.get().run(8);
+            if(!calls.containsKey(near.getUUID()) || calls.containsKey(far.getUUID())) throw helper.assertionException("Wave propagation is not distance dependent");
+        });
+        helper.runAfterDelay(7,()->task.get().run(8));
+        helper.runAfterDelay(14,()->{
+            task.get().run(8);
+            services().config().excluded_regions.remove(zone);
+            if(calls.getOrDefault(near.getUUID(),0)!=1 || calls.getOrDefault(far.getUUID(),0)!=1 || calls.containsKey(excluded.getUUID()))
+                throw helper.assertionException("Duplicate damage or excluded-region damage");
+            if(amounts.get(near.getUUID())<=amounts.get(far.getUUID())) throw helper.assertionException("Damage did not fall with distance");
+            task.set(null);
+            com.takumistudios.liveevents.server.modules.MeteorShockwave.launch(ctx,new com.takumistudios.liveevents.core.plan.AnnouncedMeteor(0,1,0,origin.x,origin.y,origin.z,100,0,35,45,true,"earth",2107));
+            if(task.get()!=null) throw helper.assertionException("Zero-power wave scheduled gameplay");
+            services().director().finish(event,"test",true);helper.succeed();
+        });
+    }
+
     @GameTest(maxTicks=140, skyAccess=true)
     public void announcedWaterImpactStaysFixedAndDoesNotCarve(GameTestHelper helper) {
         for(int x=1;x<8;x++) for(int z=1;z<8;z++) {
@@ -61,7 +140,7 @@ public class LiveEventsGameTests {
         });
     }
 
-    @GameTest(maxTicks=140, skyAccess=true)
+    @GameTest(maxTicks=1200, skyAccess=true)
     public void targetedMeteorCarvesAndRecordsJournal(GameTestHelper helper) {
         for(int x=0;x<9;x++) for(int z=0;z<9;z++) for(int y=0;y<4;y++) helper.setBlock(new BlockPos(x,y,z),Blocks.STONE);
         EventInstance event=start(helper,"liveevents_test:meteor",new Vec3(4.5,4,4.5));
@@ -70,11 +149,11 @@ public class LiveEventsGameTests {
         helper.runAfterDelay(30,()->helper.setBlock(new BlockPos(4,6,4),Blocks.STONE));
         services().director().set(event,"remaining",1);
         if(event.durationSeconds()<25) throw helper.assertionException("Closure omitted the announced impact");
-        helper.runAfterDelay(100,()->{
+        helper.succeedWhen(()->{
             helper.assertBlockPresent(Blocks.AIR,new BlockPos(4,3,4));
             helper.assertBlockPresent(Blocks.STONE,new BlockPos(4,6,4)); // later construction must not move the announced height
             if(event.journal()==null || services().journal().forInstance(event.instanceId()).map(m->m.entries).orElse(0)==0) throw helper.assertionException("Crater not journaled");
-            services().director().finish(event,"test",true);helper.succeed();
+            services().director().finish(event,"test",true);
         });
     }
 

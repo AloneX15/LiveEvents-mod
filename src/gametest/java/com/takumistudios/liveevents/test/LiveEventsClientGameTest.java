@@ -210,6 +210,41 @@ public class LiveEventsClientGameTest implements FabricClientGameTest {
             ScreenshotWorkaround.capture(context,"meteor_v3_size_"+(int)(radius*10));
         }
         stop(context,server,sizes);
+        server.runCommand("fill -12 96 -12 12 99 12 stone");
+        server.runCommand("fill -12 100 -12 12 124 12 air");
+        int giant=start(context,server,"le start meteor_shower at 0 100 0 radius=512 count=1 brutality=0 destructive_power=0");
+        server.runCommand("le seek "+giant+" 12");context.waitTicks(3);
+        server.runCommand("tp @a 0 170 -260 -20 -15");
+        server.runCommand("le meteor strike "+giant+" at 0 100 0 size=giant power=0");
+        context.waitTicks(25);
+        context.runOnClient(mc->{
+            var e=com.takumistudios.liveevents.client.state.ClientEventState.get().instances().stream().filter(i->i.id==giant).findFirst().orElseThrow();
+            if(e.meteors.values().stream().noneMatch(m->m.giant() && m.bodyRadius()==30 && m.radius()==100 && m.power()==0))
+                throw new AssertionError("Giant command did not synchronize independent body/crater radii");
+        });
+        ScreenshotWorkaround.capture(context,"meteor_giant_approach");
+        server.runCommand("le pause "+giant);context.waitTicks(2);
+        float[] flash=new float[4];
+        int shot=0;
+        for(int distance:new int[]{30,100,200,300}) {
+            server.runCommand("tp @a 0.0 100.0 -"+distance+".0 0 0");context.waitTicks(2);
+            giantFixture(context,giant,2);
+            context.waitTicks(2);
+            int index=shot++;
+            context.runOnClient(mc->flash[index]=com.takumistudios.liveevents.client.visual.VisualDirector.get().computeFrame().flashA);
+            ScreenshotWorkaround.capture(context,"meteor_giant_flash_"+distance);
+        }
+        context.runOnClient(mc->{
+            if(!(flash[0]>flash[1] && flash[1]>flash[2] && flash[2]>flash[3] && flash[3]==0))
+                throw new AssertionError("Giant distance flash: "+java.util.Arrays.toString(flash));
+        });
+        server.runCommand("tp @a 0 160 -320 0 0");context.waitTicks(2);
+        giantFixture(context,giant,30);context.waitTicks(2);
+        ScreenshotWorkaround.capture(context,"meteor_giant_wave");
+        giantFixture(context,giant,160);context.waitTicks(2);
+        ScreenshotWorkaround.capture(context,"meteor_giant_cloud");
+        stop(context,server,giant);
+        server.runCommand("tp @a 0 108 -24 0 10");context.waitTicks(2);
         context.runOnClient(mc->com.takumistudios.liveevents.client.render.MeteorWorldRenderer.resetMetrics());
         server.runCommand("fill -12 96 -12 12 99 12 stone");
         server.runCommand("fill -12 99 -12 12 99 12 grass_block");
@@ -231,6 +266,16 @@ public class LiveEventsClientGameTest implements FabricClientGameTest {
         ScreenshotWorkaround.capture(context, "meteor_v2_stress_12");stop(context,server,stress);
         server.runCommand("gamemode creative @a");
         server.runCommand("tp @a 0 110 -24 -20 -45");
+    }
+
+    private static void giantFixture(ClientGameTestContext context,int id,double age) {
+        context.runOnClient(mc->{
+            var event=com.takumistudios.liveevents.client.state.ClientEventState.get().instances().stream().filter(i->i.id==id).findFirst().orElseThrow();
+            int module=event.def.allModules().stream().filter(m->m.shortType().equals("meteor_impacts")).findFirst().orElseThrow().index();
+            double now=event.clock.advance(System.nanoTime());
+            var meteor=new com.takumistudios.liveevents.core.plan.AnnouncedMeteor(module,1000000000,now-age,0,100,0,100,0,35,45,true,"earth",2107,1,120,120,0.2,0.05,30);
+            event.meteors.clear();event.meteors.put(meteor.key(),meteor);
+        });
     }
 
     /** Lanza con un comando de consola y devuelve el número de la instancia creada. */

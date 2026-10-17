@@ -13,7 +13,7 @@ import net.minecraft.resources.Identifier;
  */
 public final class Payloads {
     /** Versión del protocolo de red. Cambiarla cuando cambie el formato de cualquier paquete. */
-    public static final int PROTOCOL = 2;
+    public static final int PROTOCOL = 3;
     public static final int MAX_ID = 128;
     public static final int MAX_JSON = 32 * 1024;
     public static final int MAX_REASON = 256;

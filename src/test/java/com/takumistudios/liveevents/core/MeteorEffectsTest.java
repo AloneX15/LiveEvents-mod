@@ -26,9 +26,9 @@ class MeteorEffectsTest {
         assertEquals(plan,MeteorPlan.generate(2107,400,128,0,1200,5,5,true));
         assertTrue(plan.getFirst().big());
         assertEquals(7,plan.getFirst().craterRadius());
-        assertEquals(5,plan.stream().skip(1).map(MeteorPlan.Impact::craterRadius).distinct().count());
+        assertEquals(5,plan.stream().skip(1).filter(m->m.craterRadius()<100).map(MeteorPlan.Impact::craterRadius).distinct().count());
         assertTrue(MeteorPlan.generate(7,400,128,0,1200,40,100,true).stream()
-                .allMatch(m->m.craterRadius()>=0.5 && m.craterRadius()<=48));
+                .allMatch(m->m.craterRadius()>=0.5 && m.craterRadius()<=100));
     }
     @Test void bodySmokeAndAudioTrackPhysicalRadius() {
         assertTrue(MeteorEffects.bodyRadius(2)<MeteorEffects.bodyRadius(10));

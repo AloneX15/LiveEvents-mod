@@ -39,7 +39,9 @@ final class MeteorCommands {
                                     throw new IllegalArgumentException("Target permission denied");
                                 if (action.equals("strike")) {
                                     if (!tokens[0].equals("on") && !tokens[0].equals("at")) throw new IllegalArgumentException("Expected on or at");
-                                    StartOptions options = StartOptions.parse(text);
+                                    String size=settings.getOrDefault("size","normal");
+                                    if (!Set.of("normal","giant").contains(size)) throw new IllegalArgumentException("size must be normal or giant");
+                                    StartOptions options = StartOptions.parse(text.replaceAll("(?:^|\\s+)size=\\S+", " ").trim());
                                     if (options.in().isPresent() && !options.in().get().equals(instance.dimension().toString()))
                                         throw new IllegalArgumentException("Target dimension differs from event");
                                     Vec3 at;
@@ -58,7 +60,7 @@ final class MeteorCommands {
                                         String[] xyz = options.at().orElseThrow(() -> new IllegalArgumentException("Expected coordinates"));
                                         at = new Vec3(StartOptions.coordinate(xyz[0], src.getPosition().x), StartOptions.coordinate(xyz[1], src.getPosition().y), StartOptions.coordinate(xyz[2], src.getPosition().z));
                                     }
-                                    instance.meteors.strike(module.index(), at, options.params().getOrDefault("power", instance.vars().getOrDefault("power", 0.7)));
+                                    instance.meteors.strike(module.index(), at, options.params().getOrDefault("power", instance.vars().getOrDefault("power", 0.7)), size.equals("giant"));
                                 } else {
                                     UUID player = null; Vec3 point = null;
                                     if (targetMode.equals("player")) {

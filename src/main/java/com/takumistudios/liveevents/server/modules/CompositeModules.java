@@ -79,15 +79,19 @@ final class CompositeModules {
             if (!level.isLoaded(ground)) {
                 return; // en chunks descargados el meteorito se ve, pero no cambia nada
             }
-            if (!ctx.event().preview() && impact.power()>0 && !impact.surface().equals("water")) {
+            if (!ctx.event().preview() && impact.power()>0 && (!impact.surface().equals("water") || impact.giant())) {
                 long seed = DeterministicRandom.derive(ctx.moduleSeed(), impact.index());
                 MeteorAftermath.create(ctx,impact,tracked->{
-                    BlockModules.carve(tracked,x,z,impact.radius(),0.55,Blocks.BASALT.defaultBlockState(),Blocks.MAGMA_BLOCK.defaultBlockState(),seed,ground.getY());
+                    BlockModules.carve(tracked,x,z,impact.radius(),impact.giant()?0.35*impact.power():0.55,Blocks.BASALT.defaultBlockState(),Blocks.MAGMA_BLOCK.defaultBlockState(),seed,ground.getY());
                     if(impact.surface().equals("earth") && ctx.params().bool("fire",true))
                         BlockModules.placeFires(tracked,x+0.5,z+0.5,impact.radius()+3,(int)Math.round(impact.radius()*2),seed+7);
                 });
             }
 
+            if (impact.giant()) {
+                if (!ctx.event().preview() && impact.power()>0) MeteorShockwave.launch(ctx,impact);
+                return;
+            }
             double size = com.takumistudios.liveevents.core.plan.MeteorEffects.scale(impact.radius());
             double blast = Math.clamp(ctx.params().number("blast_radius", 6) * size, 0, 128);
             float damage = (float)Math.clamp(ctx.params().number("damage", 8) * Math.sqrt(size) * (0.3 + impact.power()), 0, 1000);

@@ -148,7 +148,7 @@ public final class MeteorController {
     private AnnouncedMeteor announce(int module, int index, double tick, Vec3 at, double radius, double power,
                                      double azimuth, double angle, boolean big, long seed, double visualPower) {
         AnnouncedMeteor meteor = new AnnouncedMeteor(module, index, tick, at.x, at.y, at.z,
-                Math.max(0.5, Math.min(48, radius)), power, azimuth, angle, big, variant(at), seed,
+                Math.max(0.5, Math.min(100, radius)), power, azimuth, angle, big, variant(at), seed,
                 visualPower,instance.vars().getOrDefault("cooling_seconds",120.0),com.takumistudios.liveevents.core.plan.MeteorEffects.smokeSeconds(instance.vars().getOrDefault("smoke_seconds",120.0),radius),
                 instance.vars().getOrDefault("wind_x",0.2),instance.vars().getOrDefault("wind_z",0.05));
         announced.put(meteor.key(), meteor);
@@ -179,7 +179,7 @@ public final class MeteorController {
             if (target == null) continue;
             double power = instance.vars().getOrDefault("destructive_power",instance.vars().getOrDefault("power", 0.7));
             announce(ctx.spec().index(), candidate.index(), Math.max(candidate.tick(), ctx.eventTicks() + APPROACH_TICKS), target,
-                    candidate.craterRadius() * (0.5 + power), power, candidate.entryAzimuth(), candidate.entryAngle(), candidate.big(), seed, instance.vars().getOrDefault("visual_power",instance.vars().getOrDefault("power",power)));
+                    (candidate.craterRadius()>=100?100:Math.min(48,candidate.craterRadius() * (0.5 + power))), power, candidate.entryAzimuth(), candidate.entryAngle(), candidate.big(), seed, instance.vars().getOrDefault("visual_power",instance.vars().getOrDefault("power",power)));
             double extraChance=com.takumistudios.liveevents.core.plan.MeteorIntensity.extra(brutality);
             DeterministicRandom burst=new DeterministicRandom(seed ^ 0x6d6574656f72L);
             if(burst.nextDouble()<extraChance && announced.values().stream().filter(m->m.tick()>ctx.eventTicks()).count()<24) {
@@ -188,7 +188,7 @@ public final class MeteorController {
                         candidate.craterRadius(),candidate.entryAzimuth(),candidate.entryAngle(),burst.nextDouble()<extraChance*0.25);
                 Vec3 extraTarget=select(extraCandidate,seed+1);
                 if(extraTarget!=null) announce(ctx.spec().index(),extraCandidate.index(),Math.max(extraCandidate.tick(),ctx.eventTicks()+APPROACH_TICKS+4),
-                        extraTarget,extraCandidate.craterRadius()*(0.5+power)*(extraCandidate.big()?1.4:1),power,extraCandidate.entryAzimuth(),extraCandidate.entryAngle(),
+                        extraTarget,(extraCandidate.craterRadius()>=100?100:Math.min(48,extraCandidate.craterRadius()*(0.5+power)*(extraCandidate.big()?1.4:1))),power,extraCandidate.entryAzimuth(),extraCandidate.entryAngle(),
                         extraCandidate.big(),seed+1,instance.vars().getOrDefault("visual_power",instance.vars().getOrDefault("power",power)));
             }
             lastAnnouncement = ctx.eventTicks();
@@ -204,7 +204,8 @@ public final class MeteorController {
         return due;
     }
 
-    public AnnouncedMeteor strike(int module, Vec3 at, double power) {
+    public AnnouncedMeteor strike(int module, Vec3 at, double power) { return strike(module,at,power,false); }
+    public AnnouncedMeteor strike(int module, Vec3 at, double power, boolean giant) {
         if (!Double.isFinite(power) || power < 0 || power > 1 || !validPoint(at)) throw new IllegalArgumentException("Invalid impact target or power");
         if (instance.eventTicks() + APPROACH_TICKS + 30 >= instance.durationSeconds()*20 || announced.values().stream().filter(m -> m.tick() > instance.eventTicks()).count() >= 24)
             throw new IllegalArgumentException("Meteor launch budget exhausted");
@@ -214,7 +215,7 @@ public final class MeteorController {
         double physicalPower=instance.vars().getOrDefault("destructive_power",power);
         double visualPower=instance.vars().getOrDefault("visual_power",power);
         AnnouncedMeteor meteor = announce(module, manualIndex++, instance.eventTicks() + APPROACH_TICKS, at,
-                2 + physicalPower * 5, physicalPower, 35, 45, visualPower > 0.8, DeterministicRandom.derive(instance.seed(), manualIndex),visualPower);
+                giant ? 100 : 2 + physicalPower * 5, physicalPower, 35, 45, giant || visualPower > 0.8, DeterministicRandom.derive(instance.seed(), manualIndex),visualPower);
         return meteor;
     }
 

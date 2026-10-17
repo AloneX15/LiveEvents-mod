@@ -196,12 +196,14 @@ public final class EventInstance implements LiveEventInfo {
     public List<ServerPlayer> viewers() {
         List<ServerPlayer> out = new ArrayList<>();
         double interest = LiveEventsServer.get().config().interest_radius;
+        // Subscribe the possible wave envelope at event start, before any giant is announced.
+        double meteorMargin=def.allModules().stream().anyMatch(m->m.shortType().equals("meteor_impacts"))?300:0;
         for (ServerPlayer p : level.players()) {
             if (preview) {
                 if (p.getUUID().equals(previewViewer)) {
                     out.add(p);
                 }
-            } else if (interest <= 0 || def.scope() == Scope.CELESTIAL || p.position().distanceTo(center) <= interest + vars.getOrDefault("radius", 128.0)) {
+            } else if (interest <= 0 || def.scope() == Scope.CELESTIAL || p.position().distanceTo(center) <= interest + vars.getOrDefault("radius", 128.0)+meteorMargin) {
                 out.add(p);
             }
         }

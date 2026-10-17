@@ -216,7 +216,7 @@
   "subtitles.liveevents.ui.warning": "Event warning",
   "liveevents.meteor.updated": "Meteor event #%s: %s updated",
   "liveevents.meteor.status": "Event #%s: power=%s brutality=%s elapsed=%ss remaining=%ss mode=%s launches=%s throttled=%s",
-  "liveevents.client.update_required": "This server requires LiveEvents %s (protocol 2) on the client. Download: %s",
+  "liveevents.client.update_required": "This server requires LiveEvents %s (protocol 3) on the client. Download: %s",
   "subtitles.liveevents.meteor.debris": "Meteor debris falls",
   "subtitles.liveevents.meteor.tail": "Meteor impact rumbles"
 }

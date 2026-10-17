@@ -2,6 +2,10 @@
 
 ## 1.1.0
 
+- Giant meteors: 30-block body radius, 100-block crater radius, 1% random occurrence and explicit `size=giant` strikes.
+- Expanding 80-block/s shockwaves reach 300 blocks, apply one distance-scaled hit and respect protections, profiles and zero destructive power.
+- Large post-impact clouds and distance-based white flashes with gradual visual recovery. Network protocol 3 requires updated clients and servers.
+
 - Added five weighted meteor sizes with matching bodies, smoke, blast radius and damage.
 - Original layered meteor audio: atmospheric entry, close/distant impacts, debris and deep tails; distance delay, size-dependent pitch and bounded voices.
 - Fixed smoke depth masking water/clouds, removed meteor screen tints and made impact flashes independent of frame rate.

@@ -80,3 +80,11 @@ Cada error resuelto: síntoma, causa, solución y test que lo reproduce.
 - Symptom: persistent opaque veil during meteors. Cause: global sky tint in meteor event definitions. Fix: remove those modules and retain localized impact lighting.
 - Symptom: impact flash changes with frame rate. Cause: marking it consumed after a single frame. Fix: cache the limiter grant and evaluate a twelve-tick envelope each frame. Regression: MeteorEffectsTest compares integrated envelopes at different frame rates.
 - Added five deterministic size classes, radius-dependent bodies, smoke, blast/damage and pitched original audio. Regression: MeteorEffectsTest checks distribution, first-large behavior, physical bounds and monotonic scales.
+
+## 2026-10-17 — Giant meteor propagation
+
+- Split synchronized body radius from crater radius; raised crater limits to 100 and normalized the mesh to its actual spherical bound.
+- A wave initially refreshed candidates only every five ticks, delaying nearby hits. Cache queries for five ticks but rescan cached candidates each event tick in slices of 16. Regression: giantWaveTravelsOnceAndRespectsExclusions verifies arrival, single damage, falloff, excluded zones and zero-power scheduling.
+- Giant flashes and cloud lifetimes use explicit distance/time bounds; keep the wave alive even when smoke/cooling are disabled. Regression: GiantMeteorTest and client captures at 30/100/200/300 blocks.
+
+- Preparing large crater geometry concurrently exposed a fixed-tick deadline in the existing crater test. Use succeedWhen with a finite 1200-tick deadline for the asynchronous result; retain all terrain and journal assertions. The giant fixture protects neighboring test terrain through the block API and makes other test entities immune to its wave.

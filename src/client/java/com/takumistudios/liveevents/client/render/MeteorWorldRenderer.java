@@ -24,6 +24,7 @@ import java.util.*;
 public final class MeteorWorldRenderer {
     private static final Identifier ROCK = Identifier.fromNamespaceAndPath("liveevents", "textures/effect/meteor_rock.png");
     private static com.takumistudios.liveevents.core.plan.MeteorMesh mesh;
+    private static double meshRadius=1;
     private static final Identifier CLOUD = Identifier.fromNamespaceAndPath("liveevents", "textures/effect/meteor_smoke.png");
     private static final Identifier GLOW = Identifier.fromNamespaceAndPath("liveevents", "textures/effect/glow.png");
     private static final RenderStateDataKey<List<Quad>> DATA = RenderStateDataKey.create(() -> "liveevents:meteors");
@@ -48,6 +49,9 @@ public final class MeteorWorldRenderer {
         try (var stream = MeteorWorldRenderer.class.getResourceAsStream("/assets/liveevents/meteor/meteor_mesh.json")) {
             if(stream == null) throw new java.io.IOException("Missing meteor mesh");
             mesh = com.takumistudios.liveevents.core.plan.MeteorMesh.read(new java.io.InputStreamReader(stream,java.nio.charset.StandardCharsets.UTF_8));
+            meshRadius=0;
+            for(float[] point:mesh.vertices()) meshRadius=Math.max(meshRadius,Math.sqrt(point[0]*point[0]+point[1]*point[1]+point[2]*point[2]));
+            meshRadius=Math.max(0.001,meshRadius);
         } catch (java.io.IOException | RuntimeException e) { LiveEvents.LOGGER.warn("Meteor mesh unavailable; using incandescent cores",e); }
         //? if >=26.2 {
         LevelExtractionEvents.END_EXTRACTION.register(context -> {
@@ -131,7 +135,7 @@ public final class MeteorWorldRenderer {
             for (AnnouncedMeteor m : instance.meteors.values()) {
                 if (out.size() > MAX_QUADS - 160) break;
                 double remaining = m.tick() - tick;
-                double bodySize = MeteorEffects.bodyRadius(m.radius());
+                double bodySize = m.bodyRadius();
                 if (remaining > 60 || remaining < -Math.max(40,m.lifetimeTicks())) continue;
                 Vec3 target = new Vec3(m.x(),m.y(),m.z());
                 double distance = camera.distanceTo(target);
@@ -140,7 +144,7 @@ public final class MeteorWorldRenderer {
                 if (remaining > 0) {
                     double az = Math.toRadians(m.azimuth()), el = Math.toRadians(m.angle());
                     Vec3 direction = new Vec3(Math.sin(az)*Math.cos(el), Math.sin(el), -Math.cos(az)*Math.cos(el));
-                    int fragments = m.big() && remaining < 20 ? 3 : 1;
+                    int fragments = !m.giant() && m.big() && remaining < 20 ? 3 : 1;
                     for (int fragment=0;fragment<fragments;fragment++) {
                         double split = fragments == 1 ? 0 : fragment-1;
                         Vec3 endpoint = origin.add(split*m.radius()*0.55,0,split*m.radius()*0.3);
@@ -149,32 +153,41 @@ public final class MeteorWorldRenderer {
                         ribbon(out, head, tail, right, bodySize*0.75, 0xCAFF7A1A);
                         ribbon(out, head, head.add(direction.scale(8)), right, bodySize*0.28, 0xFFFFF4D6);
                         puff(out, head, right, up, bodySize*1.2, 0xFFFFF4D6, false);
-                        if(mesh != null && distance < 192 && out.size() < MAX_QUADS-400) body(out,head,bodySize,tick*(0.025+(m.seed()&15)*0.002)+(m.seed()&255), 1);
+                        if(mesh != null && distance < (m.giant()?768:192) && out.size() < MAX_QUADS-400) body(out,head,bodySize/meshRadius,tick*(0.025+(m.seed()&15)*0.002)+(m.seed()&255), 1);
                         // One gradual green accent, not a repeating strobe.
                         if (remaining > 25 && remaining < 38) puff(out, head, right, up, bodySize*2, 0x457CFF6B, false);
                         if (detail > 0) for(int j=1;j<=5;j++) puff(out, head.add(direction.scale(j*6)), right, up, bodySize*(0.7+j*0.22), 0x38685D52, true);
                     }
 
                 } else {
-                    double visualRadius=m.radius()*(0.4+m.visualPower())/(0.4+m.power());
+                    double visualRadius=m.giant()?100:m.radius()*(0.4+m.visualPower())/(0.4+m.power());
                     double seconds = -remaining/20, life = Math.min(1, seconds/2.8);
                     boolean residual=seconds>12;
                     double fade=Math.max(0,1-seconds/Math.max(1,m.smokeSeconds()))*(residual?0.25:1-0.75*seconds/12);
                     if(seconds>m.smokeSeconds()) fade=0;
                     boolean water = m.surface().equals("water"), snow = m.surface().equals("snow");
                     int color = water ? 0xB8DAEF : snow ? 0xEDF4FF : 0x827365;
-                    if (seconds < 2) ring(out, origin.add(0,0.12,0), (visualRadius+seconds*10), 0.3,
+                    if(m.giant() && seconds<=3.75) {
+                        double wave=MeteorEffects.waveRadius(seconds*20);
+                        int alpha=(int)(90*(1-seconds/3.75));
+                        for(int lat=-2;lat<=2;lat++) {
+                            double angle=lat*Math.PI/6;
+                            ring(out,origin.add(0,wave*Math.sin(angle),0),wave*Math.cos(angle),1.5,(alpha<<24)|0xFFE3B0,24);
+                        }
+                        ring(out,origin.add(0,0.2,0),wave,4,(alpha<<24)|color,32);
+                    }
+                    if (!m.giant() && seconds < 2) ring(out, origin.add(0,0.12,0), (visualRadius+seconds*10), 0.3,
                             ((int)(120*(1-seconds/2))<<24)|(water?0xA7DFFF:color), 40);
                     DeterministicRandom random = new DeterministicRandom(m.seed());
                     // Use the same depth-read-only smoke material at every LOD. Baked billboard
                     // atlases previously introduced depth-writing rectangles over water and clouds.
-                    int puffs = fade<=0 ? 0 : distance>192 ? 8 : residual ? (detail<=1?3:6) : detail<=1 ? 20 : 44;
+                    int puffs = fade<=0 ? 0 : m.giant() ? (distance>384?20:detail<=1?28:48) : distance>192 ? 8 : residual ? (detail<=1?3:6) : detail<=1 ? 20 : 44;
                     double glow = seconds<1.2 ? Math.sin(Math.PI*seconds/1.2)
                             *com.takumistudios.liveevents.client.config.ClientConfig.get().max_flash_intensity : 0;
                     if (glow>0) {
                         Vec3 core = origin.add(0,visualRadius*0.2,0);
-                        puff(out,core,right,up,visualRadius*(0.6+seconds*3),((int)(210*glow)<<24)|0xFFF4D6,false);
-                        puff(out,core,right,up,visualRadius*(1.2+seconds*6),((int)(95*glow)<<24)|0xFF8A35,false);
+                        puff(out,core,right,up,Math.min(m.giant()?90:Double.MAX_VALUE,visualRadius*(0.6+seconds*3)),((int)(210*glow)<<24)|0xFFF4D6,false);
+                        puff(out,core,right,up,Math.min(m.giant()?150:Double.MAX_VALUE,visualRadius*(1.2+seconds*6)),((int)(95*glow)<<24)|0xFF8A35,false);
                     }
                     for(int j=0;j<puffs;j++) {
                         boolean cap = j>=puffs/3;
@@ -190,6 +203,13 @@ public final class MeteorWorldRenderer {
                             double age=(seconds+j*2.0)%12;
                             at=origin.add(Math.cos(angle)*visualRadius*0.2+age*m.windX(),age*0.7*Math.sqrt(MeteorEffects.scale(m.radius())),Math.sin(angle)*visualRadius*0.2+age*m.windZ());
                             size=(float)(visualRadius*(0.15+age*0.025));puffFade*=Math.sin(age/12*Math.PI);
+                        }
+                        if(m.giant()) {
+                            double growth=Math.min(1,seconds/8);
+                            double spread=(cap?120:30)*growth*random.range(0.3,1);
+                            double y=(cap?155+random.range(-12,12):random.range(0,150))*growth;
+                            at=origin.add(Math.cos(angle)*spread+seconds*m.windX(),y,Math.sin(angle)*spread+seconds*m.windZ());
+                            size=(float)((cap?18:12)*growth);
                         }
                         Vec3 rotatedRight=right.scale(Math.cos(angle)).add(up.scale(Math.sin(angle)));
                         Vec3 rotatedUp=up.scale(Math.cos(angle)).subtract(right.scale(Math.sin(angle)));
@@ -223,11 +243,12 @@ public final class MeteorWorldRenderer {
         out.add(new Quad(a.subtract(w),a.add(w),b.add(tip),b.subtract(tip),color,0));
     }
     private static void puff(List<Quad> out,Vec3 center,Vec3 right,Vec3 up,double size,int color,boolean smoke) {
+        if(out.size()>=MAX_QUADS) return;
         Vec3 r=right.scale(size),u=up.scale(size);
         out.add(new Quad(center.subtract(r).subtract(u),center.add(r).subtract(u),center.add(r).add(u),center.subtract(r).add(u),color,smoke?1:0));
     }
     private static void ring(List<Quad> out,Vec3 center,double radius,double width,int color,int segments) {
-        for(int j=0;j<segments;j++) {
+        for(int j=0;j<segments && out.size()<MAX_QUADS;j++) {
             double a=j*Math.PI*2/segments,b=(j+1)*Math.PI*2/segments;
             out.add(new Quad(center.add(Math.cos(a)*radius,0,Math.sin(a)*radius),center.add(Math.cos(a)*(radius+width),0,Math.sin(a)*(radius+width)),
                     center.add(Math.cos(b)*(radius+width),0,Math.sin(b)*(radius+width)),center.add(Math.cos(b)*radius,0,Math.sin(b)*radius),color,0));

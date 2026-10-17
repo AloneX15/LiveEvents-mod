@@ -106,10 +106,13 @@ Estructura: `core/` (lógica pura, probada con JUnit: definiciones, expresiones,
 render por HUD). Errores resueltos en [docs/registro-de-errores.md](docs/registro-de-errores.md) y estado frente al plan
 en [docs/estado-del-plan.md](docs/estado-del-plan.md).
 
+## Meteoritos gigantes
+
+Meteoritos de 30 bloques de radio, cráteres de 100 y ondas expansivas de 300 bloques: [comandos, efectos y compatibilidad de protocolo](docs/giant-meteors.md).
+
 ## Licencia
 
-Código bajo [MIT](LICENSE). Los recursos originales de v1 son CC0; los recursos nuevos de meteoritos v2 tienen derechos reservados a TakumiStudios. Los sonidos
-reutilizan eventos de sonido de Minecraft sin redistribuir archivos. Ver [CREDITS.md](CREDITS.md).
+Código bajo [MIT](LICENSE). Los recursos originales de v1 son CC0; los recursos nuevos de meteoritos v2 tienen derechos reservados a TakumiStudios. Los sonidos combinan recursos originales sintetizados y eventos de Minecraft sin redistribuir archivos del juego. Ver [CREDITS.md](CREDITS.md).
 
 ---
 

@@ -206,14 +206,14 @@ public final class MeteorWorldRenderer {
                         }
                         if(m.giant()) {
                             double growth=Math.min(1,seconds/8);
-                            double spread=(cap?120:30)*growth*random.range(0.3,1);
-                            double y=(cap?155+random.range(-12,12):random.range(0,150))*growth;
+                            double spread=(cap?78:28)*growth*random.range(0.3,1);
+                            double y=(cap?132+random.range(-6,6):random.range(0,130))*growth;
                             at=origin.add(Math.cos(angle)*spread+seconds*m.windX(),y,Math.sin(angle)*spread+seconds*m.windZ());
-                            size=(float)((cap?18:12)*growth);
+                            size=(float)((cap?42:22)*growth);
                         }
                         Vec3 rotatedRight=right.scale(Math.cos(angle)).add(up.scale(Math.sin(angle)));
                         Vec3 rotatedUp=up.scale(Math.cos(angle)).subtract(right.scale(Math.sin(angle)));
-                        puff(out,at,rotatedRight,rotatedUp,size, ((int)(95*puffFade)<<24)|color,true);
+                        puff(out,at,rotatedRight,rotatedUp,size, ((int)((m.giant()?170:95)*puffFade)<<24)|color,true);
                     }
                     if (seconds<2.5) for(int j=0;j<(detail<=1?8:20);j++) {
                         double angle=random.range(0,Math.PI*2), speed=random.range(3,12)*(0.5+m.power());

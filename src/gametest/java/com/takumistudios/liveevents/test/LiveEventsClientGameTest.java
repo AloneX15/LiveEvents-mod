@@ -212,9 +212,17 @@ public class LiveEventsClientGameTest implements FabricClientGameTest {
         stop(context,server,sizes);
         server.runCommand("fill -12 96 -12 12 99 12 stone");
         server.runCommand("fill -12 100 -12 12 124 12 air");
+        int[] previousRenderDistance={0,0};
+        context.runOnClient(mc->{
+            previousRenderDistance[0]=mc.options.getEffectiveRenderDistance();
+            previousRenderDistance[1]=mc.options.renderDistance().get();
+            com.takumistudios.liveevents.LiveEvents.LOGGER.info("GIANT_SCENE previous_effective_render_distance={}",previousRenderDistance[0]);
+            mc.options.renderDistance().set(16);
+            mc.options.setServerRenderDistance(16);
+        });
         int giant=start(context,server,"le start meteor_shower at 0 100 0 radius=512 count=1 brutality=0 destructive_power=0");
         server.runCommand("le seek "+giant+" 12");context.waitTicks(3);
-        server.runCommand("tp @a 0 170 -260 -20 -15");
+        server.runCommand("tp @a 0 160 -120 -70 -40");
         server.runCommand("le meteor strike "+giant+" at 0 100 0 size=giant power=0");
         context.waitTicks(25);
         context.runOnClient(mc->{
@@ -241,9 +249,13 @@ public class LiveEventsClientGameTest implements FabricClientGameTest {
         server.runCommand("tp @a 0 160 -320 0 0");context.waitTicks(2);
         giantFixture(context,giant,30);context.waitTicks(2);
         ScreenshotWorkaround.capture(context,"meteor_giant_wave");
+        server.runCommand("time set 6000");
+        server.runCommand("tp @a 0 150 -200 0 -15");context.waitTicks(2);
         giantFixture(context,giant,160);context.waitTicks(2);
         ScreenshotWorkaround.capture(context,"meteor_giant_cloud");
         stop(context,server,giant);
+        context.runOnClient(mc->{mc.options.renderDistance().set(previousRenderDistance[1]);mc.options.setServerRenderDistance(previousRenderDistance[0]);});
+        server.runCommand("time set 18000");
         server.runCommand("tp @a 0 108 -24 0 10");context.waitTicks(2);
         context.runOnClient(mc->com.takumistudios.liveevents.client.render.MeteorWorldRenderer.resetMetrics());
         server.runCommand("fill -12 96 -12 12 99 12 stone");

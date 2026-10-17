@@ -88,3 +88,5 @@ Cada error resuelto: síntoma, causa, solución y test que lo reproduce.
 - Giant flashes and cloud lifetimes use explicit distance/time bounds; keep the wave alive even when smoke/cooling are disabled. Regression: GiantMeteorTest and client captures at 30/100/200/300 blocks.
 
 - Preparing large crater geometry concurrently exposed a fixed-tick deadline in the existing crater test. Use succeedWhen with a finite 1200-tick deadline for the asynchronous result; retain all terrain and journal assertions. The giant fixture protects neighboring test terrain through the block API and makes other test entities immune to its wave.
+
+- Giant cloud acceptance screenshots were obscured by the harness effective view distance of five chunks. Temporarily set both client and server render limits to sixteen chunks for this scene, then restore them. Review the plume in daylight and the body from a nearer camera; smoke density scales without increasing geometry count.

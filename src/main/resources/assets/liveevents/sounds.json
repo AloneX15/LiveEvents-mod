@@ -193,10 +193,7 @@
     "subtitle": "subtitles.liveevents.meteor.whistle",
     "sounds": [
       {
-        "name": "minecraft:entity.firework_rocket.launch",
-        "type": "event",
-        "pitch": 0.5,
-        "volume": 1
+        "name": "liveevents:meteor/whistle"
       }
     ]
   },
@@ -204,10 +201,7 @@
     "subtitle": "subtitles.liveevents.meteor.impact_near",
     "sounds": [
       {
-        "name": "minecraft:entity.generic.explode",
-        "type": "event",
-        "pitch": 0.7,
-        "volume": 1
+        "name": "liveevents:meteor/impact_near"
       }
     ]
   },
@@ -215,10 +209,7 @@
     "subtitle": "subtitles.liveevents.meteor.impact_far",
     "sounds": [
       {
-        "name": "minecraft:entity.lightning_bolt.thunder",
-        "type": "event",
-        "pitch": 0.6,
-        "volume": 0.8
+        "name": "liveevents:meteor/impact_far"
       }
     ]
   },
@@ -297,6 +288,22 @@
         "type": "event",
         "pitch": 0.6,
         "volume": 1
+      }
+    ]
+  },
+  "meteor.debris": {
+    "subtitle": "subtitles.liveevents.meteor.debris",
+    "sounds": [
+      {
+        "name": "liveevents:meteor/debris"
+      }
+    ]
+  },
+  "meteor.tail": {
+    "subtitle": "subtitles.liveevents.meteor.tail",
+    "sounds": [
+      {
+        "name": "liveevents:meteor/tail"
       }
     ]
   }

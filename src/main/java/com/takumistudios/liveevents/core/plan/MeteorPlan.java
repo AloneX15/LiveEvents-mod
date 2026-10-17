@@ -38,8 +38,10 @@ public final class MeteorPlan {
             double tick = fromTicks + span * slot;
             double distance = radius * Math.sqrt(random.nextDouble()); // uniforme en el disco
             double angle = random.range(0, Math.PI * 2);
-            boolean big = firstBig && i == 0;
-            double crater = big ? craterMax * 1.4 : random.range(craterMin, craterMax);
+            double size = MeteorEffects.sizeMultiplier(new DeterministicRandom(DeterministicRandom.derive(seed, i)).nextDouble());
+            boolean big = (firstBig && i == 0) || size >= 1.5;
+            double crater = Math.clamp(firstBig && i == 0 ? craterMax * 1.4
+                    : random.range(craterMin, craterMax) * size, 0.5, 48);
             impacts.add(new Impact(i, tick, Math.cos(angle) * distance, Math.sin(angle) * distance, crater,
                     baseAzimuth + random.range(-25, 25), random.range(25, 55), big));
         }

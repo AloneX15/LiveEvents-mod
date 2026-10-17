@@ -216,5 +216,7 @@
   "subtitles.liveevents.ui.warning": "Aviso de evento",
   "liveevents.meteor.updated": "Evento de meteoritos #%s: %s actualizado",
   "liveevents.meteor.status": "Evento #%s: fuerza=%s brutalidad=%s transcurrido=%ss restante=%ss modo=%s lanzados=%s limitados=%s",
-  "liveevents.client.update_required": "Este servidor requiere LiveEvents %s (protocolo 2) en el cliente. Descarga: %s"
+  "liveevents.client.update_required": "Este servidor requiere LiveEvents %s (protocolo 2) en el cliente. Descarga: %s",
+  "subtitles.liveevents.meteor.debris": "Fragmentos de meteorito caen",
+  "subtitles.liveevents.meteor.tail": "El impacto retumba"
 }

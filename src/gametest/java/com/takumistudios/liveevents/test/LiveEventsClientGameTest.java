@@ -126,6 +126,11 @@ public class LiveEventsClientGameTest implements FabricClientGameTest {
 
     private static void meteorWorldAcceptance(ClientGameTestContext context, TestSingleplayerContext world) {
         TestServerContext server=world.getServer();
+        context.runOnClient(mc -> {
+            var depth = com.takumistudios.liveevents.client.render.MeteorWorldRenderer.smokeMaterial().pipeline().getDepthStencilState();
+            if (depth == null || depth.writeDepth()) throw new AssertionError("Smoke must read depth without writing it");
+            if (depth.depthTest() != net.minecraft.client.renderer.RenderPipelines.ENTITY_SOLID.getDepthStencilState().depthTest()) throw new AssertionError("Smoke lost terrain occlusion");
+        });
         server.runCommand("gamemode spectator @a");
         server.runCommand("tp @a 0 108 -24 0 10");
         context.waitTicks(30); waitForChunks(world);
@@ -149,6 +154,12 @@ public class LiveEventsClientGameTest implements FabricClientGameTest {
             ScreenshotWorkaround.capture(context, "meteor_v2_"+surface+"_warning_f1");
             context.waitTicks(50);
             ScreenshotWorkaround.capture(context, "meteor_v2_"+surface+"_impact_f1");
+            if (surface.equals("water")) {
+                server.runCommand("time set 6000");
+                context.waitTicks(10);
+                ScreenshotWorkaround.capture(context,"meteor_v3_water_day_transparency");
+                server.runCommand("time set 18000");
+            }
             if(surface.equals("earth")) {
                 context.waitTicks(45);
                 ScreenshotWorkaround.capture(context, "meteor_v2_earth_mushroom_front");
@@ -183,6 +194,22 @@ public class LiveEventsClientGameTest implements FabricClientGameTest {
                     throw new AssertionError("Stopped meteor aftermath remained visible");
             });
         }
+        // Isolated renderer fixtures: five radii at the same age and camera, without terrain damage.
+        int sizes=start(context,server,"le start meteor_shower at 0 100 0 radius=32 count=1 brutality=0");
+        server.runCommand("le seek "+sizes+" 12");context.waitTicks(3);
+        for (double radius : new double[]{1.5,3,5,9,16}) {
+            context.runOnClient(mc -> {
+                var event=com.takumistudios.liveevents.client.state.ClientEventState.get().instances().stream().filter(i->i.id==sizes).findFirst().orElseThrow();
+                event.meteors.clear();
+                int module=event.def.allModules().stream().filter(m->m.shortType().equals("meteor_impacts")).findFirst().orElseThrow().index();
+                double now=event.clock.advance(System.nanoTime());
+                var meteor=new com.takumistudios.liveevents.core.plan.AnnouncedMeteor(module,1000000000,now-40,0,100,0,radius,0.7,35,45,radius>=9,"earth",2107);
+                event.meteors.put(meteor.key(),meteor);
+            });
+            context.waitTicks(2);
+            ScreenshotWorkaround.capture(context,"meteor_v3_size_"+(int)(radius*10));
+        }
+        stop(context,server,sizes);
         context.runOnClient(mc->com.takumistudios.liveevents.client.render.MeteorWorldRenderer.resetMetrics());
         server.runCommand("fill -12 96 -12 12 99 12 stone");
         server.runCommand("fill -12 99 -12 12 99 12 grass_block");

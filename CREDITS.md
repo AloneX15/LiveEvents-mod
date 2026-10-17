@@ -46,3 +46,7 @@ no se concede su redistribución independiente. Esta condición no modifica la l
 - Roca y humo neutro: `tools/generate-meteor-textures.py`, semilla 2107.
 - Código de los generadores: MIT, como el resto del código del repositorio.
 - No se distribuyen recursos de Veil, Photon, packs de shaders ni otros juegos.
+
+## Meteor audio
+
+Original procedural meteor sounds created for LiveEvents by TakumiStudios, licensed under the project MIT license. No external samples. Reproduce with `tools/generate_meteor_audio.py` (Python, numpy, soundfile).

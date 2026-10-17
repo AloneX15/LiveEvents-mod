@@ -172,7 +172,7 @@ final class WorldVisuals {
         static final class State {
             final java.util.Set<String> heard = new java.util.HashSet<>();
             final java.util.Set<String> warned = new java.util.HashSet<>();
-            final java.util.Set<String> flashed = new java.util.HashSet<>();
+            final java.util.Map<String,Boolean> flashed = new java.util.HashMap<>();
         }
         @Override public void frame(VisualContext ctx, FrameState f) {
             State state = ctx.instance.state(ctx.spec, State::new);
@@ -181,10 +181,14 @@ final class WorldVisuals {
                 double age = ctx.t - m.tick();
                 if (age < 0 || age > 20) continue;
                 double distance = ctx.camera.distanceTo(new Vec3(m.x(),m.y(),m.z()));
-                double near = clamp(1-distance/96,0,1);
-                f.addShake((float)(near*(m.big()?2:1.2)*(1-age/20)),14,0);
-                if (state.flashed.add(m.key()) && age < 4 && near>0.5 && ctx.requestFlash(0.15,0xFFE0B0))
-                    f.addFlash(0xFFE0B0,(float)(0.2*near));
+                double size = com.takumistudios.liveevents.core.plan.MeteorEffects.scale(m.radius());
+                double near = clamp(1-distance/(64+32*Math.sqrt(size)),0,1);
+                f.addShake((float)(near*Math.min(3,1.2*Math.sqrt(size))*(1-age/20)),14,0);
+                if (age < 12 && near>0.1) {
+                    boolean granted = state.flashed.computeIfAbsent(m.key(), key -> ctx.requestFlash(1.0,0xFFE0B0));
+                    if (granted) f.addFlash(0xFFE0B0,(float)(Math.min(0.32,0.18*Math.sqrt(size))*near
+                            *com.takumistudios.liveevents.core.plan.MeteorEffects.flash(age)*ctx.fade));
+                }
             }
         }
         @Override public void tick(VisualContext ctx) {
@@ -193,11 +197,20 @@ final class WorldVisuals {
                 if (m.module()!=ctx.spec.index()) continue;
                 double remaining=m.tick()-ctx.t;
                 double distance=ctx.camera.distanceTo(new Vec3(m.x(),m.y(),m.z()));
-                if(remaining>0 && remaining<=40 && state.warned.add(m.key()) && distance<96)
-                    ctx.director.playSoundAt("liveevents:meteor.whistle",(float)(0.8*ctx.exposure),0.8f,0,m.x(),m.y(),m.z());
+                double size = com.takumistudios.liveevents.core.plan.MeteorEffects.scale(m.radius());
+                float pitch = com.takumistudios.liveevents.core.plan.MeteorEffects.pitch(m.radius(),m.seed());
+                double reach = 140+100*Math.sqrt(size);
+                if(remaining>0 && remaining<=40 && distance<reach && state.warned.add(m.key()))
+                    ctx.director.playSoundAt("liveevents:meteor.whistle",(float)(0.7*clamp(1-distance/reach,0,1)*ctx.exposure),pitch,0,m.x(),m.y(),m.z());
                 if(remaining<=0 && state.heard.add(m.key()) && remaining>-4) {
-                    String sound=m.surface().equals("water")?"minecraft:entity.generic.splash":m.surface().equals("snow")?"minecraft:block.powder_snow.break":distance<64?"liveevents:meteor.impact_near":"liveevents:meteor.impact_far";
-                    ctx.director.playSoundAt(sound,(float)(clamp(2-distance/200,0.2,2)*ctx.exposure),1,VisualDirector.soundDelaySeconds(distance),m.x(),m.y(),m.z());
+                    double gain = clamp(1-distance/(reach*2),0,1)*Math.min(1.1,0.55+0.25*Math.sqrt(size))*ctx.exposure;
+                    double delay = VisualDirector.soundDelaySeconds(distance);
+                    String sound = distance<96 ? "liveevents:meteor.impact_near" : "liveevents:meteor.impact_far";
+                    ctx.director.playSoundAt(sound,(float)gain,pitch,delay,m.x(),m.y(),m.z());
+                    if (size>=0.8) ctx.director.playSoundAt("liveevents:meteor.debris",(float)(gain*0.38),pitch,delay+0.12,m.x(),m.y(),m.z());
+                    ctx.director.playSoundAt("liveevents:meteor.tail",(float)(gain*0.55),pitch,delay+0.24,m.x(),m.y(),m.z());
+                    if (!m.surface().equals("earth")) ctx.director.playSoundAt(m.surface().equals("water")?
+                            "minecraft:entity.generic.splash":"minecraft:block.powder_snow.break",(float)(gain*0.5),pitch,delay,m.x(),m.y(),m.z());
                 }
                 if(remaining<0 && remaining>-400 && distance<192) {
                     int n=ctx.director.particleBudget(remaining>-40?4:1,distance);

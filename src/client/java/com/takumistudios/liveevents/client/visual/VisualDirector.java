@@ -20,6 +20,7 @@ import net.minecraft.world.level.LightLayer;
 import net.minecraft.world.phys.Vec3;
 
 import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -97,6 +98,8 @@ public final class VisualDirector {
     private final FlashLimiter flashLimiter = new FlashLimiter();
     private final Set<String> failed = new HashSet<>();
     private final ArrayDeque<PendingSound> sounds = new ArrayDeque<>();
+    // Includes queued and currently audible meteor layers, unlike the pending queue alone.
+    private final ArrayList<Long> meteorVoiceEnds = new ArrayList<>();
     private double exposure = 1;
     private double exposureTarget = 1;
     private int tickParticleBudget;
@@ -446,7 +449,15 @@ public final class VisualDirector {
         if (v <= 0.01f || sounds.size() >= 64) {
             return; // tope de voces
         }
-        sounds.add(new PendingSound(System.nanoTime() + (long) (delaySeconds * 1e9), key, v, pitch, x, y, z));
+        long now = System.nanoTime();
+        if (id.startsWith("liveevents:meteor.")) {
+            meteorVoiceEnds.removeIf(end -> end <= now);
+            if (meteorVoiceEnds.size() >= 24) return;
+            v *= (float)(1 / Math.sqrt(1 + meteorVoiceEnds.size() * 0.18));
+            // Longest layer is 6 seconds; reserve its pitched duration conservatively.
+            meteorVoiceEnds.add(now + (long)((delaySeconds + 6 / Math.max(0.5f,pitch)) * 1e9));
+        }
+        sounds.add(new PendingSound(now + (long) (delaySeconds * 1e9), key, v, pitch, x, y, z));
     }
 
     private void playPendingSounds(ClientLevel level) {
@@ -481,6 +492,7 @@ public final class VisualDirector {
     /** /le panic o tecla de pánico: corte inmediato de todo lo del cliente. */
     public void panic() {
         sounds.clear();
+        meteorVoiceEnds.clear();
         frame.reset();
         CameraShake.set(0, 0, 0);
         flashLimiter.reset();

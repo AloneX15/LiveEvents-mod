@@ -88,8 +88,9 @@ final class CompositeModules {
                 });
             }
 
-            double blast = Math.max(0, Math.min(128,ctx.params().number("blast_radius", 6))) * (impact.big() ? 1.5 : 1);
-            float damage = (float) Math.max(0, Math.min(1000,ctx.params().number("damage", 8))) * (impact.big() ? 1.75f : 1f) * (float) (0.3 + impact.power());
+            double size = com.takumistudios.liveevents.core.plan.MeteorEffects.scale(impact.radius());
+            double blast = Math.clamp(ctx.params().number("blast_radius", 6) * size, 0, 128);
+            float damage = (float)Math.clamp(ctx.params().number("damage", 8) * Math.sqrt(size) * (0.3 + impact.power()), 0, 1000);
             Vec3 at = Vec3.atBottomCenterOf(ground);
             if (ctx.event().preview() || impact.power()<=0) return;
             for (LivingEntity e : level.getEntitiesOfClass(LivingEntity.class, new net.minecraft.world.phys.AABB(ground).inflate(blast), e -> true)) {

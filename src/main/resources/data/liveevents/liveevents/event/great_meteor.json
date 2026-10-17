@@ -114,15 +114,6 @@
       "title": "event.liveevents.great_meteor.phase.dust",
       "modules": [
         {
-          "type": "sky_tint",
-          "color": "$dust",
-          "strength": {
-            "from": 0.5,
-            "to": 0
-          },
-          "fade": "1s"
-        },
-        {
           "type": "ash_fall",
           "rate": {
             "from": 80,

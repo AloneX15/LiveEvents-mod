@@ -36,7 +36,7 @@ public final class LEContent {
             "supernova.heartbeat", "supernova.groan", "supernova.collapse", "supernova.shatter", "supernova.xray",
             "supernova.crackle", "supernova.roar", "supernova.blast", "supernova.tinnitus", "supernova.plasma",
             "supernova.whistler", "supernova.wind", "supernova.pulsar",
-            "meteor.rumble", "meteor.whistle", "meteor.impact_near", "meteor.impact_far", "meteor.sizzle",
+            "meteor.rumble", "meteor.whistle", "meteor.impact_near", "meteor.impact_far", "meteor.sizzle", "meteor.debris", "meteor.tail",
             "earthquake.hum", "earthquake.thump", "earthquake.rumble", "earthquake.crack",
             "ui.warning");
     public static final Map<String, SoundEvent> SOUND_EVENTS = new LinkedHashMap<>();

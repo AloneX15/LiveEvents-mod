@@ -6,6 +6,7 @@ import com.takumistudios.liveevents.LiveEvents;
 import com.takumistudios.liveevents.client.state.ClientEventState;
 import com.takumistudios.liveevents.client.visual.VisualDirector;
 import com.takumistudios.liveevents.core.plan.AnnouncedMeteor;
+import com.takumistudios.liveevents.core.plan.MeteorEffects;
 import com.takumistudios.liveevents.core.random.DeterministicRandom;
 import net.fabricmc.fabric.api.client.rendering.v1.RenderStateDataKey;
 import net.fabricmc.fabric.api.client.rendering.v1.level.LevelRenderEvents;
@@ -36,12 +37,12 @@ public final class MeteorWorldRenderer {
     private record Quad(Vec3 a, Vec3 b, Vec3 c, Vec3 d, int color, int layer, float u0,float v0,float u1,float v1) {
         Quad(Vec3 a,Vec3 b,Vec3 c,Vec3 d,int color,int layer) { this(a,b,c,d,color,layer,0,0,1,1); }
     }
-    private static final Identifier[] ATLASES = new Identifier[] {
-        Identifier.fromNamespaceAndPath("liveevents","textures/effect/meteor_earth.png"),
-        Identifier.fromNamespaceAndPath("liveevents","textures/effect/meteor_water.png"),
-        Identifier.fromNamespaceAndPath("liveevents","textures/effect/meteor_snow.png")
-    };
     private MeteorWorldRenderer() { }
+
+    /** Shared by all smoke LODs; reads terrain depth but never writes billboard depth. */
+    public static net.minecraft.client.renderer.rendertype.RenderType smokeMaterial() {
+        return RenderTypes.entityTranslucentEmissive(CLOUD);
+    }
 
     public static void register() {
         try (var stream = MeteorWorldRenderer.class.getResourceAsStream("/assets/liveevents/meteor/meteor_mesh.json")) {
@@ -74,13 +75,8 @@ public final class MeteorWorldRenderer {
                         (pose, vertices) -> draw(quads, 0, pose, vertices));
                 context.submitNodeCollector().submitCustomGeometry(context.poseStack(), RenderTypes.entityCutout(ROCK),
                         (pose, vertices) -> draw(quads, 2, pose, vertices));
-                context.submitNodeCollector().submitCustomGeometry(context.poseStack(), RenderTypes.entityTranslucent(CLOUD),
+                context.submitNodeCollector().submitCustomGeometry(context.poseStack(), smokeMaterial(),
                         (pose, vertices) -> draw(quads, 1, pose, vertices));
-                for(int k=0;k<ATLASES.length;k++) {
-                    final int layer=k+3;
-                    context.submitNodeCollector().submitCustomGeometry(context.poseStack(),RenderTypes.entityTranslucent(ATLASES[k]),
-                            (pose,vertices)->draw(quads,layer,pose,vertices));
-                }
             } catch (RuntimeException e) {
                 enabled = false; LiveEvents.LOGGER.error("Meteor rendering disabled after failure", e);
             }
@@ -135,6 +131,7 @@ public final class MeteorWorldRenderer {
             for (AnnouncedMeteor m : instance.meteors.values()) {
                 if (out.size() > MAX_QUADS - 160) break;
                 double remaining = m.tick() - tick;
+                double bodySize = MeteorEffects.bodyRadius(m.radius());
                 if (remaining > 60 || remaining < -Math.max(40,m.lifetimeTicks())) continue;
                 Vec3 target = new Vec3(m.x(),m.y(),m.z());
                 double distance = camera.distanceTo(target);
@@ -149,35 +146,36 @@ public final class MeteorWorldRenderer {
                         Vec3 endpoint = origin.add(split*m.radius()*0.55,0,split*m.radius()*0.3);
                         Vec3 head = endpoint.add(direction.scale(remaining*5));
                         Vec3 tail = head.add(direction.scale(Math.min(80, (60-remaining)*4)));
-                        ribbon(out, head, tail, right, m.big()?0.9:0.45, 0xCAFF7A1A);
-                        ribbon(out, head, head.add(direction.scale(8)), right, m.big()?0.35:0.18, 0xFFFFF4D6);
-                        puff(out, head, right, up, m.big()?1.4:0.6, 0xFFFFF4D6, false);
-                        if(mesh != null && distance < 192 && out.size() < MAX_QUADS-400) body(out,head,m.big()?1.2:0.6,tick*0.05, 1);
+                        ribbon(out, head, tail, right, bodySize*0.75, 0xCAFF7A1A);
+                        ribbon(out, head, head.add(direction.scale(8)), right, bodySize*0.28, 0xFFFFF4D6);
+                        puff(out, head, right, up, bodySize*1.2, 0xFFFFF4D6, false);
+                        if(mesh != null && distance < 192 && out.size() < MAX_QUADS-400) body(out,head,bodySize,tick*(0.025+(m.seed()&15)*0.002)+(m.seed()&255), 1);
                         // One gradual green accent, not a repeating strobe.
-                        if (remaining > 25 && remaining < 38) puff(out, head, right, up, 2.5, 0x457CFF6B, false);
-                        if (detail > 0) for(int j=1;j<=5;j++) puff(out, head.add(direction.scale(j*6)), right, up, 0.7+j*0.22, 0x38685D52, true);
+                        if (remaining > 25 && remaining < 38) puff(out, head, right, up, bodySize*2, 0x457CFF6B, false);
+                        if (detail > 0) for(int j=1;j<=5;j++) puff(out, head.add(direction.scale(j*6)), right, up, bodySize*(0.7+j*0.22), 0x38685D52, true);
                     }
 
                 } else {
                     double visualRadius=m.radius()*(0.4+m.visualPower())/(0.4+m.power());
                     double seconds = -remaining/20, life = Math.min(1, seconds/2.8);
                     boolean residual=seconds>12;
-                    double fade=residual?0.25*Math.max(0,1-seconds/Math.max(1,m.smokeSeconds())):Math.max(0,1-seconds/12);
+                    double fade=Math.max(0,1-seconds/Math.max(1,m.smokeSeconds()))*(residual?0.25:1-0.75*seconds/12);
                     if(seconds>m.smokeSeconds()) fade=0;
                     boolean water = m.surface().equals("water"), snow = m.surface().equals("snow");
                     int color = water ? 0xB8DAEF : snow ? 0xEDF4FF : 0x827365;
                     if (seconds < 2) ring(out, origin.add(0,0.12,0), (visualRadius+seconds*10), 0.3,
                             ((int)(120*(1-seconds/2))<<24)|(water?0xA7DFFF:color), 40);
                     DeterministicRandom random = new DeterministicRandom(m.seed());
-                    if(distance>192 && seconds<7) {
-                        double[] times={0,0.4167,0.9583,1.7917,2.8333,4.0833,5.5417,7};
-                        int tile=0;while(tile<7 && times[tile+1]<=seconds)tile++;
-                        Vec3 center=origin.add(0,visualRadius*1.6,0), rr=right.scale(visualRadius*3),uu=up.scale(visualRadius*3);
-                        float u0=(tile%4)/4f,v0=(tile/4)/2f;
-                        out.add(new Quad(center.subtract(rr).subtract(uu),center.add(rr).subtract(uu),center.add(rr).add(uu),center.subtract(rr).add(uu),
-                                0xB0FFFFFF,water?4:snow?5:3,u0,v0,u0+0.25f,v0+0.5f));
+                    // Use the same depth-read-only smoke material at every LOD. Baked billboard
+                    // atlases previously introduced depth-writing rectangles over water and clouds.
+                    int puffs = fade<=0 ? 0 : distance>192 ? 8 : residual ? (detail<=1?3:6) : detail<=1 ? 20 : 44;
+                    double glow = seconds<1.2 ? Math.sin(Math.PI*seconds/1.2)
+                            *com.takumistudios.liveevents.client.config.ClientConfig.get().max_flash_intensity : 0;
+                    if (glow>0) {
+                        Vec3 core = origin.add(0,visualRadius*0.2,0);
+                        puff(out,core,right,up,visualRadius*(0.6+seconds*3),((int)(210*glow)<<24)|0xFFF4D6,false);
+                        puff(out,core,right,up,visualRadius*(1.2+seconds*6),((int)(95*glow)<<24)|0xFF8A35,false);
                     }
-                    int puffs = distance>192 ? 0 : fade<=0?0:residual? (detail<=1?3:6) : detail<=1 ? 20 : 44;
                     for(int j=0;j<puffs;j++) {
                         boolean cap = j>=puffs/3;
                         double angle = random.range(0,Math.PI*2);
@@ -190,7 +188,7 @@ public final class MeteorWorldRenderer {
                         double puffFade=fade;
                         if(residual) {
                             double age=(seconds+j*2.0)%12;
-                            at=origin.add(Math.cos(angle)*visualRadius*0.2+age*m.windX(),age*0.7,Math.sin(angle)*visualRadius*0.2+age*m.windZ());
+                            at=origin.add(Math.cos(angle)*visualRadius*0.2+age*m.windX(),age*0.7*Math.sqrt(MeteorEffects.scale(m.radius())),Math.sin(angle)*visualRadius*0.2+age*m.windZ());
                             size=(float)(visualRadius*(0.15+age*0.025));puffFade*=Math.sin(age/12*Math.PI);
                         }
                         Vec3 rotatedRight=right.scale(Math.cos(angle)).add(up.scale(Math.sin(angle)));
@@ -211,8 +209,13 @@ public final class MeteorWorldRenderer {
             }
         }
         // Approximate back-to-front ordering for transparent smoke clusters.
-        out.sort(Comparator.comparingDouble((Quad q)->q.a.lengthSqr()).reversed());
+        out.sort(Comparator.comparingDouble((Quad q)->quadDistanceSquared(q)).reversed());
         return List.copyOf(out);
+    }
+
+    private static double quadDistanceSquared(Quad q) {
+        double x=(q.a.x+q.c.x)*0.5,y=(q.a.y+q.c.y)*0.5,z=(q.a.z+q.c.z)*0.5;
+        return x*x+y*y+z*z;
     }
 
     private static void ribbon(List<Quad> out,Vec3 a,Vec3 b,Vec3 right,double width,int color) {

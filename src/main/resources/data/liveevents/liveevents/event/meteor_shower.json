@@ -22,7 +22,6 @@
         "chaos": "Algo viene. Una chispa roja cruza el horizonte demasiado despacio y es demasiado grande."
       },
       "modules": [
-        { "type": "sky_tint", "color": "$night", "strength": 0.45, "fade": "3s", "to": "90s" },
         { "type": "meteor_trail", "rate": { "from": 0.3, "to": 3 }, "color": "$trail", "core": "$core" },
         { "type": "sound_loop", "sound": "liveevents:meteor.rumble", "bpm": 20, "volume": { "from": 0.2, "to": 0.6 } },
         { "type": "boss_bar", "to": "90s", "color": "red" },

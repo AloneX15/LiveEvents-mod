@@ -149,7 +149,7 @@ public final class MeteorController {
                                      double azimuth, double angle, boolean big, long seed, double visualPower) {
         AnnouncedMeteor meteor = new AnnouncedMeteor(module, index, tick, at.x, at.y, at.z,
                 Math.max(0.5, Math.min(48, radius)), power, azimuth, angle, big, variant(at), seed,
-                visualPower,instance.vars().getOrDefault("cooling_seconds",120.0),instance.vars().getOrDefault("smoke_seconds",120.0),
+                visualPower,instance.vars().getOrDefault("cooling_seconds",120.0),com.takumistudios.liveevents.core.plan.MeteorEffects.smokeSeconds(instance.vars().getOrDefault("smoke_seconds",120.0),radius),
                 instance.vars().getOrDefault("wind_x",0.2),instance.vars().getOrDefault("wind_z",0.05));
         announced.put(meteor.key(), meteor);
         launched++;

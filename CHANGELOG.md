@@ -2,6 +2,10 @@
 
 ## 1.1.0
 
+- Added five weighted meteor sizes with matching bodies, smoke, blast radius and damage.
+- Original layered meteor audio: atmospheric entry, close/distant impacts, debris and deep tails; distance delay, size-dependent pitch and bounded voices.
+- Fixed smoke depth masking water/clouds, removed meteor screen tints and made impact flashes independent of frame rate.
+
 - Meteor impacts now use server-fixed positions, surface variants and immutable announced power (network protocol 2).
 - Added world-space meteor mesh, tapered trails, 3D smoke clusters, impact warnings and distant Blender atlases.
 - Added administrative meteor targeting and manual strikes; power, brutality and duration controls.

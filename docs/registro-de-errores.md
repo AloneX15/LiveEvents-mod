@@ -73,3 +73,10 @@ Cada error resuelto: síntoma, causa, solución y test que lo reproduce.
   simulado que salta de 0 a 3 ms entre esas dos lecturas; no se ha relajado el presupuesto de 2 ms del GameTest.
 - Las capturas del arnés 26.1.2 omiten `GameRenderer.update` y Sodium falla con `Global terrain uniforms have not
   been updated` (Fabric API #5466). Workaround exclusivamente en el mod de pruebas, documentado en MIXINS.md.
+
+## 2026-10-17 — Meteor smoke, tint and flash
+
+- Symptom: smoke hides water/clouds in transparent regions. Cause: entity translucent geometry writes depth; separate baked atlas layers also break common sorting. Fix: a single depth-read-only emissive smoke material at all distances, sorted by quad center. Terrain depth tests remain enabled. Validation: client meteor acceptance screenshots over earth/water/snow and existing geometry-budget assertion.
+- Symptom: persistent opaque veil during meteors. Cause: global sky tint in meteor event definitions. Fix: remove those modules and retain localized impact lighting.
+- Symptom: impact flash changes with frame rate. Cause: marking it consumed after a single frame. Fix: cache the limiter grant and evaluate a twelve-tick envelope each frame. Regression: MeteorEffectsTest compares integrated envelopes at different frame rates.
+- Added five deterministic size classes, radius-dependent bodies, smoke, blast/damage and pitched original audio. Regression: MeteorEffectsTest checks distribution, first-large behavior, physical bounds and monotonic scales.

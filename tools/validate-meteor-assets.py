@@ -37,3 +37,31 @@ report = json.loads((ART / "validation.json").read_text(encoding="utf-8"))
 assert all(report[v]["validated"] for v in ("earth", "water", "snow"))
 assert (ART / "earth/meteor_mesh.json").read_bytes() == (ASSETS / "meteor/meteor_mesh.json").read_bytes()
 print("Meteor Blender/runtime contracts validated (earth, water, snow)")
+
+# The CI checks committed audio without installing synthesis dependencies.
+sounds = json.loads((ASSETS / "sounds.json").read_text(encoding="utf-8"))
+translations = [json.loads((ASSETS / "lang" / f"{lang}.json").read_text(encoding="utf-8"))
+                for lang in ("en_us", "es_es")]
+for name in ("whistle", "impact_near", "impact_far", "debris", "tail"):
+    event = sounds[f"meteor.{name}"]
+    assert all(event["subtitle"] in lang and lang[event["subtitle"]] for lang in translations), name
+    assert event["sounds"] == [{"name": f"liveevents:meteor/{name}"}], name
+    path = ASSETS / "sounds" / "meteor" / f"{name}.ogg"
+    data = path.read_bytes()
+    offset, pages, granule = 0, 0, 0
+    while offset < len(data):
+        assert data[offset:offset+4] == b"OggS" and data[offset+4] == 0, path
+        assert offset+27 <= len(data), path
+        segments = data[offset+26]
+        body = offset+27+segments
+        assert body <= len(data), path
+        end = body+sum(data[offset+27:body])
+        assert end <= len(data), path
+        granule = max(granule, struct.unpack_from("<Q", data, offset+6)[0])
+        if pages == 0:
+            assert data[body:body+7] == b"\x01vorbis", path
+            assert data[body+11] == 1, (path, "Expected mono audio")
+            assert struct.unpack_from("<I", data, body+12)[0] == 44100, path
+        offset, pages = end, pages+1
+    assert pages >= 3 and granule > 44100 and data[-1:] != b"", path
+print("Meteor audio contracts validated (5 mono Vorbis resources and subtitles)")

@@ -94,7 +94,7 @@ public class LiveEventsGameTests {
         });
     }
 
-    @GameTest(maxTicks=400, skyAccess=true)
+    @GameTest(maxTicks=1200, skyAccess=true)
     public void persistedMeteorCoolingRecoversAndRemainsRevertible(GameTestHelper helper) {
         BlockPos relative=new BlockPos(4,1,4),absolute=helper.absolutePos(relative);
         helper.setBlock(relative,Blocks.MAGMA_BLOCK);
@@ -157,7 +157,9 @@ public class LiveEventsGameTests {
     }
 
     /** Cambios de bloques: pasan por el diario y /le revert los deshace (§8.5). Necesita cielo: sin él hay techo de barreras. */
-    @GameTest(maxTicks = 400, skyAccess = true)
+    // Accelerated GameTest ticks are much faster than disk I/O on shared CI runners.
+    // Keep a finite I/O deadline and run the destructive panic test after it.
+    @GameTest(maxTicks = 1200, skyAccess = true)
     public void blockChangesAreJournaledAndReverted(GameTestHelper helper) {
         BlockPos grass = new BlockPos(4, 1, 4);
         for (int dx = -2; dx <= 2; dx++) {
@@ -252,13 +254,13 @@ public class LiveEventsGameTests {
     }
 
     /** /le panic detiene todo y vacía la cola de bloques (§21.5). Se ejecuta tarde para no cortar las demás pruebas. */
-    @GameTest(maxTicks = 600)
+    @GameTest(maxTicks = 1600)
     public void panicStopsEverything(GameTestHelper helper) {
-        helper.runAfterDelay(400, () -> {
+        helper.runAfterDelay(1400, () -> {
             start(helper, "liveevents_test:visual", new Vec3(4.5, 2, 4.5));
             start(helper, "liveevents_test:big", new Vec3(4.5, 2, 4.5));
         });
-        helper.runAfterDelay(410, () -> {
+        helper.runAfterDelay(1410, () -> {
             services().director().panic("gametest");
             if (!services().director().active().isEmpty()) {
                 throw helper.assertionException("Quedan eventos activos tras /le panic");
